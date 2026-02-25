@@ -62,6 +62,27 @@
       <a href="/jadwal">Jadwal</a>
       <a href="/genres">Genre</a>
       <a href="/koleksi">Koleksi</a>
+
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+
+      <!-- Login (tampil saat belum login) -->
+      <a href="/auth/login" id="menuBtnLogin" style="display:none;align-items:center;gap:10px;color:var(--accent);font-weight:600">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Login
+      </a>
+
+      <!-- User info (tampil saat sudah login) -->
+      <div id="menuUserInfo" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--card);border-radius:8px;border:1px solid var(--border)">
+          <img id="menuAvatar" src="" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover;flex-shrink:0">
+          <div style="flex:1;min-width:0">
+            <div id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            <div style="font-size:11px;color:var(--text3)">Logged in</div>
+          </div>
+          <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -105,7 +126,7 @@
       if (avatar) avatar.src = user.avatar || '';
       if (name) name.textContent = user.name;
     } else {
-      loginBtn.style.display = 'block';
+      loginBtn.style.display = 'flex';
       userInfo.style.display = 'none';
     }
   }
