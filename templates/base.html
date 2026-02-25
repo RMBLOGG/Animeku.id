@@ -42,22 +42,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </a>
         <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-        <!-- Auth -->
-        <div class="nav-auth" id="navAuth">
-          <a href="/auth/login" class="btn btn-primary btn-sm" id="btnLogin" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" opacity=".3"/><circle cx="12" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 12c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0 2c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4z"/></svg>
-            Login
-          </a>
-          <div class="nav-user" id="navUser" style="display:none">
-            <img id="navAvatar" src="" alt="" width="28" height="28" style="border-radius:50%;object-fit:cover;cursor:pointer" onclick="toggleUserMenu()">
-            <div class="user-dropdown" id="userDropdown" style="display:none">
-              <span id="navUserName" style="padding:10px 16px;display:block;font-weight:600;font-size:13px;color:var(--text1)"></span>
-              <hr style="border-color:var(--border);margin:4px 0">
-              <button onclick="logoutUser()" style="width:100%;padding:10px 16px;background:none;border:none;color:var(--text2);cursor:pointer;text-align:left;font-size:13px">Keluar</button>
-            </div>
-          </div>
-        </div>
-    </div>
+      </div>
 
     <div class="search-bar" id="searchBar">
       <div class="search-inner">
@@ -76,6 +61,20 @@
       <a href="/jadwal">Jadwal</a>
       <a href="/genres">Genre</a>
       <a href="/koleksi">Koleksi</a>
+      <hr style="border-color:var(--border);margin:8px 0">
+      <!-- Auth di mobile menu -->
+      <div id="menuAuthSection">
+        <a href="/auth/login" id="menuBtnLogin" style="display:none;align-items:center;gap:8px;padding:10px 0;color:var(--accent);font-weight:600;font-size:15px;text-decoration:none">
+          👤 Login dengan Google
+        </a>
+        <div id="menuUserInfo" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+            <img id="menuAvatar" src="" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover">
+            <span id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text1)"></span>
+          </div>
+          <button onclick="logoutUser()" style="width:100%;padding:10px 0;background:none;border:none;color:var(--text3);cursor:pointer;text-align:left;font-size:14px">🚪 Keluar</button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -103,34 +102,23 @@
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
-  // Auth state management
   async function loadAuthState() {
     const r = await fetch('/api/me');
     const {user} = await r.json();
     if (user) {
-      document.getElementById('btnLogin').style.display = 'none';
-      document.getElementById('navUser').style.display = 'flex';
-      document.getElementById('navAvatar').src = user.avatar || '';
-      document.getElementById('navUserName').textContent = user.name;
+      document.getElementById('menuBtnLogin').style.display = 'none';
+      document.getElementById('menuUserInfo').style.display = 'block';
+      document.getElementById('menuAvatar').src = user.avatar || '';
+      document.getElementById('menuUserName').textContent = user.name;
     } else {
-      document.getElementById('btnLogin').style.display = 'flex';
-      document.getElementById('navUser').style.display = 'none';
+      document.getElementById('menuBtnLogin').style.display = 'flex';
+      document.getElementById('menuUserInfo').style.display = 'none';
     }
-  }
-  function toggleUserMenu() {
-    const d = document.getElementById('userDropdown');
-    d.style.display = d.style.display === 'none' ? 'block' : 'none';
   }
   async function logoutUser() {
     await fetch('/auth/logout', {method:'POST'});
     location.reload();
   }
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#navUser')) {
-      const d = document.getElementById('userDropdown');
-      if (d) d.style.display = 'none';
-    }
-  });
   loadAuthState();
   </script>
   {% block scripts %}{% endblock %}
