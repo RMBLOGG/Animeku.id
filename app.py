@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect
+from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory
 import requests
 import json
 import os
@@ -176,6 +176,10 @@ def _norm_paginated(raw, page):
     return {"animes": animes, "pagination": pag_norm}
 
 # ── Pages ──────────────────────────────────────────────────────────────────────
+
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(app.static_folder, "manifest.json", mimetype="application/manifest+json")
 
 @app.route("/")
 def home():
