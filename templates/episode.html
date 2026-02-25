@@ -155,7 +155,99 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-{% else %}
+<!-- KOMENTAR -->
+<div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
+  <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--text1)">💬 Komentar</h3>
+  <div id="commentFormWrap" style="margin-bottom:20px"></div>
+  <div id="commentList" style="display:flex;flex-direction:column;gap:12px">
+    <p style="color:var(--text3);font-size:13px">Memuat komentar...</p>
+  </div>
+</div>
+
+<script>
+const ANIME_SLUG_COMMENT = '{{ anime_slug or slug }}';
+let currentUser = null;
+
+async function initComments() {
+  const r = await fetch('/api/me');
+  const {user} = await r.json();
+  currentUser = user;
+  renderCommentForm(user);
+  loadComments();
+}
+
+function renderCommentForm(user) {
+  const wrap = document.getElementById('commentFormWrap');
+  if (user) {
+    wrap.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <img src="${user.avatar||''}" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:4px">
+        <div style="flex:1">
+          <textarea id="commentInput" placeholder="Tulis komentar..." rows="2"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text1);font-size:14px;resize:vertical;font-family:inherit"></textarea>
+          <button onclick="submitComment()" class="btn btn-primary btn-sm" style="margin-top:8px">Kirim</button>
+        </div>
+      </div>`;
+  } else {
+    wrap.innerHTML = `<a href="/auth/login" class="btn btn-primary btn-sm">🔑 Login untuk berkomentar</a>`;
+  }
+}
+
+async function loadComments() {
+  const r = await fetch('/api/comments/' + ANIME_SLUG_COMMENT);
+  const comments = await r.json();
+  const list = document.getElementById('commentList');
+  if (!Array.isArray(comments) || !comments.length) {
+    list.innerHTML = '<p style="color:var(--text3);font-size:13px">Belum ada komentar. Jadilah yang pertama!</p>';
+    return;
+  }
+  list.innerHTML = comments.map(c => `
+    <div style="display:flex;gap:10px;background:var(--surface);border-radius:12px;padding:12px 14px">
+      <img src="${c.user_avatar||'/static/img/placeholder.svg'}" alt="" width="32" height="32"
+        style="border-radius:50%;object-fit:cover;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:600;font-size:13px;color:var(--text1)">${escHtml(c.user_name||'User')}</span>
+          <span style="font-size:11px;color:var(--text3)">${timeAgo(c.created_at)}</span>
+        </div>
+        <p style="font-size:14px;color:var(--text2);margin:0;word-break:break-word">${escHtml(c.content)}</p>
+        ${currentUser && currentUser.id === c.user_id ? `
+        <button onclick="deleteComment('${c.id}')" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;margin-top:6px;padding:0">Hapus</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function submitComment() {
+  const input = document.getElementById('commentInput');
+  const content = (input.value||'').trim();
+  if (!content) return;
+  const r = await fetch('/api/comments', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({anime_slug: ANIME_SLUG_COMMENT, content})
+  });
+  if (r.ok) { input.value = ''; loadComments(); }
+  else { const e = await r.json(); alert(e.error||'Gagal kirim'); }
+}
+
+async function deleteComment(id) {
+  if (!confirm('Hapus komentar ini?')) return;
+  await fetch('/api/comments/' + id, {method:'DELETE'});
+  loadComments();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60) return 'baru saja';
+  if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+  if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+  return Math.floor(diff/86400) + ' hari lalu';
+}
+
+initComments();
 <div class="container empty-state" style="padding-top:80px">
   <h3>Episode tidak ditemukan</h3>
   <p><a href="/" style="color:var(--accent)">Kembali ke beranda</a></p>

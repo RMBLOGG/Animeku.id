@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head><title>Login...</title></head>
+<body>
+<script>
+// Supabase kirim token via hash fragment
+const hash = window.location.hash.substring(1);
+const params = new URLSearchParams(hash);
+const access_token = params.get('access_token');
+
+if (access_token) {
+  // Decode JWT untuk ambil user info
+  const payload = JSON.parse(atob(access_token.split('.')[1]));
+  fetch('/auth/session', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      access_token,
+      user: {
+        id: payload.sub,
+        email: payload.email,
+        user_metadata: payload.user_metadata || {}
+      }
+    })
+  }).then(() => {
+    window.location.href = document.referrer || '/';
+  });
+} else {
+  window.location.href = '/';
+}
+</script>
+<p style="font-family:sans-serif;text-align:center;padding-top:100px;color:#666">Sedang login...</p>
+</body>
+</html>
