@@ -28,35 +28,79 @@ redis = Redis(
 CACHE_TTL = {
     "home":300, "popular":600, "movies":600, "ongoing":300,
     "completed":600, "recent":300, "search":120, "genres":3600,
-    "genre":300, "schedule":1800, "list":3600,
+    "genre":300, "schedule":120, "list":3600,
     "anime":600, "episode":180, "server":60, "default":300,
 }
 
+import random, time
+
 def _ttl(path):
+    base = CACHE_TTL["default"]
     for k, v in CACHE_TTL.items():
-        if k in path: return v
-    return CACHE_TTL["default"]
+        if k in path:
+            base = v
+            break
+    # Jitter ±10% supaya cache tidak expired serentak
+    return base + int(base * random.uniform(-0.1, 0.1))
 
 def fetch(path, params=None):
-    key = "samehadaku:" + path + str(sorted(params.items()) if params else "")
+    key   = "samehadaku:" + path + str(sorted(params.items()) if params else "")
+    lock_key = key + ":lock"
+
+    # 1. Fast path — cache hit
     try:
         cached = redis.get(key)
         if cached:
             return json.loads(cached)
     except Exception as e:
         print(f"Redis get error: {e}")
+
+    # 2. Coba acquire distributed lock (SET NX EX 10)
+    #    Hanya 1 worker/instance yang berhasil, sisanya dapat None
+    lock_acquired = False
     try:
-        r = requests.get(f"{API_BASE}{path}", params=params, timeout=10)
-        r.raise_for_status()
-        data = r.json()
-        try:
-            redis.set(key, json.dumps(data), ex=_ttl(path))
-        except Exception as e:
-            print(f"Redis set error: {e}")
-        return data
+        lock_acquired = redis.set(lock_key, "1", nx=True, ex=10)
     except Exception as e:
-        print(f"API error [{path}]: {e}")
-        return None
+        print(f"Redis lock error: {e}")
+
+    if lock_acquired:
+        # Worker yang dapat lock → fetch ke API
+        try:
+            r = requests.get(f"{API_BASE}{path}", params=params, timeout=10)
+            r.raise_for_status()
+            data = r.json()
+            try:
+                redis.set(key, json.dumps(data), ex=_ttl(path))
+            except Exception as e:
+                print(f"Redis set error: {e}")
+            return data
+        except Exception as e:
+            print(f"API error [{path}]: {e}")
+            return None
+        finally:
+            try:
+                redis.delete(lock_key)
+            except Exception:
+                pass
+    else:
+        # Worker lain sedang fetch → tunggu max 3 detik sampai cache terisi
+        for _ in range(6):
+            time.sleep(0.5)
+            try:
+                cached = redis.get(key)
+                if cached:
+                    return json.loads(cached)
+            except Exception:
+                pass
+        # Timeout — fallback fetch langsung (last resort)
+        try:
+            r = requests.get(f"{API_BASE}{path}", params=params, timeout=10)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            print(f"API fallback error [{path}]: {e}")
+            return None
+
 
 # ── Helper normalisasi ─────────────────────────────────────────────────────────
 
