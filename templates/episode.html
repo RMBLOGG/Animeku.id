@@ -14,31 +14,30 @@
 
 <div class="player-container">
 
-  <!-- BREADCRUMB -->
+  <!-- BREADCRUMB & JUDUL -->
+  {# Pakai namespace agar variabel bisa diakses di luar loop #}
+  {% set ep_ns = namespace(name='') %}
+  {% for ep in episodes %}
+    {% if ep.slug == slug %}{% set ep_ns.name = ep.name %}{% endif %}
+  {% endfor %}
+
   <div class="breadcrumb">
     <a href="/">Beranda</a>
     <span class="breadcrumb-sep">›</span>
     {% if anime_data and anime_data.detail %}
-    <a href="/anime/{{ anime_slug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;display:inline-block">{{ anime_data.detail.title }}</a>
+    <a href="/anime/{{ anime_slug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ anime_data.detail.title }}</a>
     <span class="breadcrumb-sep">›</span>
     {% endif %}
-    {# Tampilkan hanya nama episode singkat di breadcrumb (misal "Episode 5") #}
-    {% set ep_short = None %}
-    {% for ep in episodes %}
-      {% if ep.slug == slug %}{% set ep_short = ep.name %}{% endif %}
-    {% endfor %}
-    <span>{{ ep_short if ep_short else data.title }}</span>
+    <span>{{ ep_ns.name if ep_ns.name else 'Episode' }}</span>
   </div>
 
   <!-- JUDUL -->
-  {# Judul singkat: pakai nama anime + nama episode jika tersedia #}
-  {% if anime_data and anime_data.detail and ep_short %}
-  <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(16px,3vw,28px);line-height:1.3">
-    {{ anime_data.detail.title }}
-    <span style="color:var(--accent)"> — {{ ep_short }}</span>
+  {% if anime_data and anime_data.detail and ep_ns.name %}
+  <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(15px,2.5vw,24px);line-height:1.3">
+    {{ anime_data.detail.title }}<span style="color:var(--accent)"> — {{ ep_ns.name }}</span>
   </h1>
   {% else %}
-  <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(16px,3vw,28px);line-height:1.3">{{ data.title }}</h1>
+  <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(15px,2.5vw,24px);line-height:1.3">{{ data.title }}</h1>
   {% endif %}
   <p style="color:var(--text3);font-size:13px;margin-bottom:16px">Animeku.id — Streaming Sub Indo</p>
 
