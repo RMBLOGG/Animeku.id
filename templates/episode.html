@@ -9,8 +9,10 @@
 {% for ep in episodes %}
   {% if ep.slug == slug %}{% set current_idx.val = loop.index0 %}{% endif %}
 {% endfor %}
-{% set prev_ep = episodes[current_idx.val - 1] if current_idx.val > 0 else None %}
-{% set next_ep = episodes[current_idx.val + 1] if current_idx.val >= 0 and current_idx.val < episodes|length - 1 else None %}
+{# API mengurutkan episode dari terbaru ke terlama (index 0 = episode terbaru) #}
+{# Prev = episode lebih lama = index+1, Next = episode lebih baru = index-1 #}
+{% set prev_ep = episodes[current_idx.val + 1] if current_idx.val >= 0 and current_idx.val < episodes|length - 1 else None %}
+{% set next_ep = episodes[current_idx.val - 1] if current_idx.val > 0 else None %}
 
 <div class="player-container">
 
