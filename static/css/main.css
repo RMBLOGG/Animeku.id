@@ -659,19 +659,41 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   line-height: 1.8;
   font-size: 14px;
   max-width: 700px;
+  overflow: hidden;
+  max-height: 112px; /* ~4 baris: 14px * 1.8 * 4 */
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              -webkit-mask-image 0.4s ease,
+              mask-image 0.4s ease;
+}
+.synopsis-text.expanded {
+  max-height: 2000px;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .synopsis-text.clamped {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  /* kept for compatibility - handled by max-height above */
 }
 .read-more {
   color: var(--accent);
   font-size: 13px;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+.read-more:hover { opacity: 0.75; }
+.read-more .read-more-arrow {
   display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.read-more.open .read-more-arrow {
+  transform: rotate(180deg);
 }
 
 /* Episode List */
