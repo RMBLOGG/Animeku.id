@@ -184,7 +184,7 @@ def api_me():
 @app.route("/api/comments/<anime_slug>")
 def get_comments(anime_slug):
     r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/comments",
+        f"{SUPABASE_URL}/rest/v1/anime_comments",
         headers=supabase_headers(),
         params={
             "anime_slug": f"eq.{anime_slug}",
@@ -196,14 +196,33 @@ def get_comments(anime_slug):
 
 @app.route("/api/comments", methods=["POST"])
 def post_comment():
-    user = session.get("user")
-    if not user:
+    # Ambil token dari Authorization header (bukan session, karena Vercel serverless)
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not access_token:
         return jsonify({"error": "Login dulu ya!"}), 401
+
+    # Verifikasi user dari Supabase
+    user_resp = requests.get(
+        f"{SUPABASE_URL}/auth/v1/user",
+        headers=supabase_headers(access_token)
+    )
+    if not user_resp.ok:
+        return jsonify({"error": "Login dulu ya!"}), 401
+
+    user_data = user_resp.json()
+    user = {
+        "id": user_data.get("id"),
+        "name": user_data.get("user_metadata", {}).get("full_name", "User"),
+        "avatar": user_data.get("user_metadata", {}).get("avatar_url", ""),
+    }
+
     data = request.get_json()
     content = (data.get("content") or "").strip()
     anime_slug = data.get("anime_slug", "")
     if not content or len(content) < 2:
         return jsonify({"error": "Komentar terlalu pendek"}), 400
+
     payload = {
         "anime_slug": anime_slug,
         "user_id": user["id"],
@@ -212,23 +231,33 @@ def post_comment():
         "content": content
     }
     r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/comments",
-        headers={**supabase_headers(session.get("access_token")), "Prefer": "return=representation"},
+        f"{SUPABASE_URL}/rest/v1/anime_comments",
+        headers={**supabase_headers(access_token), "Prefer": "return=representation"},
         json=payload
     )
     if r.ok:
         return jsonify(r.json()[0] if r.json() else {})
-    return jsonify({"error": "Gagal kirim komentar"}), 500
+    return jsonify({"error": "Gagal kirim komentar", "detail": r.text}), 500
 
 @app.route("/api/comments/<comment_id>", methods=["DELETE"])
 def delete_comment(comment_id):
-    user = session.get("user")
-    if not user:
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not access_token:
         return jsonify({"error": "Unauthorized"}), 401
+
+    user_resp = requests.get(
+        f"{SUPABASE_URL}/auth/v1/user",
+        headers=supabase_headers(access_token)
+    )
+    if not user_resp.ok:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_id = user_resp.json().get("id")
     r = requests.delete(
-        f"{SUPABASE_URL}/rest/v1/comments",
-        headers=supabase_headers(session.get("access_token")),
-        params={"id": f"eq.{comment_id}", "user_id": f"eq.{user['id']}"}
+        f"{SUPABASE_URL}/rest/v1/anime_comments",
+        headers=supabase_headers(access_token),
+        params={"id": f"eq.{comment_id}", "user_id": f"eq.{user_id}"}
     )
     return jsonify({"ok": r.ok})
 
