@@ -75,7 +75,7 @@
       <div class="ph-logo" id="phLogo">
         <span class="ph-a">A</span><span class="ph-n">N</span><span class="ph-i">I</span><span class="ph-m">M</span><span class="ph-e">E</span><span class="ph-k">K</span><span class="ph-u">U</span><span class="ph-dot">.</span><span class="ph-id">ID</span>
       </div>
-      <p style="color:rgba(255,255,255,0.45);font-size:13px;letter-spacing:2px;font-family:var(--font-mono,'monospace');text-transform:uppercase">
+      <p id="phSubtitle" style="color:rgba(255,255,255,0.45);font-size:13px;letter-spacing:2px;font-family:var(--font-mono,'monospace');text-transform:uppercase;opacity:0;transform:translateY(12px);transition:none">
         ↓ Pilih kualitas untuk memulai
       </p>
     </div>
@@ -91,22 +91,55 @@
     .ph-logo span {
       display:inline-block;
       opacity:0;
-      transform:translateY(20px);
-      animation: phPop 0.4s forwards;
+      transform:translateY(30px) scale(0.7);
+      transition: none;
     }
-    .ph-a  { color:#e53935; animation-delay:0.0s; }
-    .ph-n  { color:#fff;    animation-delay:0.07s; }
-    .ph-i  { color:#fff;    animation-delay:0.14s; }
-    .ph-m  { color:#fff;    animation-delay:0.21s; }
-    .ph-e  { color:#fff;    animation-delay:0.28s; }
-    .ph-k  { color:#fff;    animation-delay:0.35s; }
-    .ph-u  { color:#fff;    animation-delay:0.42s; }
-    .ph-dot{ color:#e53935; animation-delay:0.49s; font-size:0.6em; }
-    .ph-id { color:#e53935; animation-delay:0.56s; font-size:0.7em; }
-    @keyframes phPop {
-      to { opacity:1; transform:translateY(0); }
+    .ph-logo span.ph-visible {
+      opacity:1;
+      transform:translateY(0) scale(1);
+      transition: opacity 0.45s cubic-bezier(.22,.68,0,1.4), transform 0.45s cubic-bezier(.22,.68,0,1.4);
     }
+    .ph-a  { color:#e53935; }
+    .ph-n  { color:#fff; }
+    .ph-i  { color:#fff; }
+    .ph-m  { color:#fff; }
+    .ph-e  { color:#fff; }
+    .ph-k  { color:#fff; }
+    .ph-u  { color:#fff; }
+    .ph-dot{ color:#e53935; font-size:0.6em; }
+    .ph-id { color:#e53935; font-size:0.7em; }
     </style>
+
+    <script>
+    (function() {
+      function animateLogo() {
+        var spans = document.querySelectorAll('#phLogo span');
+        var subtitle = document.getElementById('phSubtitle');
+        // reset
+        spans.forEach(function(s) { s.classList.remove('ph-visible'); });
+        if (subtitle) {
+          subtitle.style.transition = 'none';
+          subtitle.style.opacity = '0';
+          subtitle.style.transform = 'translateY(12px)';
+        }
+        // animasi huruf
+        spans.forEach(function(s, i) {
+          setTimeout(function() { s.classList.add('ph-visible'); }, 150 + i * 90);
+        });
+        // subtitle muncul setelah semua huruf selesai
+        var delay = 150 + spans.length * 90 + 100;
+        setTimeout(function() {
+          if (subtitle) {
+            subtitle.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            subtitle.style.opacity = '1';
+            subtitle.style.transform = 'translateY(0)';
+          }
+        }, delay);
+      }
+      document.addEventListener('DOMContentLoaded', animateLogo);
+      window.animateLogoPlaceholder = animateLogo;
+    })();
+    </script>
 
     {% if data.streams and data.streams | length > 0 %}
     <iframe id="playerIframe" src="about:blank"
@@ -304,6 +337,21 @@ function hidePlaceholder() {
   }
 }
 
+function showPlaceholder() {
+  const ph = document.getElementById('playerPlaceholder');
+  if (ph) {
+    ph.style.display = 'flex';
+    ph.style.opacity = '0';
+    requestAnimationFrame(function() {
+      ph.style.transition = 'opacity 0.4s';
+      ph.style.opacity = '1';
+    });
+    if (typeof window.animateLogoPlaceholder === 'function') {
+      setTimeout(window.animateLogoPlaceholder, 200);
+    }
+  }
+}
+
 function toggleEpList() {
   document.getElementById('epListGrid').classList.toggle('hidden');
   document.getElementById('epToggleBtn').classList.toggle('open');
@@ -328,12 +376,96 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- KOMENTAR -->
 <div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
-  <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--text1)">💬 Komentar</h3>
-  <div id="commentFormWrap" style="margin-bottom:20px"></div>
-  <div id="commentList" style="display:flex;flex-direction:column;gap:12px">
-    <p style="color:var(--text3);font-size:13px">Memuat komentar...</p>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <div style="width:3px;height:20px;background:var(--accent);border-radius:2px"></div>
+    <h3 style="font-size:15px;font-weight:700;color:var(--text);font-family:var(--font-head);letter-spacing:1px;margin:0">KOMENTAR</h3>
+  </div>
+
+  <div id="commentFormWrap" style="margin-bottom:24px"></div>
+
+  <div id="commentList" style="display:flex;flex-direction:column;gap:10px">
+    <p style="color:var(--text3);font-size:13px;font-family:var(--font-mono)">Memuat komentar...</p>
   </div>
 </div>
+
+<style>
+.comment-card {
+  display: flex;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  transition: border-color 0.2s;
+}
+.comment-card:hover { border-color: rgba(230,57,70,0.2); }
+.comment-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+.comment-avatar-placeholder {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-head);
+}
+.comment-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+.comment-time {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+}
+.comment-body {
+  font-size: 14px;
+  color: var(--text2);
+  margin: 6px 0 0;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.comment-delete {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  transition: color 0.2s;
+}
+.comment-delete:hover { color: var(--accent); }
+.comment-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 14px;
+  resize: vertical;
+  font-family: var(--font-body);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.comment-input:focus {
+  outline: none;
+  border-color: rgba(230,57,70,0.45);
+}
+.comment-input::placeholder { color: var(--text3); }
+</style>
 
 <script>
 const SUPABASE_URL = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
@@ -358,13 +490,16 @@ async function initComments() {
 function renderCommentForm(user) {
   const wrap = document.getElementById('commentFormWrap');
   if (user) {
+    const initial = (user.name || 'U')[0].toUpperCase();
+    const avatarHtml = user.avatar
+      ? `<img src="${user.avatar}" alt="" class="comment-avatar" style="margin-top:2px">`
+      : `<div class="comment-avatar-placeholder" style="margin-top:2px">${initial}</div>`;
     wrap.innerHTML = `
-      <div style="display:flex;gap:10px;align-items:flex-start">
-        <img src="${user.avatar||''}" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:4px">
+      <div style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+        ${avatarHtml}
         <div style="flex:1">
-          <textarea id="commentInput" placeholder="Tulis komentar..." rows="2"
-            style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text1);font-size:14px;resize:vertical;font-family:inherit"></textarea>
-          <button onclick="submitComment()" class="btn btn-primary btn-sm" style="margin-top:8px">Kirim</button>
+          <textarea id="commentInput" placeholder="Tulis komentar..." rows="2" class="comment-input"></textarea>
+          <button onclick="submitComment()" class="btn btn-primary btn-sm" style="margin-top:10px">Kirim</button>
         </div>
       </div>`;
   } else {
@@ -379,23 +514,30 @@ async function loadComments() {
   const comments = await r.json();
   const list = document.getElementById('commentList');
   if (!Array.isArray(comments) || !comments.length) {
-    list.innerHTML = '<p style="color:var(--text3);font-size:13px">Belum ada komentar. Jadilah yang pertama!</p>';
+    list.innerHTML = '<p style="color:var(--text3);font-size:13px;font-family:var(--font-mono)">Belum ada komentar. Jadilah yang pertama!</p>';
     return;
   }
-  list.innerHTML = comments.map(c => `
-    <div style="display:flex;gap:10px;background:var(--surface);border-radius:12px;padding:12px 14px">
-      <img src="${c.user_avatar||'/static/img/placeholder.svg'}" alt="" width="32" height="32"
-        style="border-radius:50%;object-fit:cover;flex-shrink:0">
+  list.innerHTML = comments.map(c => {
+    const initial = (c.user_name || 'U')[0].toUpperCase();
+    const avatarHtml = c.user_avatar
+      ? `<img src="${c.user_avatar}" alt="" class="comment-avatar">`
+      : `<div class="comment-avatar-placeholder">${initial}</div>`;
+    const deleteBtn = currentUser && currentUser.id === c.user_id
+      ? `<button onclick="deleteComment('${c.id}')" class="comment-delete">— Hapus</button>`
+      : '';
+    return `
+    <div class="comment-card">
+      ${avatarHtml}
       <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-weight:600;font-size:13px;color:var(--text1)">${escHtml(c.user_name||'User')}</span>
-          <span style="font-size:11px;color:var(--text3)">${timeAgo(c.created_at)}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span class="comment-name">${escHtml(c.user_name||'User')}</span>
+          <span class="comment-time">${timeAgo(c.created_at)}</span>
         </div>
-        <p style="font-size:14px;color:var(--text2);margin:0;word-break:break-word">${escHtml(c.content)}</p>
-        ${currentUser && currentUser.id === c.user_id ? `
-        <button onclick="deleteComment('${c.id}')" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;margin-top:6px;padding:0">Hapus</button>` : ''}
+        <p class="comment-body">${escHtml(c.content)}</p>
+        ${deleteBtn}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function submitComment() {
