@@ -202,7 +202,7 @@ function renderCommentForm(user) {
 }
 
 async function loadComments() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/comments?anime_slug=eq.${ANIME_SLUG_COMMENT}&order=created_at.desc&select=*`, {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?anime_slug=eq.${ANIME_SLUG_COMMENT}&order=created_at.desc&select=*`, {
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
   });
   const comments = await r.json();
@@ -234,7 +234,7 @@ async function submitComment() {
   const token = getToken();
   const user = getUser();
   if (!token || !user) { alert('Login dulu ya!'); return; }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments`, {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_ANON,
@@ -251,13 +251,16 @@ async function submitComment() {
     })
   });
   if (r.ok) { input.value = ''; loadComments(); }
-  else { alert('Gagal kirim komentar'); }
+  else {
+    const err = await r.json().catch(() => ({}));
+    alert('Gagal kirim komentar: ' + (err.message || r.status));
+  }
 }
 
 async function deleteComment(id) {
   if (!confirm('Hapus komentar ini?')) return;
   const token = getToken();
-  await fetch(`${SUPABASE_URL}/rest/v1/comments?id=eq.${id}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?id=eq.${id}`, {
     method: 'DELETE',
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
   });
