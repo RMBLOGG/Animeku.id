@@ -19,7 +19,7 @@
   <div class="schedule-days" id="dayTabs">
     {% for day in days %}
     <button class="day-pill {% if loop.first %}active{% endif %}"
-      data-day="{{ day }}" onclick="switchDay(this, '{{ day }}')">
+      data-day="{{ day }}" data-idx="{{ loop.index0 }}" onclick="switchDay(this, {{ loop.index0 }})">
       {{ day }}
     </button>
     {% endfor %}
@@ -29,7 +29,7 @@
 <!-- SCHEDULE CONTENT -->
 <div class="schedule-content">
   {% for day, animes in data.schedule.items() %}
-  <div class="schedule-day-panel {% if not loop.first %}hidden{% endif %}" id="day-{{ day }}">
+  <div class="schedule-day-panel {% if not loop.first %}hidden{% endif %}" id="day-{{ loop.index0 }}">
 
     <div style="margin-bottom:18px;display:flex;align-items:center;gap:10px">
       <div style="width:4px;height:22px;background:var(--accent);border-radius:2px"></div>
@@ -162,13 +162,13 @@
 </style>
 
 <script>
-function switchDay(btn, day) {
+function switchDay(btn, idx) {
   // Update pills
   document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
-  // Update panels
+  // Update panels (pakai index, aman dari karakter spesial seperti jum'at)
   document.querySelectorAll('.schedule-day-panel').forEach(p => p.classList.add('hidden'));
-  const panel = document.getElementById('day-' + day);
+  const panel = document.getElementById('day-' + idx);
   if (panel) panel.classList.remove('hidden');
   // Scroll pill ke tengah
   btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -182,9 +182,14 @@ function switchDay(btn, day) {
   };
   const todayKey = hariMap[new Date().getDay()];
   const pills = document.querySelectorAll('.day-pill');
+  let found = false;
   pills.forEach(p => {
-    if (p.dataset.day.toLowerCase().includes(todayKey)) {
+    // Normalisasi: hilangkan apostrof dan spasi, lowercase
+    const dayNorm = p.dataset.day.toLowerCase().replace(/[^a-z]/g, '');
+    const todayNorm = todayKey.replace(/[^a-z]/g, '');
+    if (!found && dayNorm.includes(todayNorm)) {
       p.click();
+      found = true;
     }
   });
 })();
