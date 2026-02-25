@@ -7,46 +7,98 @@
 {% if data and data.ongoing %}
 {% set featured = data.ongoing[0] %}
 <section class="hero hero-v2">
-  <!-- Blurred backdrop dari poster -->
-  {% if featured.poster %}
-  <div class="hero-backdrop" style="background-image: url('{{ featured.poster }}')"></div>
-  {% endif %}
+  <div class="hero-backdrop" id="heroBg" style="background-image: url('{{ featured.poster }}')"></div>
   <div class="hero-overlay"></div>
 
   <div class="hero-inner container">
-    <!-- Poster -->
-    {% if featured.poster %}
     <div class="hero-poster-wrap">
-      <img src="{{ featured.poster }}" alt="{{ featured.title }}" class="hero-poster-img">
+      <img src="{{ featured.poster }}" alt="{{ featured.title }}" class="hero-poster-img" id="heroPosterImg">
       <div class="hero-poster-glow"></div>
     </div>
-    {% endif %}
 
-    <!-- Info -->
     <div class="hero-content">
       <div class="hero-badge">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
         SEDANG TAYANG
       </div>
-      <h1 class="hero-title">{{ featured.title }}</h1>
-      <div class="hero-meta-row">
+      <h1 class="hero-title" id="heroTitle">{{ featured.title }}</h1>
+      <div class="hero-meta-row" id="heroMeta">
         {% if featured.type %}<span class="hero-tag">{{ featured.type }}</span>{% endif %}
         {% if featured.episode %}<span class="hero-tag accent">{{ featured.episode }}</span>{% endif %}
         <span class="hero-tag fire">{{ featured.status_or_day }}</span>
       </div>
       <p class="hero-desc">Nonton anime sub indo terlengkap & terbaru. Streaming gratis kualitas HD langsung di browser kamu.</p>
       <div class="hero-actions">
-        <a href="/anime/{{ featured.slug }}" class="btn btn-primary">
+        <a href="/anime/{{ featured.slug }}" class="btn btn-primary" id="heroLink">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           Tonton Sekarang
         </a>
-        <a href="/ongoing" class="btn btn-ghost">
-          Lihat Semua Ongoing
-        </a>
+        <a href="/ongoing" class="btn btn-ghost">Lihat Semua Ongoing</a>
       </div>
     </div>
   </div>
+
+  <!-- Dots -->
+  <div class="hero-dots">
+    {% for anime in data.ongoing[:5] %}
+    <button class="hero-dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></button>
+    {% endfor %}
+  </div>
 </section>
+
+<style>
+.hero-dots { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10; }
+.hero-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.35); border:none; cursor:pointer; transition:all 0.3s; padding:0; }
+.hero-dot.active { background:#e53935; width:24px; border-radius:4px; }
+#heroPosterImg { transition: opacity 0.4s ease; }
+</style>
+
+<script>
+const heroAnimes = [
+  {% for anime in data.ongoing[:5] %}
+  {
+    poster: "{{ anime.poster }}",
+    title: {{ anime.title | tojson }},
+    type: "{{ anime.type }}",
+    episode: "{{ anime.episode }}",
+    day: "{{ anime.status_or_day }}",
+    slug: "{{ anime.slug }}"
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+let heroCurrent = 0;
+
+function heroGoTo(n) {
+  heroCurrent = (n + heroAnimes.length) % heroAnimes.length;
+  const a = heroAnimes[heroCurrent];
+  const img = document.getElementById('heroPosterImg');
+
+  img.style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('heroBg').style.backgroundImage = `url('${a.poster}')`;
+    img.src = a.poster;
+    img.alt = a.title;
+    img.style.opacity = '1';
+  }, 300);
+
+  document.getElementById('heroTitle').textContent = a.title;
+  document.getElementById('heroLink').href = `/anime/${a.slug}`;
+  document.getElementById('heroMeta').innerHTML =
+    (a.type ? `<span class="hero-tag">${a.type}</span>` : '') +
+    (a.episode ? `<span class="hero-tag accent">${a.episode}</span>` : '') +
+    `<span class="hero-tag fire">${a.day}</span>`;
+
+  document.querySelectorAll('.hero-dot').forEach((d, i) => d.classList.toggle('active', i === heroCurrent));
+}
+
+document.querySelectorAll('.hero-dot').forEach(d => {
+  d.addEventListener('click', () => { heroGoTo(+d.dataset.index); resetHeroTimer(); });
+});
+
+let heroTimer = setInterval(() => heroGoTo(heroCurrent + 1), 5000);
+function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(() => heroGoTo(heroCurrent + 1), 5000); }
+</script>
 {% endif %}
 
 <!-- SCHEDULE STRIP -->
