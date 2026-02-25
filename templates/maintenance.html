@@ -357,6 +357,17 @@
     .maint-inner > *:nth-child(9)  { animation-delay: 0.69s; }
     .maint-inner > *:nth-child(10) { animation-delay: 0.77s; }
 
+    /* ── CENSORED BLUR ── */
+    .censored {
+      filter: blur(4px);
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      padding: 0 3px;
+      cursor: default;
+      user-select: none;
+      pointer-events: none;
+    }
+
     /* ── LIGHT MODE ── */
     [data-theme="light"] {
       --bg:#f4f5f7; --bg2:#ffffff; --bg3:#e8eaed;
@@ -479,7 +490,7 @@
           <div class="status-card err">
             <div class="sdot err"></div>
             <div class="slabel">
-              <span class="sn">API Animasu (Sumber Stream)</span>
+              <span class="sn">API <span class="censored">Animasu</span> (Sumber Stream)</span>
               <span class="sd">Server tidak merespons — sedang dalam proses pemulihan</span>
             </div>
             <span class="sbadge err">ERROR</span>
@@ -493,7 +504,7 @@
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           <span>
-            Gangguan ini berasal dari <strong>server Animasu</strong> selaku penyedia API streaming, bukan dari website kami. Kami tidak bisa mengontrol waktu pemulihannya namun akan segera kembali normal. Pantau update di sosial media kami.
+            Gangguan ini berasal dari <strong>server pihak ketiga (<span class="censored">Animasu</span>)</strong> selaku penyedia API streaming, bukan dari website kami. Kami tidak bisa mengontrol waktu pemulihannya namun akan segera kembali normal. Pantau update di sosial media kami.
           </span>
         </div>
 
