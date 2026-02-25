@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Animeku.id — Nonton Anime Sub Indo{% endblock %}</title>
+  <meta name="description" content="Nonton anime sub indo gratis, streaming kualitas HD. Animeku.id tempat wibu sejati.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script>
+    // Apply theme sebelum render — cegah flash
+    (function() {
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span>
+      </a>
+      <div class="nav-links">
+        <a href="/ongoing"   class="nav-link">Ongoing</a>
+        <a href="/completed" class="nav-link">Completed</a>
+        <a href="/movies"    class="nav-link">Movie</a>
+        <a href="/popular"   class="nav-link">Populer</a>
+        <a href="/jadwal"    class="nav-link">Jadwal</a>
+        <a href="/genres"    class="nav-link">Genre</a>
+        <a href="/koleksi"   class="nav-link">Koleksi</a>
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon-btn" id="themeToggle" aria-label="Toggle theme" title="Ganti tema"></button>
+        <button class="nav-icon-btn" id="searchToggle" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <a href="/koleksi" class="nav-icon-btn" title="Koleksi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </a>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </div>
 
+    <div class="search-bar" id="searchBar">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Cari anime..." autocomplete="off"/>
+        <kbd>ESC</kbd>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="/ongoing">Ongoing</a>
+      <a href="/completed">Completed</a>
+      <a href="/movies">Movie</a>
+      <a href="/popular">Populer</a>
+      <a href="/jadwal">Jadwal</a>
+      <a href="/genres">Genre</a>
+      <a href="/koleksi">❤️ Koleksi</a>
+    </div>
+  </nav>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo"><span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span></div>
+      <p class="footer-tagline">Tempat wibu sejati nonton anime sub indo 🎌</p>
+      <div class="footer-links">
+        <a href="/ongoing">Ongoing</a>
+        <a href="/completed">Completed</a>
+        <a href="/movies">Movie</a>
+        <a href="/jadwal">Jadwal</a>
+        <a href="/genres">Genre</a>
+        <a href="/koleksi">Koleksi</a>
+      </div>
+      <p class="footer-credit">Data dari <strong>Animasu</strong> via API Sanka Vollerei.</p>
+    </div>
+  </footer>
+
+  <button id="backTop" aria-label="Kembali ke atas">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

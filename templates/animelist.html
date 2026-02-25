@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Daftar Anime A-Z — Animeku.id{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Daftar <span>Anime</span></h1>
+    <p class="page-header-sub">Semua anime tersedia dari A sampai Z</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container">
+    {% if data and data.anime_list %}
+
+    <!-- Letter tabs -->
+    <div class="letter-tabs">
+      {% for group in data.anime_list %}
+      <a href="#letter-{{ group.letter }}" class="letter-tab">{{ group.letter }}</a>
+      {% endfor %}
+    </div>
+
+    <!-- Sections -->
+    {% for group in data.anime_list %}
+    <div class="letter-section" id="letter-{{ group.letter }}">
+      <div class="letter-heading">{{ group.letter }}</div>
+      <div class="letter-list">
+        {% for anime in group.animes %}
+        <a href="/anime/{{ anime.slug }}" class="letter-item">{{ anime.title }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="empty-state"><h3>Gagal memuat daftar anime</h3></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

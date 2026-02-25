@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Animeku.id — Nonton Anime Sub Indo Gratis{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+{% if data and data.ongoing %}
+{% set featured = data.ongoing[0] %}
+<section class="hero hero-v2">
+  <!-- Blurred backdrop dari poster -->
+  {% if featured.poster %}
+  <div class="hero-backdrop" style="background-image: url('{{ featured.poster }}')"></div>
+  {% endif %}
+  <div class="hero-overlay"></div>
+
+  <div class="hero-inner container">
+    <!-- Poster -->
+    {% if featured.poster %}
+    <div class="hero-poster-wrap">
+      <img src="{{ featured.poster }}" alt="{{ featured.title }}" class="hero-poster-img">
+      <div class="hero-poster-glow"></div>
+    </div>
+    {% endif %}
+
+    <!-- Info -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+        SEDANG TAYANG
+      </div>
+      <h1 class="hero-title">{{ featured.title }}</h1>
+      <div class="hero-meta-row">
+        {% if featured.type %}<span class="hero-tag">{{ featured.type }}</span>{% endif %}
+        {% if featured.episode %}<span class="hero-tag accent">{{ featured.episode }}</span>{% endif %}
+        <span class="hero-tag fire">{{ featured.status_or_day }}</span>
+      </div>
+      <p class="hero-desc">Nonton anime sub indo terlengkap & terbaru. Streaming gratis kualitas HD langsung di browser kamu.</p>
+      <div class="hero-actions">
+        <a href="/anime/{{ featured.slug }}" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Tonton Sekarang
+        </a>
+        <a href="/ongoing" class="btn btn-ghost">
+          Lihat Semua Ongoing
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- SCHEDULE STRIP -->
+{% if schedule %}
+<div class="schedule-strip">
+  <div class="schedule-days" id="scheduleDays">
+    {% set days = schedule.schedule.keys() | list if schedule.schedule else [] %}
+    {% for day in days %}
+    <button class="day-pill {% if loop.first %}active{% endif %}" data-day="{{ day }}">{{ day }}</button>
+    {% endfor %}
+  </div>
+  <div class="schedule-content">
+    <div class="schedule-list" id="scheduleList">
+      {% if schedule.schedule %}
+        {% set first_day = schedule.schedule.keys() | list | first %}
+        {% for item in schedule.schedule[first_day][:8] %}
+        <a href="/anime/{{ item.slug }}" class="schedule-item">
+          <span class="schedule-time">{{ item.time if item.time else '—' }}</span>
+          <span>{{ item.title }}</span>
+          {% if item.episode %}<span class="schedule-ep">{{ item.episode }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const scheduleData = {{ schedule.schedule | tojson | safe if schedule.schedule else '{}' }};
+document.querySelectorAll('.day-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.day-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const day = btn.dataset.day;
+    const items = scheduleData[day] || [];
+    const list = document.getElementById('scheduleList');
+    list.innerHTML = items.slice(0, 8).map(item => `
+      <a href="/anime/${item.slug}" class="schedule-item">
+        <span class="schedule-time">${item.time || '—'}</span>
+        <span>${item.title}</span>
+        ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
+      </a>
+    `).join('');
+  });
+});
+</script>
+{% endif %}
+
+<!-- ONGOING -->
+{% if data and data.ongoing %}
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Sedang Tayang</h2>
+      <a href="/ongoing" class="see-all">Lihat Semua →</a>
+    </div>
+    <div class="anime-grid stagger">
+      {% for anime in data.ongoing[:10] %}
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
+        <div class="card-poster">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+          <div class="card-overlay">
+            <div class="play-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            </div>
+          </div>
+          <span class="card-badge">{{ anime.episode }}</span>
+          {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
+        </div>
+        <div class="card-info">
+          <div class="card-title">{{ anime.title }}</div>
+          <div class="card-meta">
+            <span class="card-ep">{{ anime.status_or_day }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- POPULAR -->
+{% if popular and popular.animes %}
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🔥 Populer</h2>
+      <a href="/popular" class="see-all">Lihat Semua →</a>
+    </div>
+    <div class="anime-grid lg stagger">
+      {% for anime in popular.animes[:10] %}
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
+        <div class="card-poster">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+          <div class="card-overlay">
+            <div class="play-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            </div>
+          </div>
+          {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
+        </div>
+        <div class="card-info">
+          <div class="card-title">{{ anime.title }}</div>
+          <div class="card-meta">
+            <span class="card-ep">{{ anime.episode }}</span>
+            <span class="card-status">{{ anime.status_or_day }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- RECENT -->
+{% if data and data.recent %}
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Terbaru</h2>
+      <a href="/completed" class="see-all">Lihat Semua →</a>
+    </div>
+    <div class="anime-grid stagger">
+      {% for anime in data.recent[:10] %}
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
+        <div class="card-poster">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+          <div class="card-overlay">
+            <div class="play-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            </div>
+          </div>
+          {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
+        </div>
+        <div class="card-info">
+          <div class="card-title">{{ anime.title }}</div>
+          <div class="card-meta">
+            <span class="card-ep">{{ anime.episode }}</span>
+            <span class="card-status">{{ anime.status_or_day }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

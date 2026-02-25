@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Anime {{ title }} — Animeku.id{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Anime <span>{{ title }}</span></h1>
+    <p class="page-header-sub">Halaman {{ page }}</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    {% set animes = data.animes if data and data.animes else (data.ongoing if data and data.ongoing else []) %}
+    {% if animes %}
+    <div class="anime-grid lg stagger">
+      {% for anime in animes %}
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
+        <div class="card-poster">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+          <div class="card-overlay">
+            <div class="play-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            </div>
+          </div>
+          {% if anime.episode %}<span class="card-badge">{{ anime.episode }}</span>{% endif %}
+          {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
+        </div>
+        <div class="card-info">
+          <div class="card-title">{{ anime.title }}</div>
+          <div class="card-meta">
+            <span class="card-status">{{ anime.status_or_day }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    {% set pagination = data.pagination if data and data.pagination else None %}
+    {% if pagination %}
+    <div class="pagination">
+      {% if pagination.hasPrev %}
+      <a href="{{ base_url }}?page={{ page - 1 }}" class="page-btn">←</a>
+      {% endif %}
+      <span class="page-btn active">{{ page }}</span>
+      {% if pagination.hasNext %}
+      <a href="{{ base_url }}?page={{ page + 1 }}" class="page-btn">→</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h3>Tidak ada data</h3>
+      <p>Coba <a href="/" style="color:var(--accent)">kembali ke beranda</a></p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

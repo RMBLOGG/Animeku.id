@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Semua Genre — Animeku.id{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Semua <span>Genre</span></h1>
+    <p class="page-header-sub">Temukan anime berdasarkan genre favoritmu</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container">
+    {% if data and data.genres %}
+    <div class="genre-grid stagger">
+      {% set genre_icons = {
+        'Action':'⚔️','Adventure':'🗺️','Comedy':'😂','Drama':'🎭',
+        'Fantasy':'🧙','Horror':'👻','Mystery':'🔍','Romance':'💕',
+        'Sci-Fi':'🚀','Slice of Life':'☕','Sports':'⚽','Supernatural':'✨',
+        'Thriller':'😱','Music':'🎵','School':'🏫','Military':'🎖️',
+        'Mecha':'🤖','Psychological':'🧠','Historical':'📜','Magic':'🪄'
+      } %}
+      {% for genre in data.genres %}
+      <a href="/genre/{{ genre.slug }}" class="genre-card">
+        <div class="genre-card-icon">{{ genre_icons.get(genre.name, '🎌') }}</div>
+        <div class="genre-card-name">{{ genre.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><h3>Gagal memuat genre</h3></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

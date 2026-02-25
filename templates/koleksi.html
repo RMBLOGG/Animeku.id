@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Koleksiku — Animeku.id{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Koleksi<span style="color:var(--accent)">ku</span></h1>
+    <p class="page-header-sub">Watchlist & riwayat tontonan tersimpan di browser kamu</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container">
+    <div class="koleksi-toolbar">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('watchlist', this)"><i class="fas fa-fire"></i> Watchlist</button>
+        <button class="tab-btn" onclick="switchTab('history', this)"><i class="fas fa-fire"></i> Riwayat</button>
+      </div>
+      <button id="clearBtn" class="koleksi-clear-btn" onclick="clearActive()">
+        <i class="fas fa-trash"></i> Hapus Semua
+      </button>
+    </div>
+    <div id="tab-watchlist" class="tab-pane active">
+      <div id="watchlistContainer">
+        <div class="empty-state"><h3>Memuat...</h3></div>
+      </div>
+    </div>
+    <div id="tab-history" class="tab-pane">
+      <div id="historyContainer">
+        <div class="empty-state"><h3>Memuat...</h3></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  // Re-render saat tab di-switch
+  if (name === 'watchlist') renderWatchlist();
+  if (name === 'history') renderHistory();
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Pastikan render dipanggil setelah main.js selesai load
+  renderWatchlist();
+  renderHistory();
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Season Anime — Animeku.id{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Anime per <span style="color:var(--accent)">Season</span></h1>
+    <p class="page-header-sub">Pilih musim dan tahun</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container">
+    {% set seasons = [('winter','❄️','Winter'),('spring','🌸','Spring'),('summer','☀️','Summer'),('fall','🍂','Fall')] %}
+    {% set years = range(2025, 2019, -1) %}
+    {% for year in years %}
+    <div style="margin-bottom:40px">
+      <h2 class="section-title" style="margin-bottom:20px">{{ year }}</h2>
+      <div class="season-grid">
+        {% for slug, icon, name in seasons %}
+        <a href="/season/{{ slug }}/{{ year }}" class="season-card">
+          <div class="season-card-icon">{{ icon }}</div>
+          <div class="season-card-name">{{ name }}</div>
+          <div class="season-card-year">{{ year }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

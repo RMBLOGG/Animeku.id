@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ data.detail.title if data and data.detail else 'Detail Anime' }} — Animeku.id{% endblock %}
+
+{% block content %}
+{% if data and data.detail %}
+{% set d = data.detail %}
+
+<div class="detail-hero" id="detailHero"
+  data-anime-slug="{{ slug }}"
+  data-anime-title="{{ d.title }}"
+  data-anime-poster="{{ d.poster }}"
+  data-anime-type="{{ d.info.type if d.info and d.info.type else '' }}">
+  <div class="detail-backdrop" style="background-image: url('{{ d.poster }}')"></div>
+  <div class="detail-content">
+    <div class="detail-poster">
+      <img src="{{ d.poster }}" alt="{{ d.title }}" onerror="this.src='/static/img/placeholder.svg'">
+    </div>
+    <div class="detail-info fade-up">
+      <div>
+        <h1 class="detail-title">{{ d.title }}</h1>
+        {% if d.info and d.info.japanese %}
+        <p class="detail-title-jp">{{ d.info.japanese }}</p>
+        {% endif %}
+      </div>
+
+      <div class="badges-row">
+        {% if d.info %}
+          {% if d.info.type %}<span class="badge badge-type">{{ d.info.type }}</span>{% endif %}
+          {% if d.info.status %}
+            {% if 'Ongoing' in d.info.status or 'Airing' in d.info.status %}
+              <span class="badge badge-status-ongoing">{{ d.info.status }}</span>
+            {% else %}
+              <span class="badge badge-status-completed">{{ d.info.status }}</span>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      </div>
+
+      {% if d.info %}
+      <div class="detail-stats">
+        {% if d.info.score and d.info.score != 'N/A' %}
+        <div class="stat"><span class="stat-label">⭐ Score</span><span class="stat-value score">{{ d.info.score }}</span></div>
+        {% endif %}
+        {% if d.info.total_episode %}
+        <div class="stat"><span class="stat-label">Episode</span><span class="stat-value">{{ d.info.total_episode }}</span></div>
+        {% endif %}
+        {% if d.info.duration %}
+        <div class="stat"><span class="stat-label">Durasi</span><span class="stat-value" style="font-size:15px">{{ d.info.duration }}</span></div>
+        {% endif %}
+        {% if d.info.released %}
+        <div class="stat"><span class="stat-label">Rilis</span><span class="stat-value" style="font-size:14px">{{ d.info.released }}</span></div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if d.genres %}
+      <div class="genre-tags">
+        {% for g in d.genres %}
+        <a href="/genre/{{ g.slug }}" class="genre-tag">{{ g.name }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if d.synopsis %}
+      <div>
+        <p class="synopsis-text clamped">{{ d.synopsis }}</p>
+        <span class="read-more">Baca selengkapnya ↓</span>
+      </div>
+      {% endif %}
+
+      <div class="detail-actions">
+        {% if d.episodes and d.episodes | length > 0 %}
+        <a href="/episode/{{ d.episodes[0].slug }}?anime={{ slug }}" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Tonton Sekarang
+        </a>
+        {% endif %}
+        <button class="btn-watchlist" id="watchlistBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="watchlistBtnText">+ Watchlist</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPISODE LIST -->
+{% if d.episodes and d.episodes | length > 0 %}
+<div class="episodes-section">
+  <div class="section-header" style="margin-bottom:16px">
+    <h2 class="section-title">Daftar Episode</h2>
+    <span style="color:var(--text3);font-size:13px">{{ d.episodes | length }} Episode</span>
+  </div>
+
+  <!-- Continue watching banner -->
+  <div id="continueBanner"></div>
+
+  <input type="text" id="epSearch" placeholder="Cari episode..."
+    style="width:100%;max-width:300px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;display:block">
+
+  <div class="episodes-grid" id="episodesGrid">
+    {% for ep in d.episodes %}
+    <a href="/episode/{{ ep.slug }}?anime={{ slug }}" class="ep-btn" data-ep="{{ ep.name | lower }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+      {{ ep.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% endif %}
+
+{% else %}
+<div class="container empty-state">
+  <h3>Anime tidak ditemukan</h3>
+  <p>Coba cari anime lain atau kembali ke <a href="/" style="color:var(--accent)">halaman utama</a></p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if data and data.detail %}
+{% set d = data.detail %}
+<script>
+// Watchlist button state
+(function() {
+  const slug = '{{ slug }}';
+  const list = JSON.parse(localStorage.getItem('animeku_watchlist') || '[]');
+  const inList = list.some(a => a.slug === slug);
+  const btn  = document.getElementById('watchlistBtn');
+  const txt  = document.getElementById('watchlistBtnText');
+  if (inList && btn) { btn.classList.add('active'); txt.textContent = '✓ Di Watchlist'; }
+
+  // Continue watching banner
+  const prog  = JSON.parse(localStorage.getItem('animeku_progress') || '{}');
+  const saved = prog[slug];
+  if (saved) {
+    const banner = document.getElementById('continueBanner');
+    if (banner) banner.innerHTML = `
+      <a href="/episode/${saved.epSlug}?anime=${slug}" class="continue-banner">
+        <img src="{{ d.poster }}" alt="{{ d.title }}" onerror="this.src='/static/img/placeholder.svg'">
+        <div class="continue-info">
+          <div class="continue-label">⏯ LANJUT NONTON</div>
+          <div class="continue-title">{{ d.title }}</div>
+          <div class="continue-ep">${saved.epName}</div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent);flex-shrink:0"><path d="M5 3l14 9-14 9V3z"/></svg>
+      </a>`;
+  }
+
+  // Episode search
+  document.getElementById('epSearch')?.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.ep-btn').forEach(b => {
+      b.style.display = b.dataset.ep.includes(q) ? '' : 'none';
+    });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Jadwal Tayang — Animeku.id{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-header-title">Jadwal <span>Tayang</span></h1>
+    <p class="page-header-sub">Jadwal rilis anime mingguan</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container">
+    {% if data and data.schedule %}
+    <div class="schedule-grid">
+      {% for day, animes in data.schedule.items() %}
+      <div class="schedule-day-card">
+        <div class="schedule-day-header">{{ day }}</div>
+        <div class="schedule-day-list">
+          {% for item in animes %}
+          <a href="/anime/{{ item.slug }}" class="schedule-day-item">
+            {% if item.poster %}
+            <img src="{{ item.poster }}" alt="{{ item.title }}" onerror="this.style.display='none'">
+            {% endif %}
+            <div class="sched-info">
+              <div class="sched-title">{{ item.title }}</div>
+              <div class="sched-ep">{{ item.episode or '' }} {% if item.time %}· {{ item.time }}{% endif %}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><h3>Jadwal tidak tersedia</h3></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

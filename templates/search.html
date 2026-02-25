@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Cari "{{ query }}" — Animeku.id{% endblock %}
+{% block content %}
+<div class="search-page-bar">
+  <div class="search-page-inner">
+    <h2 style="font-family:var(--font-head);font-size:28px;margin-bottom:20px;letter-spacing:1px">
+      CARI <span style="color:var(--accent)">ANIME</span>
+    </h2>
+    <form class="search-page-form" action="/search" method="get">
+      <input type="text" name="q" value="{{ query }}" placeholder="Nama anime..." class="search-page-input" autofocus>
+      <button type="submit" class="btn btn-primary">Cari</button>
+    </form>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    {% if query %}
+      {% set animes = data.animes if data and data.animes else [] %}
+      {% if animes %}
+      <div class="section-header">
+        <h2 class="section-title">Hasil: "{{ query }}"</h2>
+        <span style="color:var(--text3);font-size:13px">{{ animes | length }} hasil</span>
+      </div>
+      <div class="anime-grid lg stagger">
+        {% for anime in animes %}
+        <a href="/anime/{{ anime.slug }}" class="anime-card">
+          <div class="card-poster">
+            <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+            <div class="card-overlay">
+              <div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg></div>
+            </div>
+            {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
+          </div>
+          <div class="card-info">
+            <div class="card-title">{{ anime.title }}</div>
+            <div class="card-meta">
+              <span class="card-ep">{{ anime.episode or '' }}</span>
+              <span class="card-status">{{ anime.status_or_day or '' }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <h3>Tidak ditemukan</h3>
+        <p>Coba kata kunci lain atau <a href="/" style="color:var(--accent)">lihat beranda</a></p>
+      </div>
+      {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <h3>Ketik nama anime yang ingin dicari</h3>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
