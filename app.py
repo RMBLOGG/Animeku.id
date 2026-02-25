@@ -70,8 +70,13 @@ def home():
     data     = fetch("/anime/animasu/home")
     popular  = fetch("/anime/animasu/popular")
     schedule = fetch("/anime/animasu/schedule")
+    
+    # Kalau semua API gagal → tampilkan halaman maintenance
+    if data is None and popular is None and schedule is None:
+        return render_template("maintenance.html"), 503
+    
     return render_template("index.html", data=data, popular=popular, schedule=schedule)
-
+    
 @app.route("/anime/<slug>")
 def detail(slug):
     data = fetch(f"/anime/animasu/detail/{slug}")
