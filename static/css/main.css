@@ -256,6 +256,19 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 }
 .anime-grid.lg { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); }
 
+/* Ongoing section: 3 kolom, card 16:9 */
+.ongoing-grid {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px;
+}
+.ongoing-grid .card-poster {
+  aspect-ratio: 16/9;
+}
+.ongoing-grid .card-title {
+  font-size: 11px;
+  -webkit-line-clamp: 1;
+}
+
 .anime-card {
   position: relative;
   border-radius: var(--radius);
@@ -357,22 +370,23 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   align-items: center;
 }
 .hero-backdrop {
+  display: block;
   position: absolute;
   inset: -20px;
   background-size: cover;
   background-position: center top;
-  filter: blur(35px) brightness(0.3) saturate(1.4);
-  transform: scale(1.1);
+  filter: blur(8px) brightness(0.75);
   z-index: 0;
 }
 .hero-overlay {
+  display: block;
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to right,
-    rgba(9,11,15,0.2) 0%,
-    rgba(9,11,15,0.5) 50%,
-    rgba(9,11,15,0.85) 100%
+    rgba(0,0,0,0.80) 0%,
+    rgba(0,0,0,0.45) 55%,
+    rgba(0,0,0,0.10) 100%
   );
   z-index: 1;
 }
@@ -468,8 +482,14 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
 @media (max-width: 640px) {
-  .hero-poster-wrap { display: none; }
-  .hero-inner { padding: 48px 16px 56px; }
+  .hero-poster-wrap { display: flex; justify-content: center; }
+  .hero-poster-img { width: 130px; }
+  .hero-inner {
+    padding: 48px 16px 56px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -1025,6 +1045,7 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   .hamburger { display: flex; }
 
   .anime-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+  .ongoing-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
   .detail-content { grid-template-columns: 1fr; }
   .detail-poster { width: 160px; }
   .schedule-grid { grid-template-columns: 1fr; }
