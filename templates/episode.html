@@ -148,6 +148,10 @@
       referrerpolicy="no-referrer"
       style="position:relative;z-index:1">
     </iframe>
+    <!-- Tombol fullscreen custom dengan landscape lock -->
+    <button id="fsBtn" onclick="toggleFullscreen()" title="Fullscreen" style="position:absolute;bottom:10px;right:10px;z-index:10;background:rgba(0,0,0,0.6);border:none;border-radius:8px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(4px);transition:background 0.2s">
+      <svg id="fsIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
     {% else %}
     <div class="player-placeholder">
       <p>Stream tidak tersedia untuk episode ini</p>
@@ -356,6 +360,45 @@ function toggleEpList() {
   document.getElementById('epListGrid').classList.toggle('hidden');
   document.getElementById('epToggleBtn').classList.toggle('open');
 }
+
+// ── Fullscreen + Landscape Lock ────────────────────────────────────────────
+const fsExitIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+const fsEnterIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+
+async function toggleFullscreen() {
+  const wrap = document.querySelector('.player-wrap') || document.querySelector('.player-container > div');
+  const el   = document.getElementById('playerIframe') || wrap;
+  const btn  = document.getElementById('fsIcon');
+
+  if (!document.fullscreenElement) {
+    // Masuk fullscreen
+    try {
+      await (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen).call(el);
+    } catch(e) { console.warn('Fullscreen error:', e); }
+
+    // Lock landscape
+    try {
+      await screen.orientation.lock('landscape');
+    } catch(e) {
+      // Fallback: paksa rotate manual lewat CSS transform
+      console.warn('Orientation lock not supported, using CSS fallback');
+    }
+    if (btn) btn.innerHTML = fsExitIcon;
+  } else {
+    // Keluar fullscreen
+    await document.exitFullscreen().catch(() => {});
+    if (btn) btn.innerHTML = fsEnterIcon;
+  }
+}
+
+// Update icon & unlock orientation saat user exit fullscreen manual (tombol back HP)
+document.addEventListener('fullscreenchange', function() {
+  const btn = document.getElementById('fsIcon');
+  if (!document.fullscreenElement) {
+    try { screen.orientation.unlock(); } catch(e) {}
+    if (btn) btn.innerHTML = fsEnterIcon;
+  }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
   // Auto-load server pertama
