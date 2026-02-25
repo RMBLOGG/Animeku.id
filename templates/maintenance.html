@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Server Down — Animeku.ID</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #090b0f;
+      --bg2:      #0e1117;
+      --bg3:      #13181f;
+      --card:     #111520;
+      --border:   rgba(255,255,255,0.07);
+      --accent:   #e63946;
+      --accent2:  #ff6b6b;
+      --gold:     #f4a261;
+      --text:     #e8eaf0;
+      --text2:    #8b92a5;
+      --text3:    #555d70;
+      --radius:   10px;
+      --radius-lg:16px;
+      --font-head:'Bebas Neue', sans-serif;
+      --font-body:'DM Sans', sans-serif;
+      --font-mono:'JetBrains Mono', monospace;
+      --nav-h:    64px;
+      --trans:    0.2s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(9,11,15,0.97);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--trans);
+    }
+    .navbar.scrolled { background: rgba(9,11,15,1); }
+    .nav-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 24px; height: var(--nav-h);
+      display: flex; align-items: center; gap: 32px;
+    }
+    .logo { font-family: var(--font-head); font-size: 24px; letter-spacing: 2px; color: var(--text); flex-shrink: 0; }
+    .logo-a  { color: var(--accent); }
+    .logo-dot{ color: var(--accent); }
+    .logo-id { color: var(--text2); font-size: 18px; }
+    .nav-links { display: flex; gap: 4px; flex: 1; }
+    .nav-link { padding: 6px 14px; border-radius: 6px; color: var(--text3); font-size: 14px; font-weight: 500; opacity: 0.45; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .nav-icon-btn { color: var(--text3); padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; opacity: 0.45; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; padding: 8px; cursor: pointer; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--text2); border-radius: 2px; }
+
+    /* ── MAIN ── */
+    main { padding-top: var(--nav-h); }
+
+    /* ── HERO / MAINTENANCE ── */
+    .maint-wrap {
+      position: relative;
+      min-height: calc(100vh - var(--nav-h) - 130px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px 72px;
+      overflow: hidden;
+      text-align: center;           /* ← KEY: semua teks center */
+    }
+
+    /* Grid background */
+    .maint-wrap::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(230,57,70,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(230,57,70,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridScroll 25s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes gridScroll { to { transform: translateY(48px); } }
+
+    /* Glow orb */
+    .maint-wrap::after {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(230,57,70,0.08) 0%, transparent 65%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: orbPulse 5s ease-in-out infinite;
+    }
+    @keyframes orbPulse {
+      0%,100% { opacity:1; transform:translate(-50%,-50%) scale(1); }
+      50%      { opacity:0.4; transform:translate(-50%,-50%) scale(1.2); }
+    }
+
+    /* ── INNER CONTAINER ── */
+    .maint-inner {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;       /* ← center semua child secara horizontal */
+      text-align: center;        /* ← center teks */
+    }
+
+    /* ── BADGE (like hero-badge) ── */
+    .maint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(230,57,70,0.12);
+      border: 1px solid rgba(230,57,70,0.3);
+      color: var(--accent);
+      font-size: 11px; font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 22px;
+      font-family: var(--font-mono);
+      letter-spacing: 1.5px;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px;
+      background: var(--accent); border-radius: 50%;
+      animation: pDot 1.4s ease-in-out infinite;
+    }
+    @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.2;transform:scale(0.5);} }
+
+    /* ── ICON ── */
+    .maint-icon {
+      width: 80px; height: 80px;
+      position: relative;
+      margin-bottom: 26px;
+    }
+    .icon-ring {
+      position: absolute; inset: 0;
+      border: 1.5px solid rgba(230,57,70,0.35);
+      border-radius: 50%;
+      animation: spinRing 10s linear infinite;
+    }
+    .icon-ring::before {
+      content: '';
+      position: absolute;
+      width: 8px; height: 8px;
+      background: var(--accent); border-radius: 50%;
+      top: -4px; left: 50%; transform: translateX(-50%);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    @keyframes spinRing { to { transform: rotate(360deg); } }
+    .icon-center {
+      position: absolute; inset: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .icon-center svg { color: var(--accent); animation: wrench 3s ease-in-out infinite; }
+    @keyframes wrench {
+      0%,100%{transform:rotate(0);} 15%{transform:rotate(-25deg);} 35%{transform:rotate(25deg);}
+      55%{transform:rotate(-12deg);} 75%{transform:rotate(12deg);}
+    }
+
+    /* ── TITLE ── */
+    .maint-title {
+      font-family: var(--font-head);
+      font-size: clamp(42px, 8vw, 70px);
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .maint-title .red { color: var(--accent); }
+
+    /* ── SUBTITLE ── */
+    .maint-sub {
+      color: var(--text2);
+      font-size: 14px;
+      line-height: 1.75;
+      margin-bottom: 36px;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    /* ── SECTION LABEL (red bar left) ── */
+    .maint-label {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px; font-weight: 600;
+      color: var(--text3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .maint-label::before {
+      content: '';
+      display: block;
+      width: 3px; height: 14px;
+      background: var(--accent);
+      border-radius: 2px; flex-shrink: 0;
+    }
+
+    /* ── ERROR BAR (like player-notice) ── */
+    .error-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(230,57,70,0.06);
+      border: 1px solid rgba(230,57,70,0.18);
+      border-radius: var(--radius);
+      padding: 13px 18px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .ebar-left { display: flex; align-items: center; gap: 10px; }
+    .ebar-left svg { color: var(--accent); flex-shrink: 0; }
+    .ebar-msg { font-size: 13px; color: var(--text2); }
+    .ebar-msg strong { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--accent2); letter-spacing: 1px; margin-bottom: 2px; }
+    .ebar-code {
+      font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+      color: var(--accent);
+      background: rgba(230,57,70,0.12);
+      padding: 4px 14px; border-radius: 6px;
+      border: 1px solid rgba(230,57,70,0.25);
+      flex-shrink: 0;
+    }
+
+    /* ── STATUS CARDS ── */
+    .status-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; width: 100%; }
+    .status-card {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      text-align: left;
+    }
+    .status-card.err { border-color: rgba(230,57,70,0.2); }
+    .sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sdot.ok  { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.45); }
+    .sdot.err { background: var(--accent); box-shadow: 0 0 8px rgba(230,57,70,0.5); animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
+    .slabel { flex: 1; }
+    .slabel .sn { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+    .slabel .sd { font-size: 12px; color: var(--text3); display: block; margin-top: 2px; }
+    .sbadge {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      padding: 3px 12px; border-radius: 999px; flex-shrink: 0;
+    }
+    .sbadge.ok  { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.22); }
+    .sbadge.err { background: rgba(230,57,70,0.12); color: var(--accent2); border: 1px solid rgba(230,57,70,0.28); }
+
+    /* ── WARNING NOTE ── */
+    .maint-note {
+      width: 100%;
+      background: rgba(244,162,97,0.07);
+      border: 1px solid rgba(244,162,97,0.18);
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: var(--text2); line-height: 1.65;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .maint-note svg { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+    .maint-note strong { color: var(--gold); }
+
+    /* ── BUTTONS ── */
+    .maint-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: var(--radius);
+      font-family: var(--font-body); font-size: 14px; font-weight: 600;
+      transition: var(--trans); cursor: pointer; border: none; text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.11); }
+
+    /* ── TIMESTAMP ── */
+    .maint-ts {
+      margin-top: 32px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 11px; color: var(--text3);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+    }
+    .ts-dot { width: 6px; height: 6px; background: var(--text3); border-radius: 50%; }
+
+    /* ── FOOTER ── */
+    .footer { background: var(--bg2); border-top: 1px solid var(--border); padding: 36px 24px 28px; }
+    .footer-inner { max-width: 1400px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .footer-logo { font-family: var(--font-head); font-size: 26px; letter-spacing: 2px; }
+    .footer-tagline { color: var(--text3); font-size: 13px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+    .footer-links span { color: var(--text3); font-size: 13px; opacity: 0.45; }
+
+    /* ── BACK TO TOP ── */
+    #backTop {
+      position: fixed; bottom: 24px; right: 20px; z-index: 500;
+      width: 42px; height: 42px; background: var(--accent); border-radius: 50%;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(230,57,70,0.4);
+      opacity: 0; pointer-events: none; transform: translateY(10px);
+      transition: all 0.3s ease; border: none; cursor: pointer;
+    }
+    #backTop.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    #backTop:hover { background: var(--accent2); transform: translateY(-2px); }
+
+    /* ── FADE-UP ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .maint-inner > * {
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    .maint-inner > *:nth-child(1)  { animation-delay: 0.05s; }
+    .maint-inner > *:nth-child(2)  { animation-delay: 0.13s; }
+    .maint-inner > *:nth-child(3)  { animation-delay: 0.21s; }
+    .maint-inner > *:nth-child(4)  { animation-delay: 0.29s; }
+    .maint-inner > *:nth-child(5)  { animation-delay: 0.37s; }
+    .maint-inner > *:nth-child(6)  { animation-delay: 0.45s; }
+    .maint-inner > *:nth-child(7)  { animation-delay: 0.53s; }
+    .maint-inner > *:nth-child(8)  { animation-delay: 0.61s; }
+    .maint-inner > *:nth-child(9)  { animation-delay: 0.69s; }
+    .maint-inner > *:nth-child(10) { animation-delay: 0.77s; }
+
+    /* ── LIGHT MODE ── */
+    [data-theme="light"] {
+      --bg:#f4f5f7; --bg2:#ffffff; --bg3:#e8eaed;
+      --card:#ffffff; --border:rgba(0,0,0,0.08);
+      --text:#111520; --text2:#4a5568; --text3:#9aa3b2;
+    }
+    [data-theme="light"] .navbar { background: rgba(244,245,247,0.97); }
+    [data-theme="light"] .navbar.scrolled { background: rgba(244,245,247,1); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+    }
+    @media (max-width: 480px) {
+      .maint-actions { gap: 8px; }
+      .btn { padding: 10px 18px; font-size: 13px; }
+      .ebar-code { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════ NAVBAR ════ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span>
+      </a>
+      <div class="nav-links">
+        <span class="nav-link">Ongoing</span>
+        <span class="nav-link">Completed</span>
+        <span class="nav-link">Movie</span>
+        <span class="nav-link">Populer</span>
+        <span class="nav-link">Jadwal</span>
+        <span class="nav-link">Genre</span>
+        <span class="nav-link">Koleksi</span>
+      </div>
+      <div class="nav-right">
+        <span class="nav-icon-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </span>
+        <span class="nav-icon-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </span>
+        <button class="hamburger" id="hamburger">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ════ CONTENT ════ -->
+  <main>
+    <div class="maint-wrap">
+      <div class="maint-inner">
+
+        <!-- 1. Badge -->
+        <div class="maint-badge">
+          <span class="pulse-dot"></span>
+          GANGGUAN LAYANAN
+        </div>
+
+        <!-- 2. Icon -->
+        <div class="maint-icon">
+          <div class="icon-ring"></div>
+          <div class="icon-center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 3. Title -->
+        <h1 class="maint-title">
+          SERVER<br><span class="red">SEDANG DOWN</span>
+        </h1>
+
+        <!-- 4. Subtitle -->
+        <p class="maint-sub">
+          Website kami baik-baik saja, namun <strong>API streaming pihak ketiga</strong> sedang mengalami gangguan. Tim kami sedang memantau dan menunggu pemulihan dari sumber.
+        </p>
+
+        <!-- 5. Info Error -->
+        <div class="maint-label">Info Error</div>
+        <div class="error-bar">
+          <div class="ebar-left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div class="ebar-msg">
+              <strong>CLOUDFLARE ERROR — CONNECTION TIMED OUT</strong>
+              Koneksi antara Cloudflare dan server origin gagal merespons
+            </div>
+          </div>
+          <span class="ebar-code">522</span>
+        </div>
+
+        <!-- 6. Status cards -->
+        <div class="maint-label">Status Komponen</div>
+        <div class="status-cards">
+          <div class="status-card">
+            <div class="sdot ok"></div>
+            <div class="slabel">
+              <span class="sn">Browser Kamu</span>
+              <span class="sd">Koneksi internet berfungsi dengan baik</span>
+            </div>
+            <span class="sbadge ok">WORKING</span>
+          </div>
+          <div class="status-card">
+            <div class="sdot ok"></div>
+            <div class="slabel">
+              <span class="sn">Cloudflare CDN</span>
+              <span class="sd">Jaringan proxy dan distribusi konten normal</span>
+            </div>
+            <span class="sbadge ok">WORKING</span>
+          </div>
+          <div class="status-card err">
+            <div class="sdot err"></div>
+            <div class="slabel">
+              <span class="sn">API Animasu (Sumber Stream)</span>
+              <span class="sd">Server tidak merespons — sedang dalam proses pemulihan</span>
+            </div>
+            <span class="sbadge err">ERROR</span>
+          </div>
+        </div>
+
+        <!-- 7. Warning note -->
+        <div class="maint-note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>
+            Gangguan ini berasal dari <strong>server Animasu</strong> selaku penyedia API streaming, bukan dari website kami. Kami tidak bisa mengontrol waktu pemulihannya namun akan segera kembali normal. Pantau update di sosial media kami.
+          </span>
+        </div>
+
+        <!-- 8. Buttons -->
+        <div class="maint-actions">
+          <button class="btn btn-primary" onclick="location.reload()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Coba Lagi
+          </button>
+          <a href="https://www.facebook.com/vppxbn3e8h" target="_blank" class="btn btn-ghost">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+            Update di Facebook
+          </a>
+        </div>
+
+        <!-- 9. Timestamp -->
+        <div class="maint-ts">
+          <span class="ts-dot"></span>
+          <span id="ts-text">Memuat...</span>
+        </div>
+
+      </div><!-- /maint-inner -->
+    </div><!-- /maint-wrap -->
+  </main>
+
+  <!-- ════ FOOTER ════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span>
+      </div>
+      <p class="footer-tagline">Tempat wibu sejati nonton anime sub indo 🎌</p>
+      <div class="footer-links">
+        <span>Ongoing</span><span>Completed</span><span>Movie</span>
+        <span>Jadwal</span><span>Genre</span><span>Koleksi</span>
+      </div>
+    </div>
+  </footer>
+
+  <button id="backTop" aria-label="Kembali ke atas">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
+
+  <script>
+    // Apply saved theme
+    (function() {
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+
+    // Timestamp
+    (function() {
+      var el = document.getElementById('ts-text');
+      var now = new Date();
+      var opts = { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+      el.textContent = 'Terdeteksi pada ' + now.toLocaleString('id-ID', opts) + ' WIB';
+    })();
+
+    // Navbar scroll
+    window.addEventListener('scroll', function() {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+      document.getElementById('backTop').classList.toggle('visible', window.scrollY > 300);
+    });
+
+    // Back to top
+    document.getElementById('backTop').addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
