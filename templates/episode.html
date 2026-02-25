@@ -26,51 +26,154 @@
   <div class="breadcrumb">
     <a href="/">Beranda</a>
     <span class="breadcrumb-sep">›</span>
+    {% set _aslug = anime_slug or (data.anime_id if data else '') %}
     {% if anime_data and anime_data.detail %}
-    <a href="/anime/{{ anime_slug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ anime_data.detail.title }}</a>
+    <a href="/anime/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ anime_data.detail.title }}</a>
+    <span class="breadcrumb-sep">›</span>
+    {% elif _aslug %}
+    <a href="/anime/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ _aslug | replace("-", " ") | title }}</a>
     <span class="breadcrumb-sep">›</span>
     {% endif %}
-    <span>{{ ep_ns.name if ep_ns.name else 'Episode' }}</span>
+    {# Ambil nomor episode dari data.title, misal "Tamon-kun Episode 9 Sub Indo" → "Episode 9" #}
+    {% if data.title %}
+      {% set parts = data.title.split() %}
+      {% set ep_idx = namespace(val=-1) %}
+      {% for i in range(parts|length) %}
+        {% if parts[i].lower() == 'episode' %}{% set ep_idx.val = i %}{% endif %}
+      {% endfor %}
+      <span>{% if ep_idx.val >= 0 %}Episode {{ parts[ep_idx.val + 1] if ep_idx.val + 1 < parts|length else '' }}{% else %}Episode{% endif %}</span>
+    {% else %}
+      <span>{{ ep_ns.name if ep_ns.name else 'Episode' }}</span>
+    {% endif %}
   </div>
 
   <!-- JUDUL -->
-  {% if anime_data and anime_data.detail and ep_ns.name %}
+  {# data.title dari API samehadaku sudah berisi judul lengkap, misal "One Piece Episode 9 Sub Indo" #}
   <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(15px,2.5vw,24px);line-height:1.3">
-    {{ anime_data.detail.title }}<span style="color:var(--accent)"> — {{ ep_ns.name }}</span>
+    {% if data.title %}
+      {{ data.title }}
+    {% elif anime_data and anime_data.detail %}
+      {{ anime_data.detail.title }}{% if ep_ns.name %}<span style="color:var(--accent)"> — {{ ep_ns.name }}</span>{% endif %}
+    {% else %}
+      Nonton Episode
+    {% endif %}
   </h1>
-  {% else %}
-  <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(15px,2.5vw,24px);line-height:1.3">{{ data.title }}</h1>
-  {% endif %}
   <p style="color:var(--text3);font-size:13px;margin-bottom:16px">Animeku.id — Streaming Sub Indo</p>
 
   <!-- VIDEO PLAYER -->
-  <div class="player-frame">
+  <div class="player-frame" style="position:relative">
+
+    <!-- PLACEHOLDER: tampil sebelum server dipilih -->
+    <div id="playerPlaceholder" style="
+      position:absolute;inset:0;
+      background:#0a0a0a;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      gap:20px;z-index:5;border-radius:var(--radius,12px);
+    ">
+      <!-- Logo ANIMEKU.ID huruf per huruf -->
+      <div class="ph-logo" id="phLogo">
+        <span class="ph-a">A</span><span class="ph-n">N</span><span class="ph-i">I</span><span class="ph-m">M</span><span class="ph-e">E</span><span class="ph-k">K</span><span class="ph-u">U</span><span class="ph-dot">.</span><span class="ph-id">ID</span>
+      </div>
+      <p style="color:rgba(255,255,255,0.45);font-size:13px;letter-spacing:2px;font-family:var(--font-mono,'monospace');text-transform:uppercase">
+        ↓ Pilih kualitas untuk memulai
+      </p>
+    </div>
+
+    <style>
+    .ph-logo {
+      display:flex;align-items:baseline;gap:2px;
+      font-family:var(--font-head,'sans-serif');
+      font-size:clamp(32px,8vw,52px);
+      font-weight:900;
+      letter-spacing:2px;
+    }
+    .ph-logo span {
+      display:inline-block;
+      opacity:0;
+      transform:translateY(20px);
+      animation: phPop 0.4s forwards;
+    }
+    .ph-a  { color:#e53935; animation-delay:0.0s; }
+    .ph-n  { color:#fff;    animation-delay:0.07s; }
+    .ph-i  { color:#fff;    animation-delay:0.14s; }
+    .ph-m  { color:#fff;    animation-delay:0.21s; }
+    .ph-e  { color:#fff;    animation-delay:0.28s; }
+    .ph-k  { color:#fff;    animation-delay:0.35s; }
+    .ph-u  { color:#fff;    animation-delay:0.42s; }
+    .ph-dot{ color:#e53935; animation-delay:0.49s; font-size:0.6em; }
+    .ph-id { color:#e53935; animation-delay:0.56s; font-size:0.7em; }
+    @keyframes phPop {
+      to { opacity:1; transform:translateY(0); }
+    }
+    </style>
+
     {% if data.streams and data.streams | length > 0 %}
-    <iframe id="playerIframe" src="{{ data.streams[0].url }}"
+    <iframe id="playerIframe" src="about:blank"
       allowfullscreen allow="autoplay; fullscreen"
       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
-      referrerpolicy="no-referrer">
+      referrerpolicy="no-referrer"
+      style="position:relative;z-index:1">
     </iframe>
     {% else %}
     <div class="player-placeholder">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z"/></svg>
       <p>Stream tidak tersedia untuk episode ini</p>
     </div>
     {% endif %}
   </div>
 
-  <!-- SERVER TABS -->
+  <!-- SERVER TABS: Pilih Resolusi → Pilih Server -->
   {% if data.streams and data.streams | length > 0 %}
   <div class="player-section">
-    <p class="player-section-label">PILIH SERVER — Jika error, coba server lain</p>
-    <div class="server-tabs">
+    <p class="player-section-label">PILIH KUALITAS</p>
+
+    <!-- Step 1: Tombol Resolusi -->
+    <div class="server-tabs" id="qualityTabs">
+      {% set seen_q = namespace(list=[]) %}
       {% for stream in data.streams %}
-      <button class="server-btn {% if loop.first %}active{% endif %}"
-        data-url="{{ stream.url }}" onclick="switchServer(this)">
-        {{ stream.name }}
-      </button>
+        {% set q = stream.name.split()[-1] if stream.name.split() else '' %}
+        {% if q not in seen_q.list %}
+          {% set _ = seen_q.list.append(q) %}
+          <button class="server-btn {% if loop.first %}active{% endif %}"
+            data-quality="{{ q }}"
+            onclick="selectQuality(this, '{{ q }}')">
+            {{ q }}
+          </button>
+        {% endif %}
       {% endfor %}
     </div>
+
+    <!-- Step 2: Daftar Server per Resolusi -->
+    <p class="player-section-label" style="margin-top:14px">PILIH SERVER</p>
+    {% set first_q = namespace(val='') %}
+    {% for stream in data.streams %}
+      {% if loop.first %}{% set first_q.val = stream.name.split()[-1] %}{% endif %}
+    {% endfor %}
+
+    {% set seen_q2 = namespace(list=[]) %}
+    {% for stream in data.streams %}
+      {% set q = stream.name.split()[-1] if stream.name.split() else '' %}
+      {% if q not in seen_q2.list %}
+        {% set _ = seen_q2.list.append(q) %}
+        <div class="server-tabs server-group"
+             id="group-{{ q }}"
+             style="{{ '' if q == first_q.val else 'display:none' }}">
+          {% for s in data.streams %}
+            {% set sq = s.name.split()[-1] if s.name.split() else '' %}
+            {% if sq == q %}
+            <button class="server-btn"
+              data-server-id="{{ s.serverId }}"
+              data-url="{{ s.url if s.url else '' }}"
+              onclick="switchServer(this)">
+              {{ s.name.split()[:-1] | join(' ') if s.name.split()|length > 1 else s.name }}
+            </button>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div id="serverLoading" style="display:none;color:var(--text3);font-size:13px;margin-top:8px">⏳ Memuat server...</div>
   </div>
   {% endif %}
 
@@ -145,18 +248,72 @@
 </div>
 
 <script>
-function switchServer(btn) {
-  document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+function selectQuality(btn, quality) {
+  // Highlight tombol resolusi aktif
+  document.querySelectorAll('#qualityTabs .server-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Tampilkan grup server yang sesuai
+  document.querySelectorAll('.server-group').forEach(g => g.style.display = 'none');
+  const group = document.getElementById('group-' + quality);
+  if (group) {
+    group.style.display = 'flex';
+    // Auto-klik server pertama di grup ini
+    const firstSrv = group.querySelector('.server-btn');
+    if (firstSrv) switchServer(firstSrv);
+  }
+}
+
+async function switchServer(btn) {
+  document.querySelectorAll('.server-group .server-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const iframe = document.getElementById('playerIframe');
-  if (iframe) iframe.src = btn.dataset.url;
+  if (!iframe) return;
+
+  const directUrl = btn.dataset.url;
+  if (directUrl) {
+    hidePlaceholder();
+    iframe.src = directUrl;
+    return;
+  }
+
+  const serverId = btn.dataset.serverId;
+  if (!serverId) return;
+  const loading = document.getElementById('serverLoading');
+  if (loading) loading.style.display = 'block';
+  try {
+    const res  = await fetch(`/api/server/${serverId}`);
+    const json = await res.json();
+    if (json.url) {
+      hidePlaceholder();
+      iframe.src = json.url;
+      btn.dataset.url = json.url;
+    }
+  } catch(e) {
+    console.error('Failed to fetch server URL', e);
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
 }
+
+function hidePlaceholder() {
+  const ph = document.getElementById('playerPlaceholder');
+  if (ph) {
+    ph.style.transition = 'opacity 0.4s';
+    ph.style.opacity = '0';
+    setTimeout(() => ph.style.display = 'none', 400);
+  }
+}
+
 function toggleEpList() {
   document.getElementById('epListGrid').classList.toggle('hidden');
   document.getElementById('epToggleBtn').classList.toggle('open');
 }
-// Jalankan setelah main.js selesai load
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Auto-load server pertama
+  const firstBtn = document.querySelector('.server-btn.active');
+  if (firstBtn) switchServer(firstBtn);
+
   if (typeof saveEpisodeProgress === 'function') {
     saveEpisodeProgress(
       '{{ anime_slug }}',

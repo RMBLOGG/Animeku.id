@@ -128,22 +128,47 @@ function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(()
 
 <script>
 const scheduleData = {{ schedule.schedule | tojson | safe if schedule.schedule else '{}' }};
-document.querySelectorAll('.day-pill').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.day-pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const day = btn.dataset.day;
-    const items = scheduleData[day] || [];
-    const list = document.getElementById('scheduleList');
-    list.innerHTML = items.slice(0, 8).map(item => `
-      <a href="/anime/${item.slug}" class="schedule-item">
-        <span class="schedule-time">${item.time || '—'}</span>
-        <span>${item.title}</span>
-        ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
-      </a>
-    `).join('');
+function activateDay(dayName) {
+  const pills = document.querySelectorAll('.day-pill');
+  let matched = false;
+  pills.forEach(btn => {
+    if (btn.dataset.day === dayName) {
+      btn.classList.add('active');
+      matched = true;
+      const items = scheduleData[dayName] || [];
+      const list = document.getElementById('scheduleList');
+      list.innerHTML = items.slice(0, 8).map(item => `
+        <a href="/anime/${item.slug}" class="schedule-item">
+          <span class="schedule-time">${item.time || '—'}</span>
+          <span>${item.title}</span>
+          ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
+        </a>
+      `).join('');
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } else {
+      btn.classList.remove('active');
+    }
   });
+  return matched;
+}
+
+document.querySelectorAll('.day-pill').forEach(btn => {
+  btn.addEventListener('click', () => activateDay(btn.dataset.day));
 });
+
+// Auto-aktifkan hari ini
+(function() {
+  const hariMap = {
+    0: 'Minggu', 1: 'Senin', 2: 'Selasa', 3: 'Rabu',
+    4: 'Kamis', 5: 'Jumat', 6: 'Sabtu'
+  };
+  const today = hariMap[new Date().getDay()];
+  if (!activateDay(today)) {
+    // Fallback: aktifkan hari pertama kalau hari ini tidak ada di jadwal
+    const first = document.querySelector('.day-pill');
+    if (first) activateDay(first.dataset.day);
+  }
+})();
 </script>
 {% endif %}
 
@@ -155,7 +180,7 @@ document.querySelectorAll('.day-pill').forEach(btn => {
       <h2 class="section-title">Sedang Tayang</h2>
       <a href="/ongoing" class="see-all">Lihat Semua →</a>
     </div>
-    <div class="anime-grid stagger">
+    <div class="anime-grid ongoing-grid stagger">
       {% for anime in data.ongoing[:10] %}
       <a href="/anime/{{ anime.slug }}" class="anime-card">
         <div class="card-poster">

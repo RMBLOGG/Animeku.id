@@ -184,10 +184,8 @@ function switchDay(btn, idx) {
   const pills = document.querySelectorAll('.day-pill');
   let found = false;
   pills.forEach(p => {
-    // Normalisasi: hilangkan apostrof dan spasi, lowercase
     const dayNorm = p.dataset.day.toLowerCase().replace(/[^a-z]/g, '');
-    const todayNorm = todayKey.replace(/[^a-z]/g, '');
-    if (!found && dayNorm.includes(todayNorm)) {
+    if (!found && dayNorm === todayKey) {
       p.click();
       found = true;
     }
