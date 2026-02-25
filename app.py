@@ -1,11 +1,23 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect
 import requests
 import json
 import os
 from upstash_redis import Redis
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "animeku-secret-2026")
 API_BASE = "https://www.sankavollerei.com"
+
+SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
+
+def supabase_headers(access_token=None):
+    h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
+    if access_token:
+        h["Authorization"] = f"Bearer {access_token}"
+    else:
+        h["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
+    return h
 
 # ── Upstash Redis Cache ────────────────────────────────────────────────────────
 redis = Redis(
@@ -131,6 +143,94 @@ def koleksi():
 @app.route("/api/search/<keyword>")
 def api_search(keyword):
     return jsonify(fetch(f"/anime/animasu/search/{keyword}"))
+
+# ── Auth Routes ───────────────────────────────────────────────────────────────
+
+@app.route("/auth/login")
+def auth_login():
+    redirect_to = f"{SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to={request.host_url}auth/callback"
+    return redirect(redirect_to)
+
+@app.route("/auth/callback")
+def auth_callback():
+    # Token dikirim via hash fragment, ditangkap JS di client
+    return render_template("auth_callback.html")
+
+@app.route("/auth/session", methods=["POST"])
+def auth_session():
+    data = request.get_json()
+    if data and data.get("access_token"):
+        session["access_token"] = data["access_token"]
+        session["user"] = {
+            "id": data.get("user", {}).get("id"),
+            "name": data.get("user", {}).get("user_metadata", {}).get("full_name", "User"),
+            "avatar": data.get("user", {}).get("user_metadata", {}).get("avatar_url", ""),
+            "email": data.get("user", {}).get("email", ""),
+        }
+    return jsonify({"ok": True})
+
+@app.route("/auth/logout", methods=["POST"])
+def auth_logout():
+    session.clear()
+    return jsonify({"ok": True})
+
+@app.route("/api/me")
+def api_me():
+    user = session.get("user")
+    return jsonify({"user": user})
+
+# ── Comment Routes ─────────────────────────────────────────────────────────────
+
+@app.route("/api/comments/<anime_slug>")
+def get_comments(anime_slug):
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/comments",
+        headers=supabase_headers(),
+        params={
+            "anime_slug": f"eq.{anime_slug}",
+            "order": "created_at.desc",
+            "select": "*"
+        }
+    )
+    return jsonify(r.json() if r.ok else [])
+
+@app.route("/api/comments", methods=["POST"])
+def post_comment():
+    user = session.get("user")
+    if not user:
+        return jsonify({"error": "Login dulu ya!"}), 401
+    data = request.get_json()
+    content = (data.get("content") or "").strip()
+    anime_slug = data.get("anime_slug", "")
+    if not content or len(content) < 2:
+        return jsonify({"error": "Komentar terlalu pendek"}), 400
+    payload = {
+        "anime_slug": anime_slug,
+        "user_id": user["id"],
+        "user_name": user["name"],
+        "user_avatar": user["avatar"],
+        "content": content
+    }
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/comments",
+        headers={**supabase_headers(session.get("access_token")), "Prefer": "return=representation"},
+        json=payload
+    )
+    if r.ok:
+        return jsonify(r.json()[0] if r.json() else {})
+    return jsonify({"error": "Gagal kirim komentar"}), 500
+
+@app.route("/api/comments/<comment_id>", methods=["DELETE"])
+def delete_comment(comment_id):
+    user = session.get("user")
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    r = requests.delete(
+        f"{SUPABASE_URL}/rest/v1/comments",
+        headers=supabase_headers(session.get("access_token")),
+        params={"id": f"eq.{comment_id}", "user_id": f"eq.{user['id']}"}
+    )
+    return jsonify({"ok": r.ok})
 
 if __name__ == "__main__":
     app.run(debug=True)
