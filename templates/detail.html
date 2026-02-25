@@ -63,8 +63,8 @@
 
       {% if d.synopsis %}
       <div>
-        <p class="synopsis-text clamped">{{ d.synopsis }}</p>
-        <span class="read-more">Baca selengkapnya ↓</span>
+        <p class="synopsis-text" id="synopsisText">{{ d.synopsis }}</p>
+        <span class="read-more" id="readMoreBtn">Baca selengkapnya <span class="read-more-arrow">↓</span></span>
       </div>
       {% endif %}
 
@@ -158,4 +158,28 @@
 })();
 </script>
 {% endif %}
+
+<script>
+// Smooth baca selengkapnya
+(function() {
+  var btn = document.getElementById('readMoreBtn');
+  var text = document.getElementById('synopsisText');
+  if (!btn || !text) return;
+
+  var isExpanded = false;
+
+  btn.addEventListener('click', function() {
+    isExpanded = !isExpanded;
+    if (isExpanded) {
+      text.classList.add('expanded');
+      btn.classList.add('open');
+      btn.childNodes[0].textContent = 'Sembunyikan ';
+    } else {
+      text.classList.remove('expanded');
+      btn.classList.remove('open');
+      btn.childNodes[0].textContent = 'Baca selengkapnya ';
+    }
+  });
+})();
+</script>
 {% endblock %}
