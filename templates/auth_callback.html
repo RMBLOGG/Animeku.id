@@ -3,28 +3,25 @@
 <head><title>Login...</title></head>
 <body>
 <script>
-// Supabase kirim token via hash fragment
 const hash = window.location.hash.substring(1);
 const params = new URLSearchParams(hash);
 const access_token = params.get('access_token');
 
 if (access_token) {
-  // Decode JWT untuk ambil user info
   const payload = JSON.parse(atob(access_token.split('.')[1]));
-  fetch('/auth/session', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      access_token,
-      user: {
-        id: payload.sub,
-        email: payload.email,
-        user_metadata: payload.user_metadata || {}
-      }
-    })
-  }).then(() => {
-    window.location.href = document.referrer || '/';
-  });
+  const user = {
+    id: payload.sub,
+    email: payload.email,
+    name: (payload.user_metadata && payload.user_metadata.full_name) || payload.email,
+    avatar: (payload.user_metadata && payload.user_metadata.avatar_url) || ''
+  };
+
+  localStorage.setItem('sb_access_token', access_token);
+  localStorage.setItem('sb_user', JSON.stringify(user));
+
+  const returnTo = localStorage.getItem('auth_return_to') || '/';
+  localStorage.removeItem('auth_return_to');
+  window.location.href = returnTo;
 } else {
   window.location.href = '/';
 }

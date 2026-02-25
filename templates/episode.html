@@ -165,14 +165,22 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
+const SUPABASE_URL = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
 const ANIME_SLUG_COMMENT = '{{ anime_slug or slug }}';
-let currentUser = null;
+
+// Ambil user dari localStorage
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
+}
+function getToken() {
+  return localStorage.getItem('sb_access_token');
+}
+
+let currentUser = getUser();
 
 async function initComments() {
-  const r = await fetch('/api/me');
-  const {user} = await r.json();
-  currentUser = user;
-  renderCommentForm(user);
+  renderCommentForm(currentUser);
   loadComments();
 }
 
@@ -194,7 +202,9 @@ function renderCommentForm(user) {
 }
 
 async function loadComments() {
-  const r = await fetch('/api/comments/' + ANIME_SLUG_COMMENT);
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/comments?anime_slug=eq.${ANIME_SLUG_COMMENT}&order=created_at.desc&select=*`, {
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+  });
   const comments = await r.json();
   const list = document.getElementById('commentList');
   if (!Array.isArray(comments) || !comments.length) {
@@ -221,18 +231,36 @@ async function submitComment() {
   const input = document.getElementById('commentInput');
   const content = (input.value||'').trim();
   if (!content) return;
-  const r = await fetch('/api/comments', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({anime_slug: ANIME_SLUG_COMMENT, content})
+  const token = getToken();
+  const user = getUser();
+  if (!token || !user) { alert('Login dulu ya!'); return; }
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({
+      anime_slug: ANIME_SLUG_COMMENT,
+      user_id: user.id,
+      user_name: user.name,
+      user_avatar: user.avatar,
+      content
+    })
   });
   if (r.ok) { input.value = ''; loadComments(); }
-  else { const e = await r.json(); alert(e.error||'Gagal kirim'); }
+  else { alert('Gagal kirim komentar'); }
 }
 
 async function deleteComment(id) {
   if (!confirm('Hapus komentar ini?')) return;
-  await fetch('/api/comments/' + id, {method:'DELETE'});
+  const token = getToken();
+  await fetch(`${SUPABASE_URL}/rest/v1/comments?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+  });
   loadComments();
 }
 

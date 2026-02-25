@@ -62,15 +62,6 @@
       <a href="/jadwal">Jadwal</a>
       <a href="/genres">Genre</a>
       <a href="/koleksi">Koleksi</a>
-      <hr style="border-color:rgba(255,255,255,0.1);margin:8px 0">
-      <a href="/auth/login" id="menuBtnLogin" style="display:none;color:var(--accent);font-weight:600">👤 Login dengan Google</a>
-      <div id="menuUserInfo" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
-          <img id="menuAvatar" src="" alt="" width="28" height="28" style="border-radius:50%;object-fit:cover">
-          <span id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text1)"></span>
-        </div>
-        <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 0;font-size:14px;text-align:left">🚪 Keluar</button>
-      </div>
     </div>
   </nav>
 
@@ -98,25 +89,36 @@
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
-  async function loadAuthState() {
-    try {
-      const r = await fetch('/api/me');
-      const {user} = await r.json();
-      if (user) {
-        document.getElementById('menuBtnLogin').style.display = 'none';
-        document.getElementById('menuUserInfo').style.display = 'block';
-        document.getElementById('menuAvatar').src = user.avatar || '';
-        document.getElementById('menuUserName').textContent = user.name;
-      } else {
-        document.getElementById('menuBtnLogin').style.display = 'block';
-        document.getElementById('menuUserInfo').style.display = 'none';
-      }
-    } catch(e) {}
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
   }
-  async function logoutUser() {
-    await fetch('/auth/logout', {method:'POST'});
+  function loadAuthState() {
+    const user = getUser();
+    const loginBtn = document.getElementById('menuBtnLogin');
+    const userInfo = document.getElementById('menuUserInfo');
+    if (!loginBtn || !userInfo) return;
+    if (user) {
+      loginBtn.style.display = 'none';
+      userInfo.style.display = 'block';
+      const avatar = document.getElementById('menuAvatar');
+      const name = document.getElementById('menuUserName');
+      if (avatar) avatar.src = user.avatar || '';
+      if (name) name.textContent = user.name;
+    } else {
+      loginBtn.style.display = 'block';
+      userInfo.style.display = 'none';
+    }
+  }
+  function logoutUser() {
+    localStorage.removeItem('sb_access_token');
+    localStorage.removeItem('sb_user');
     location.reload();
   }
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('#menuBtnLogin')) {
+      localStorage.setItem('auth_return_to', location.href);
+    }
+  });
   loadAuthState();
   </script>
   {% block scripts %}{% endblock %}
