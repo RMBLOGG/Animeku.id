@@ -128,6 +128,59 @@ function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(()
 
 <script>
 const scheduleData = {{ schedule.schedule | tojson | safe if schedule.schedule else '{}' }};
+
+// Parse "0d 2h 37m" -> total detik
+function parseEstimation(str) {
+  if (!str || str === 'Update' || str === '—') return null;
+  const m = str.match(/(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)m)?/);
+  if (!m) return null;
+  const d = parseInt(m[1]||0), h = parseInt(m[2]||0), mn = parseInt(m[3]||0);
+  return d * 86400 + h * 3600 + mn * 60;
+}
+
+// Format detik -> string countdown
+function formatCountdown(secs) {
+  if (secs <= 0) return '<span style="color:var(--accent)">Sudah Rilis!</span>';
+  const d = Math.floor(secs / 86400);
+  const h = Math.floor((secs % 86400) / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (d > 0) return `${d}h ${h}j ${m}m`;
+  if (h > 0) return `${h}j ${m}m ${s}s`;
+  return `${m}m ${s}s`;
+}
+
+// Simpan waktu load halaman + sisa detik awal per item
+const countdownState = {}; // key: slug -> { initSecs, loadedAt }
+
+function buildItemHtml(item) {
+  const key = item.slug;
+  let timeHtml;
+
+  if (!item.time || item.time === 'Update') {
+    timeHtml = `<span class="schedule-time" style="color:var(--text3)">Update</span>`;
+  } else {
+    const initSecs = parseEstimation(item.time);
+    if (initSecs === null) {
+      timeHtml = `<span class="schedule-time">${item.time}</span>`;
+    } else {
+      if (!countdownState[key]) {
+        countdownState[key] = { initSecs, loadedAt: Date.now() };
+      }
+      const elapsed = Math.floor((Date.now() - countdownState[key].loadedAt) / 1000);
+      const remaining = Math.max(0, countdownState[key].initSecs - elapsed);
+      timeHtml = `<span class="schedule-time schedule-countdown" data-slug="${key}">${formatCountdown(remaining)}</span>`;
+    }
+  }
+
+  return `
+    <a href="/anime/${item.slug}" class="schedule-item">
+      ${timeHtml}
+      <span>${item.title}</span>
+      ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
+    </a>`;
+}
+
 function activateDay(dayName) {
   const pills = document.querySelectorAll('.day-pill');
   let matched = false;
@@ -136,14 +189,16 @@ function activateDay(dayName) {
       btn.classList.add('active');
       matched = true;
       const items = scheduleData[dayName] || [];
-      const list = document.getElementById('scheduleList');
-      list.innerHTML = items.slice(0, 8).map(item => `
-        <a href="/anime/${item.slug}" class="schedule-item">
-          <span class="schedule-time">${item.time || '—'}</span>
-          <span>${item.title}</span>
-          ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
-        </a>
-      `).join('');
+      // Pre-init countdown state
+      items.forEach(item => {
+        if (item.time && item.time !== 'Update') {
+          const secs = parseEstimation(item.time);
+          if (secs !== null && !countdownState[item.slug]) {
+            countdownState[item.slug] = { initSecs: secs, loadedAt: Date.now() };
+          }
+        }
+      });
+      document.getElementById('scheduleList').innerHTML = items.slice(0, 10).map(buildItemHtml).join('');
       btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     } else {
       btn.classList.remove('active');
@@ -164,11 +219,22 @@ document.querySelectorAll('.day-pill').forEach(btn => {
   };
   const today = hariMap[new Date().getDay()];
   if (!activateDay(today)) {
-    // Fallback: aktifkan hari pertama kalau hari ini tidak ada di jadwal
     const first = document.querySelector('.day-pill');
     if (first) activateDay(first.dataset.day);
   }
 })();
+
+// Update countdown tiap detik
+setInterval(function() {
+  document.querySelectorAll('.schedule-countdown').forEach(el => {
+    const slug = el.dataset.slug;
+    const state = countdownState[slug];
+    if (!state) return;
+    const elapsed = Math.floor((Date.now() - state.loadedAt) / 1000);
+    const remaining = Math.max(0, state.initSecs - elapsed);
+    el.innerHTML = formatCountdown(remaining);
+  });
+}, 1000);
 </script>
 {% endif %}
 
