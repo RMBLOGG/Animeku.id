@@ -43,6 +43,7 @@
         </a>
         <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
       </div>
+    </div>
 
     <div class="search-bar" id="searchBar">
       <div class="search-inner">
@@ -61,19 +62,14 @@
       <a href="/jadwal">Jadwal</a>
       <a href="/genres">Genre</a>
       <a href="/koleksi">Koleksi</a>
-      <hr style="border-color:var(--border);margin:8px 0">
-      <!-- Auth di mobile menu -->
-      <div id="menuAuthSection">
-        <a href="/auth/login" id="menuBtnLogin" style="display:none;align-items:center;gap:8px;padding:10px 0;color:var(--accent);font-weight:600;font-size:15px;text-decoration:none">
-          👤 Login dengan Google
-        </a>
-        <div id="menuUserInfo" style="display:none">
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-            <img id="menuAvatar" src="" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover">
-            <span id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text1)"></span>
-          </div>
-          <button onclick="logoutUser()" style="width:100%;padding:10px 0;background:none;border:none;color:var(--text3);cursor:pointer;text-align:left;font-size:14px">🚪 Keluar</button>
+      <hr style="border-color:rgba(255,255,255,0.1);margin:8px 0">
+      <a href="/auth/login" id="menuBtnLogin" style="display:none;color:var(--accent);font-weight:600">👤 Login dengan Google</a>
+      <div id="menuUserInfo" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+          <img id="menuAvatar" src="" alt="" width="28" height="28" style="border-radius:50%;object-fit:cover">
+          <span id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text1)"></span>
         </div>
+        <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 0;font-size:14px;text-align:left">🚪 Keluar</button>
       </div>
     </div>
   </nav>
@@ -103,17 +99,19 @@
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
   async function loadAuthState() {
-    const r = await fetch('/api/me');
-    const {user} = await r.json();
-    if (user) {
-      document.getElementById('menuBtnLogin').style.display = 'none';
-      document.getElementById('menuUserInfo').style.display = 'block';
-      document.getElementById('menuAvatar').src = user.avatar || '';
-      document.getElementById('menuUserName').textContent = user.name;
-    } else {
-      document.getElementById('menuBtnLogin').style.display = 'flex';
-      document.getElementById('menuUserInfo').style.display = 'none';
-    }
+    try {
+      const r = await fetch('/api/me');
+      const {user} = await r.json();
+      if (user) {
+        document.getElementById('menuBtnLogin').style.display = 'none';
+        document.getElementById('menuUserInfo').style.display = 'block';
+        document.getElementById('menuAvatar').src = user.avatar || '';
+        document.getElementById('menuUserName').textContent = user.name;
+      } else {
+        document.getElementById('menuBtnLogin').style.display = 'block';
+        document.getElementById('menuUserInfo').style.display = 'none';
+      }
+    } catch(e) {}
   }
   async function logoutUser() {
     await fetch('/auth/logout', {method:'POST'});
