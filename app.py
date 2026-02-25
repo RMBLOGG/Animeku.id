@@ -1,18 +1,24 @@
 from flask import Flask, render_template, request, jsonify
 import requests
-import time
+import json
+import os
+from upstash_redis import Redis
 
 app = Flask(__name__)
 API_BASE = "https://www.sankavollerei.com"
 
-# ── In-Memory Cache ────────────────────────────────────────────────────────────
+# ── Upstash Redis Cache ────────────────────────────────────────────────────────
+redis = Redis(
+    url=os.environ["UPSTASH_REDIS_REST_URL"],
+    token=os.environ["UPSTASH_REDIS_REST_TOKEN"],
+)
+
 CACHE_TTL = {
     "home":300, "popular":600, "movies":600, "ongoing":300,
     "completed":600, "latest":300, "search":120, "genres":3600,
     "genre":300, "schedule":1800, "animelist":3600,
     "detail":600, "episode":180, "default":300,
 }
-_cache = {}
 
 def _ttl(path):
     for k, v in CACHE_TTL.items():
@@ -20,20 +26,30 @@ def _ttl(path):
     return CACHE_TTL["default"]
 
 def fetch(path, params=None):
-    key = path + str(sorted(params.items()) if params else "")
-    now = time.time()
-    if key in _cache:
-        data, exp = _cache[key]
-        if now < exp: return data
+    key = "animasu:" + path + str(sorted(params.items()) if params else "")
+
+    # Cek cache Redis dulu
+    try:
+        cached = redis.get(key)
+        if cached:
+            return json.loads(cached)
+    except Exception as e:
+        print(f"Redis get error: {e}")
+
+    # Kalau tidak ada, fetch dari API
     try:
         r = requests.get(f"{API_BASE}{path}", params=params, timeout=10)
         r.raise_for_status()
         data = r.json()
-        _cache[key] = (data, now + _ttl(path))
+        # Simpan ke Redis dengan TTL otomatis
+        try:
+            redis.set(key, json.dumps(data), ex=_ttl(path))
+        except Exception as e:
+            print(f"Redis set error: {e}")
         return data
     except Exception as e:
         print(f"API error [{path}]: {e}")
-        return _cache[key][0] if key in _cache else None
+        return None
 
 # ── Pages ──────────────────────────────────────────────────────────────────────
 
