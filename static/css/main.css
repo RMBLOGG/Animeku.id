@@ -1353,3 +1353,5 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   .ep-prev-next { width:100%; }
   .ep-prev-next a, .ep-prev-next button { flex:1; justify-content:center; }
 }
+
+@keyframes livePulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
