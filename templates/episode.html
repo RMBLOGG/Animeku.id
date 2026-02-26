@@ -845,8 +845,11 @@ async function uploadProofFile(file) {
     progressFill.style.width = '50%';
     progressText.textContent = 'Menyimpan file...';
 
+    // Kirim token dari localStorage supaya backend bisa verifikasi user
+    const token = localStorage.getItem('sb_access_token') || '';
     const upResp = await fetch('/api/payment/upload-proof', {
       method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
       body: formData,
     });
     const upData = await upResp.json();
