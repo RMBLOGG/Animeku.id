@@ -703,11 +703,11 @@ const ADMIN_IDS     = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 let allChatMessages = [];
 let allComments     = [];
 let allUsers        = [];
-let bannedUsers     = [];   // diload dari Supabase
+let bannedUsers     = JSON.parse(localStorage.getItem("admin_banned") || "[]");
 let currentTab      = "stats";
 
 // ── INIT ───────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   let user = null;
   try { user = JSON.parse(localStorage.getItem("sb_user")); } catch {}
 
@@ -991,41 +991,19 @@ function filterUsers(q) {
   renderUserTable(filtered);
 }
 
-async function banUser(uid, name) {
-  if (!confirm(`Ban user "${name}"? Mereka tidak bisa mengirim pesan chat.`)) return;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/banned_users`, {
-      method: "POST",
-      headers: { ...sbH(), "Prefer": "resolution=merge-duplicates" },
-      body: JSON.stringify({ user_id: uid, user_name: name, banned_at: new Date().toISOString() }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    if (!bannedUsers.includes(uid)) bannedUsers.push(uid);
-    toast(`🚫 ${name} telah di-ban`, "success");
-    renderUserTable(allUsers);
-  } catch(e) { toast("Gagal ban user: " + e.message, "error"); }
+function banUser(uid, name) {
+  if (!confirm(`Ban user "${name}"? Mereka tidak bisa mengirim pesan.`)) return;
+  if (!bannedUsers.includes(uid)) bannedUsers.push(uid);
+  localStorage.setItem("admin_banned", JSON.stringify(bannedUsers));
+  toast(`🚫 ${name} telah di-ban`, "success");
+  renderUserTable(allUsers);
 }
 
-async function unbanUser(uid) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/banned_users?user_id=eq.${uid}`, {
-      method: "DELETE",
-      headers: sbH(),
-    });
-    if (!res.ok) throw new Error();
-    bannedUsers = bannedUsers.filter(id => id !== uid);
-    toast("✓ User berhasil di-unban", "success");
-    renderUserTable(allUsers);
-  } catch { toast("Gagal unban user", "error"); }
-}
-
-async function loadBannedUsers() {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/banned_users?select=user_id`, { headers: sbH() });
-    if (!res.ok) return;
-    const data = await res.json();
-    bannedUsers = data.map(b => b.user_id);
-  } catch {}
+function unbanUser(uid) {
+  bannedUsers = bannedUsers.filter(id => id !== uid);
+  localStorage.setItem("admin_banned", JSON.stringify(bannedUsers));
+  toast("✓ User di-unban", "success");
+  renderUserTable(allUsers);
 }
 
 // ── POPUP CONFIG ───────────────────────────────────────────────
@@ -1075,55 +1053,19 @@ function previewPopup() {
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────
-async function saveSiteSettings(patch) {
-  try {
-    // Load existing dulu
-    const getRes = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.site_settings&select=value`, { headers: sbH() });
-    let existing = {};
-    if (getRes.ok) {
-      const d = await getRes.json();
-      if (d.length) existing = d[0].value || {};
-    }
-    const merged = { ...existing, ...patch };
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
-      method: "POST",
-      headers: { ...sbH(), "Prefer": "resolution=merge-duplicates" },
-      body: JSON.stringify({ key: "site_settings", value: merged }),
-    });
-    if (!res.ok) throw new Error();
-    return true;
-  } catch { return false; }
+function toggleMaintenance(on) {
+  localStorage.setItem("admin_maintenance", on ? "1" : "0");
+  toast(on ? "⚠️ Mode maintenance aktif" : "✓ Mode maintenance dinonaktifkan", on ? "error" : "success");
 }
 
-async function loadSiteSettings() {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.site_settings&select=value`, { headers: sbH() });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data.length) return;
-    const s = data[0].value || {};
-    document.getElementById("maintenanceToggle").checked = !!s.maintenance;
-    document.getElementById("popupToggle").checked       = !s.popup_disabled;
-    document.getElementById("chatToggle").checked        = !s.chat_disabled;
-  } catch {}
+function togglePopupSetting(on) {
+  localStorage.setItem("admin_popup_disabled", on ? "0" : "1");
+  toast(on ? "✓ Popup diaktifkan" : "Popup dinonaktifkan", "success");
 }
 
-async function toggleMaintenance(on) {
-  const ok = await saveSiteSettings({ maintenance: on });
-  toast(ok
-    ? (on ? "⚠️ Mode maintenance aktif — pengunjung lihat halaman maintenance" : "✓ Mode maintenance dinonaktifkan")
-    : "Gagal simpan pengaturan",
-    ok ? (on ? "error" : "success") : "error");
-}
-
-async function togglePopupSetting(on) {
-  const ok = await saveSiteSettings({ popup_disabled: !on });
-  toast(ok ? (on ? "✓ Popup diaktifkan" : "Popup dinonaktifkan") : "Gagal simpan pengaturan", ok ? "success" : "error");
-}
-
-async function toggleChatSetting(on) {
-  const ok = await saveSiteSettings({ chat_disabled: !on });
-  toast(ok ? (on ? "✓ Live chat diaktifkan" : "Live chat dinonaktifkan") : "Gagal simpan pengaturan", ok ? "success" : "error");
+function toggleChatSetting(on) {
+  localStorage.setItem("admin_chat_disabled", on ? "0" : "1");
+  toast(on ? "✓ Live chat diaktifkan" : "Live chat dinonaktifkan", "success");
 }
 
 async function clearAllChat() {
