@@ -43,6 +43,29 @@ def supabase_headers(access_token=None, use_service_key=False):
         h["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
     return h
 
+def get_current_user():
+    """Ambil user dari Flask session ATAU Authorization header (untuk Vercel serverless)."""
+    user = get_current_user()
+    if user:
+        return user
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if access_token:
+        try:
+            resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
+            if resp.ok:
+                ud = resp.json()
+                return {
+                    "id":    ud.get("id"),
+                    "name":  ud.get("user_metadata", {}).get("full_name", "User"),
+                    "email": ud.get("email", ""),
+                    "avatar": ud.get("user_metadata", {}).get("avatar_url", ""),
+                }
+        except Exception:
+            pass
+    return None
+
+
 # ── Upstash Redis Cache ────────────────────────────────────────────────────────
 redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
@@ -369,7 +392,7 @@ def episode(slug):
     # Hitung nomor episode dari daftar episode anime
     # (API mengurutkan terbaru ke terlama, index 0 = terbaru)
     episode_number = 1
-    user = session.get("user")
+    user = get_current_user()
     user_id = user["id"] if user else None
 
     if anime_data and anime_data["detail"]["episodes"]:
@@ -522,7 +545,7 @@ def api_search(keyword):
 @app.route("/api/access/<anime_slug>/<int:episode_number>")
 def api_check_access(anime_slug, episode_number):
     """Frontend memanggil ini untuk cek apakah user boleh nonton."""
-    user = session.get("user")
+    user = get_current_user()
     user_id = user["id"] if user else None
     has_access = check_episode_access(user_id, anime_slug, episode_number)
     return jsonify({
@@ -535,7 +558,7 @@ def api_check_access(anime_slug, episode_number):
 @app.route("/api/payment/submit", methods=["POST"])
 def payment_submit():
     """User submit bukti transfer, status jadi 'pending' menunggu admin."""
-    user = session.get("user")
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Login dulu ya!"}), 401
 
@@ -596,7 +619,7 @@ def payment_submit():
 @app.route("/api/my/subscriptions")
 def my_subscriptions():
     """Daftar langganan aktif milik user yang sedang login."""
-    user = session.get("user")
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -628,20 +651,7 @@ def my_subscriptions():
 @app.route("/api/payment/upload-proof", methods=["POST"])
 def payment_upload_proof():
     """Upload bukti transfer langsung ke Cloudinary dari server."""
-    # Cek auth: bisa dari Flask session ATAU Authorization header (localStorage token)
-    user = session.get("user")
-    if not user:
-        auth_header  = request.headers.get("Authorization", "")
-        access_token = auth_header.replace("Bearer ", "").strip()
-        if access_token:
-            user_resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
-            if user_resp.ok:
-                ud = user_resp.json()
-                user = {
-                    "id":    ud.get("id"),
-                    "name":  ud.get("user_metadata", {}).get("full_name", "User"),
-                    "email": ud.get("email", ""),
-                }
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
