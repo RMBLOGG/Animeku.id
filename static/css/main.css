@@ -23,8 +23,21 @@
   --trans:    0.2s ease;
 }
 
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+/* Izinkan select teks di input & textarea */
+input, textarea, [contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
+}
 
 html { scroll-behavior: smooth; }
 
