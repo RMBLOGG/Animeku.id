@@ -45,7 +45,7 @@ def supabase_headers(access_token=None, use_service_key=False):
 
 def get_current_user():
     """Ambil user dari Flask session ATAU Authorization header (untuk Vercel serverless)."""
-    user = get_current_user()
+    user = session.get("user")
     if user:
         return user
     auth_header  = request.headers.get("Authorization", "")
