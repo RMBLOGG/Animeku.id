@@ -1135,6 +1135,30 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 [data-theme="light"] .schedule-strip,
 [data-theme="light"] .page-header { background:var(--bg2); }
 
+/* ── Popup Announcement — Button Colors ── */
+.ann-btn-apk {
+  background: linear-gradient(135deg, #4caf7d, #2e7d52) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(76,175,125,0.35);
+}
+.ann-btn-apk:hover {
+  box-shadow: 0 6px 22px rgba(76,175,125,0.5);
+  transform: translateY(-2px);
+  opacity: 1;
+}
+.ann-btn-close {
+  background: linear-gradient(135deg, #f472b6, #db2777) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(244,114,182,0.35);
+}
+.ann-btn-close:hover {
+  box-shadow: 0 6px 22px rgba(244,114,182,0.5);
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
 /* ── Popup Announcement — Light Mode ── */
 [data-theme="light"] #announcementModal {
   background: #ffffff;
@@ -1146,21 +1170,7 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 [data-theme="light"] .ann-body strong { color: #111520; }
 [data-theme="light"] .ann-close { color: #9aa3b2; }
 [data-theme="light"] .ann-close:hover { color: #111520; }
-[data-theme="light"] .ann-btn-apk {
-  background: rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.12) !important;
-  color: #111520;
-}
-[data-theme="light"] .ann-btn-apk:hover { background: rgba(0,0,0,0.09); }
-[data-theme="light"] .ann-btn-close {
-  background: rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.10) !important;
-  color: #4a5568;
-}
-[data-theme="light"] .ann-btn-close:hover {
-  background: rgba(0,0,0,0.08);
-  color: #111520;
-}
+
 
 /* ══════════════════════════════════════════════
    NAV ICON BUTTON
