@@ -839,33 +839,27 @@ async function uploadProofFile(file) {
   progressText.textContent = 'Mengupload bukti transfer...';
 
   try {
-    // Minta signed URL dari server
-    const urlResp = await fetch('/api/payment/upload-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: file.name }),
-    });
-    const urlData = await urlResp.json();
-    if (!urlResp.ok || !urlData.upload_url) throw new Error('Gagal buat upload URL');
+    const formData = new FormData();
+    formData.append('file', file);
 
     progressFill.style.width = '50%';
     progressText.textContent = 'Menyimpan file...';
 
-    // Upload file ke signed URL
-    const upResp = await fetch(urlData.upload_url, {
-      method: 'PUT',
-      headers: { 'Content-Type': file.type },
-      body: file,
+    const upResp = await fetch('/api/payment/upload-proof', {
+      method: 'POST',
+      body: formData,
     });
-    if (!upResp.ok) throw new Error('Upload gagal');
+    const upData = await upResp.json();
+    if (!upResp.ok || !upData.url) throw new Error(upData.error || 'Upload gagal');
 
-    uploadedProofUrl = urlData.public_path;
+    uploadedProofUrl = upData.url;
     progressFill.style.width = '100%';
     progressText.textContent = '✅ Upload berhasil!';
     submitBtn.disabled = false;
 
   } catch (err) {
     progressText.textContent = '❌ Upload gagal. Coba lagi.';
+    progressFill.style.width = '0%';
     console.error(err);
   }
 }

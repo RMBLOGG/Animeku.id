@@ -402,13 +402,10 @@ async function revokeSubscription(id) {
 }
 
 // ── Proof ─────────────────────────────────────────────────────────
-async function viewProof(path, name) {
-  try {
-    const resp = await fetch('/api/admin/proof-url', {method:'POST',headers:adminHeaders(),body:JSON.stringify({path})});
-    const data = await resp.json();
-    document.getElementById('proofImg').src = data.url || path;
-  } catch { document.getElementById('proofImg').src = path; }
-  document.getElementById('proofCaption').textContent = 'Bukti transfer dari '+name;
+function viewProof(path, name) {
+  // Cloudinary URL sudah bisa diakses langsung - tidak perlu signed URL lagi
+  document.getElementById('proofImg').src = path;
+  document.getElementById('proofCaption').textContent = 'Bukti transfer dari ' + name;
   document.getElementById('proofOverlay').style.display = 'flex';
 }
 function closeProof() { document.getElementById('proofOverlay').style.display='none'; document.getElementById('proofImg').src=''; }
