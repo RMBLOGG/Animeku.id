@@ -380,15 +380,14 @@ def animelist():
     raw = fetch("/anime/samehadaku/list")
     data = None
     if raw and raw.get("data"):
-        animes = raw["data"].get("animeList", [])
-        groups = {}
-        for a in animes:
-            title  = a.get("title", "")
-            letter = title[0].upper() if title else "#"
-            if letter not in groups:
-                groups[letter] = []
-            groups[letter].append({"title": title, "slug": a.get("animeId", "")})
-        anime_list = [{"letter": k, "animes": v} for k, v in sorted(groups.items())]
+        list_data = raw["data"].get("list", [])
+        anime_list = []
+        for group in list_data:
+            letter = group.get("startWith", "#")
+            animes = [{"title": a.get("title", ""), "slug": a.get("animeId", "")}
+                      for a in group.get("animeList", [])]
+            if animes:
+                anime_list.append({"letter": letter, "animes": animes})
         data = {"anime_list": anime_list}
     return render_template("animelist.html", data=data)
 
