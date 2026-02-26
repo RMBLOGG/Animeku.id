@@ -2,7 +2,7 @@
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Animeku.id — Nonton Anime Sub Indo{% endblock %}</title>
   <meta name="description" content="Nonton anime sub indo gratis, streaming kualitas HD. Animeku.id tempat wibu sejati.">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -162,12 +162,12 @@
   <div id="announcementModal">
     <button class="ann-close" onclick="closeAnnouncement()">×</button>
 
-    <!-- Logo -->
-    <div class="ann-logo">
-      <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="ANIMEKU.ID" style="width:72px;height:72px;border-radius:16px;object-fit:cover">
-    </div>
-
     <h2 class="ann-title">Pemberitahuan !!</h2>
+
+    <!-- Logo di bawah judul, tengah, diperbesar -->
+    <div class="ann-logo">
+      <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="ANIMEKU.ID" style="width:90px;height:90px;border-radius:20px;object-fit:cover;box-shadow:0 8px 24px rgba(230,57,70,0.3)">
+    </div>
 
     <p class="ann-body">
       Website ini sepenuhnya dikelola oleh <strong>Dayynime</strong>.<br>
@@ -180,10 +180,16 @@
 
     <!-- Tombol -->
     <div class="ann-actions">
-      <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="ann-btn ann-btn-donate" onclick="closeAnnouncement()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
-        Dukung ANIMEKU.ID
-      </a>
+      <div class="ann-btn-row">
+        <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="ann-btn ann-btn-donate" onclick="closeAnnouncement()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+          Dukung
+        </a>
+        <a href="https://www.mediafire.com/file/x6bzzjcv4yf7uv1/Animeku.Id.apk/file" target="_blank" rel="noopener" class="ann-btn ann-btn-apk">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7C5.9 2 5 2.9 5 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.83 0-1.5-.67-1.5-1.5S11.17 17 12 17s1.5.67 1.5 1.5S12.83 20 12 20zm5-4H7V4h10v12z"/></svg>
+          Versi APK
+        </a>
+      </div>
       <button class="ann-btn ann-btn-close" onclick="closeAnnouncement()">
         Lanjut →
       </button>
@@ -237,17 +243,17 @@
 }
 .ann-close:hover { color: var(--text, #e8eaf0); }
 .ann-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 36px;
-  letter-spacing: 3px;
-  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  margin-top: 4px;
 }
 .ann-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px;
   letter-spacing: 2px;
   color: var(--text, #e8eaf0);
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 .ann-body {
   font-size: 13px;
@@ -262,12 +268,17 @@
   gap: 10px;
   margin-top: 24px;
 }
+.ann-btn-row {
+  display: flex;
+  gap: 10px;
+}
+.ann-btn-row .ann-btn { flex: 1; }
 .ann-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 16px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -284,6 +295,15 @@
 .ann-btn-donate:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(230,57,70,0.5);
+}
+.ann-btn-apk {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: var(--text, #e8eaf0);
+}
+.ann-btn-apk:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
 }
 .ann-btn-close {
   background: rgba(255,255,255,0.05);
