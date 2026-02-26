@@ -27,6 +27,135 @@
   {% block head %}{% endblock %}
 </head>
 <body>
+
+<!-- ── SPLASH SCREEN ─────────────────────────────────────────── -->
+<div id="splashScreen">
+  <div class="splash-content">
+
+    <!-- Logo animasi per huruf -->
+    <div class="splash-logo" id="splashLogo">
+      <span style="color:#e63946">A</span><span>N</span><span>I</span><span>M</span><span>E</span><span>K</span><span>U</span><span style="color:#e63946;font-size:0.6em">.</span><span style="color:#8b92a5;font-size:0.7em">ID</span>
+    </div>
+
+    <!-- Teks selamat datang -->
+    <p class="splash-tagline" id="splashTagline">Selamat datang di dunia anime sub indo</p>
+
+    <!-- Garis loading -->
+    <div class="splash-bar"><div class="splash-bar-fill" id="splashBarFill"></div></div>
+
+  </div>
+</div>
+
+<style>
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  background: #090b0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#splashScreen.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.splash-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 14vw, 96px);
+  letter-spacing: 4px;
+  color: #f0f2f8;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.splash-logo span {
+  opacity: 0;
+  transform: translateY(30px) scale(0.7);
+  transition: none;
+}
+.splash-logo span.sp-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.45s cubic-bezier(.22,.68,0,1.4),
+              transform 0.45s cubic-bezier(.22,.68,0,1.4);
+}
+.splash-tagline {
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.splash-tagline.sp-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.splash-bar {
+  width: 160px;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.splash-bar.sp-in { opacity: 1; }
+.splash-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #e63946, #ff6b6b);
+  border-radius: 99px;
+  transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+<script>
+(function() {
+  // Hanya tampil sekali per sesi
+  if (sessionStorage.getItem('splashShown')) {
+    document.getElementById('splashScreen').style.display = 'none';
+    return;
+  }
+
+  sessionStorage.setItem('splashShown', '1');
+
+  var spans = document.querySelectorAll('.splash-logo span');
+  var tagline = document.getElementById('splashTagline');
+  var bar = document.querySelector('.splash-bar');
+  var barFill = document.getElementById('splashBarFill');
+
+  // Animasi huruf satu per satu
+  spans.forEach(function(s, i) {
+    setTimeout(function() { s.classList.add('sp-in'); }, 200 + i * 80);
+  });
+
+  // Tagline muncul setelah huruf selesai
+  var tagDelay = 200 + spans.length * 80 + 150;
+  setTimeout(function() {
+    tagline.classList.add('sp-in');
+    bar.classList.add('sp-in');
+    setTimeout(function() { barFill.style.width = '100%'; }, 50);
+  }, tagDelay);
+
+  // Sembunyikan splash setelah loading bar selesai
+  setTimeout(function() {
+    document.getElementById('splashScreen').classList.add('hide');
+  }, tagDelay + 2000);
+})();
+</script>
+<!-- ── END SPLASH SCREEN ──────────────────────────────────────── -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="/" class="logo">
@@ -131,6 +260,13 @@
     <div class="footer-inner">
       <div class="footer-logo"><span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span></div>
       <p class="footer-tagline">Tempat wibu sejati nonton anime sub indo 🎌</p>
+
+      <!-- Tombol Donasi -->
+      <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="donate-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        Dukung Animeku.ID
+      </a>
+
       <div class="footer-links">
         <a href="/ongoing">Ongoing</a>
         <a href="/completed">Completed</a>
