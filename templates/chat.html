@@ -171,6 +171,23 @@
 }
 .msg-name.is-me { color: var(--accent); }
 .msg-name.is-anon { color: var(--text3); font-style: italic; }
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #000;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 4px;
+  box-shadow: 0 2px 6px rgba(244,162,97,0.4);
+}
+.msg-name.is-admin { color: #f4a261 !important; }
 .msg-time {
   font-size: 10px;
   color: var(--text3);
@@ -563,6 +580,7 @@ const ROOM_ID        = "global";
 const HEARTBEAT_MS   = 20000;  // 20 detik
 const ONLINE_TIMEOUT = 60000;  // 60 detik inaktif = offline
 const MAX_MESSAGES   = 100;
+const ADMIN_IDS      = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 
 // ── STATE ──────────────────────────────────────────────────────
 let currentUser    = null;   // { id, name, avatar, is_anon }
@@ -632,6 +650,10 @@ function initUser() {
     };
     document.getElementById("authBanner").style.display = "flex";
   }
+}
+
+function isAdmin(userId) {
+  return ADMIN_IDS.includes(userId);
 }
 
 // ── SUPABASE HELPERS ───────────────────────────────────────────
@@ -980,10 +1002,19 @@ function buildMsgEl(msg, isOwn, animate = true) {
   const nameEl   = document.createElement("span");
   nameEl.className = "msg-name" + (isOwn ? " is-me" : "") + (msg.is_anon ? " is-anon" : "");
   nameEl.textContent = msg.is_anon ? "Anonim" : (msg.user_name || "User");
+  if (isAdmin(msg.user_id)) {
+    nameEl.classList.add("is-admin");
+    const badge = document.createElement("span");
+    badge.className = "admin-badge";
+    badge.innerHTML = "⭐ ADMIN";
+    meta.appendChild(nameEl);
+    meta.appendChild(badge);
+  } else {
+    meta.appendChild(nameEl);
+  }
   const timeEl  = document.createElement("span");
   timeEl.className = "msg-time";
   timeEl.textContent = formatTime(msg.created_at);
-  meta.appendChild(nameEl);
   meta.appendChild(timeEl);
   body.appendChild(meta);
 
