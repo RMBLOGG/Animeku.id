@@ -1135,6 +1135,33 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 [data-theme="light"] .schedule-strip,
 [data-theme="light"] .page-header { background:var(--bg2); }
 
+/* ── Popup Announcement — Light Mode ── */
+[data-theme="light"] #announcementModal {
+  background: #ffffff;
+  border-color: rgba(230,57,70,0.15);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+}
+[data-theme="light"] .ann-title { color: #111520; }
+[data-theme="light"] .ann-body { color: #4a5568; }
+[data-theme="light"] .ann-body strong { color: #111520; }
+[data-theme="light"] .ann-close { color: #9aa3b2; }
+[data-theme="light"] .ann-close:hover { color: #111520; }
+[data-theme="light"] .ann-btn-apk {
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #111520;
+}
+[data-theme="light"] .ann-btn-apk:hover { background: rgba(0,0,0,0.09); }
+[data-theme="light"] .ann-btn-close {
+  background: rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.10) !important;
+  color: #4a5568;
+}
+[data-theme="light"] .ann-btn-close:hover {
+  background: rgba(0,0,0,0.08);
+  color: #111520;
+}
+
 /* ══════════════════════════════════════════════
    NAV ICON BUTTON
 ══════════════════════════════════════════════ */
