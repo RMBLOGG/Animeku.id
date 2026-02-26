@@ -878,9 +878,10 @@ async function submitPayment() {
   submitBtn.textContent = '⏳ Mengirim...';
 
   try {
+    const token = localStorage.getItem('sb_access_token') || '';
     const resp = await fetch('/api/payment/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? {'Authorization': 'Bearer ' + token} : {}) },
       body: JSON.stringify({
         plan_id:       currentPlan,
         anime_slug:    currentPlan === 'per_anime' ? ANIME_SLUG_PAGE : null,
@@ -912,7 +913,10 @@ async function checkMyPayments() {
   statusContent.innerHTML   = '<p style="color:var(--text3);font-size:13px">Memuat status...</p>';
 
   try {
-    const resp = await fetch('/api/my/subscriptions');
+    const token = localStorage.getItem('sb_access_token') || '';
+    const resp = await fetch('/api/my/subscriptions', {
+      headers: token ? {'Authorization': 'Bearer ' + token} : {}
+    });
     const data = await resp.json();
 
     if (!resp.ok) {
