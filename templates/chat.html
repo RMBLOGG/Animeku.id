@@ -7,7 +7,7 @@
 .chat-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: calc(var(--nav-h) + 24px) 16px 32px;
+  padding: calc(var(--nav-h) + 8px) 16px 32px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -255,16 +255,18 @@
 
 /* Emoji picker */
 .emoji-picker-popup {
-  position: absolute;
+  position: fixed;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px;
   display: flex;
   gap: 4px;
-  z-index: 999;
+  z-index: 9999;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  font-size: 18px;
+  font-size: 20px;
+  flex-wrap: wrap;
+  max-width: calc(100vw - 32px);
 }
 .emoji-opt {
   padding: 4px 6px;
@@ -790,12 +792,31 @@ function openEmojiPicker(msgId, btnEl) {
     return;
   }
   activeEmojiMsg = msgId;
-  const rect = btnEl.getBoundingClientRect();
   picker.style.display = "flex";
-  picker.style.top  = (rect.bottom + window.scrollY + 4) + "px";
-  picker.style.left = (rect.left  + window.scrollX)      + "px";
-  picker.style.position = "fixed";
-  picker.style.top  = (rect.top - picker.offsetHeight - 6) + "px";
+
+  // Hitung posisi setelah picker visible agar offsetWidth/Height tersedia
+  requestAnimationFrame(() => {
+    const rect        = btnEl.getBoundingClientRect();
+    const pw          = picker.offsetWidth;
+    const ph          = picker.offsetHeight;
+    const vw          = window.innerWidth;
+    const vh          = window.innerHeight;
+    const margin      = 8;
+
+    // Posisi vertikal: tampil di atas tombol, kalau tidak cukup tampil di bawah
+    let top = rect.top - ph - 6;
+    if (top < margin) top = rect.bottom + 6;
+    // Clamp agar tidak melebihi layar bawah
+    if (top + ph > vh - margin) top = vh - ph - margin;
+
+    // Posisi horizontal: rata kiri tombol, geser ke kiri jika melebihi layar
+    let left = rect.left;
+    if (left + pw > vw - margin) left = vw - pw - margin;
+    if (left < margin) left = margin;
+
+    picker.style.top  = top  + "px";
+    picker.style.left = left + "px";
+  });
 }
 
 async function addReaction(emoji) {
