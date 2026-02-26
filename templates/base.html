@@ -2,7 +2,7 @@
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
   <title>{% block title %}Animeku.id — Nonton Anime Sub Indo{% endblock %}</title>
   <meta name="description" content="Nonton anime sub indo gratis, streaming kualitas HD. Animeku.id tempat wibu sejati.">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -156,6 +156,176 @@
 })();
 </script>
 <!-- ── END SPLASH SCREEN ──────────────────────────────────────── -->
+
+<!-- ── POPUP PEMBERITAHUAN ───────────────────────────────────── -->
+<div id="announcementOverlay" style="display:none">
+  <div id="announcementModal">
+    <button class="ann-close" onclick="closeAnnouncement()">×</button>
+
+    <!-- Logo -->
+    <div class="ann-logo">
+      <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="ANIMEKU.ID" style="width:72px;height:72px;border-radius:16px;object-fit:cover">
+    </div>
+
+    <h2 class="ann-title">Pemberitahuan !!</h2>
+
+    <p class="ann-body">
+      Website ini sepenuhnya dikelola oleh <strong>Dayynime</strong>.<br>
+      Kami berkomitmen menghadirkan platform streaming yang bersih, aman, dan <strong>Tanpa Iklan Sama Sekali.</strong>
+    </p>
+    <p class="ann-body" style="margin-top:10px">
+      Jika kamu ingin <strong>Berkontribusi</strong> untuk biaya server kami,<br>
+      silakan klik tombol <strong>Dukung ANIMEKU.ID</strong> di bawah. 🙏
+    </p>
+
+    <!-- Tombol -->
+    <div class="ann-actions">
+      <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="ann-btn ann-btn-donate" onclick="closeAnnouncement()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        Dukung ANIMEKU.ID
+      </a>
+      <button class="ann-btn ann-btn-close" onclick="closeAnnouncement()">
+        Lanjut →
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+#announcementOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 99998;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#announcementOverlay.ann-visible { opacity: 1; }
+#announcementOverlay.ann-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+#announcementModal {
+  background: var(--bg2, #0e1117);
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: 20px;
+  padding: 32px 24px 24px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  transform: translateY(20px);
+  transition: transform 0.35s cubic-bezier(.22,.68,0,1.2);
+}
+#announcementOverlay.ann-visible #announcementModal { transform: translateY(0); }
+.ann-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  color: var(--text3, #555d70);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.ann-close:hover { color: var(--text, #e8eaf0); }
+.ann-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+.ann-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text, #e8eaf0);
+  margin-bottom: 16px;
+}
+.ann-body {
+  font-size: 13px;
+  color: var(--text2, #8b92a5);
+  line-height: 1.7;
+  margin: 0;
+}
+.ann-body strong { color: var(--text, #e8eaf0); }
+.ann-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+.ann-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.ann-btn-donate {
+  background: linear-gradient(135deg, #e63946, #c0202a);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(230,57,70,0.35);
+}
+.ann-btn-donate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(230,57,70,0.5);
+}
+.ann-btn-close {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: var(--text2, #8b92a5);
+}
+.ann-btn-close:hover {
+  background: rgba(255,255,255,0.09);
+  color: var(--text, #e8eaf0);
+}
+</style>
+
+<script>
+(function() {
+  // Tampil sekali per sesi, muncul setelah splash selesai
+  if (sessionStorage.getItem('annShown')) return;
+  sessionStorage.setItem('annShown', '1');
+
+  var overlay = document.getElementById('announcementOverlay');
+  var splashShown = sessionStorage.getItem('splashShown');
+
+  // Delay: kalau ada splash, tunggu splash selesai dulu (~3.5s), kalau tidak langsung
+  var delay = splashShown ? 3600 : 600;
+
+  setTimeout(function() {
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        overlay.classList.add('ann-visible');
+      });
+    });
+  }, delay);
+})();
+
+function closeAnnouncement() {
+  var overlay = document.getElementById('announcementOverlay');
+  overlay.classList.add('ann-hide');
+  overlay.classList.remove('ann-visible');
+  setTimeout(function() { overlay.style.display = 'none'; }, 350);
+}
+</script>
+<!-- ── END POPUP PEMBERITAHUAN ────────────────────────────────── -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="/" class="logo">
