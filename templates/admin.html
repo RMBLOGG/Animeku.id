@@ -128,7 +128,7 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 16px;
 }
 .admin-section-header {
@@ -151,7 +151,7 @@
   align-items: center;
   gap: 8px;
 }
-.admin-section-body { padding: 0; }
+.admin-section-body { padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Table */
 .admin-table {
