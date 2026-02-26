@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Animeku.id — Nonton Anime Sub Indo{% endblock %}</title>
   <meta name="description" content="Nonton anime sub indo gratis, streaming kualitas HD. Animeku.id tempat wibu sejati.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -24,6 +27,384 @@
   {% block head %}{% endblock %}
 </head>
 <body>
+
+<!-- ── SPLASH SCREEN ─────────────────────────────────────────── -->
+<div id="splashScreen">
+  <div class="splash-content">
+
+    <!-- Logo animasi per huruf -->
+    <div class="splash-logo" id="splashLogo">
+      <span style="color:#e63946">A</span><span>N</span><span>I</span><span>M</span><span>E</span><span>K</span><span>U</span><span style="color:#e63946;font-size:0.6em">.</span><span style="color:#8b92a5;font-size:0.7em">ID</span>
+    </div>
+
+    <!-- Teks selamat datang -->
+    <p class="splash-tagline" id="splashTagline">Selamat datang di dunia anime sub indo</p>
+
+    <!-- Garis loading -->
+    <div class="splash-bar"><div class="splash-bar-fill" id="splashBarFill"></div></div>
+
+  </div>
+</div>
+
+<style>
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  background: #090b0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#splashScreen.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.splash-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 14vw, 96px);
+  letter-spacing: 4px;
+  color: #f0f2f8;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.splash-logo span {
+  opacity: 0;
+  transform: translateY(30px) scale(0.7);
+  transition: none;
+}
+.splash-logo span.sp-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.45s cubic-bezier(.22,.68,0,1.4),
+              transform 0.45s cubic-bezier(.22,.68,0,1.4);
+}
+.splash-tagline {
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.splash-tagline.sp-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.splash-bar {
+  width: 160px;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.splash-bar.sp-in { opacity: 1; }
+.splash-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #e63946, #ff6b6b);
+  border-radius: 99px;
+  transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+<script>
+(function() {
+  // Hanya tampil sekali per sesi
+  if (sessionStorage.getItem('splashShown')) {
+    document.getElementById('splashScreen').style.display = 'none';
+    return;
+  }
+
+  sessionStorage.setItem('splashShown', '1');
+
+  var spans = document.querySelectorAll('.splash-logo span');
+  var tagline = document.getElementById('splashTagline');
+  var bar = document.querySelector('.splash-bar');
+  var barFill = document.getElementById('splashBarFill');
+
+  // Animasi huruf satu per satu
+  spans.forEach(function(s, i) {
+    setTimeout(function() { s.classList.add('sp-in'); }, 200 + i * 80);
+  });
+
+  // Tagline muncul setelah huruf selesai
+  var tagDelay = 200 + spans.length * 80 + 150;
+  setTimeout(function() {
+    tagline.classList.add('sp-in');
+    bar.classList.add('sp-in');
+    setTimeout(function() { barFill.style.width = '100%'; }, 50);
+  }, tagDelay);
+
+  // Sembunyikan splash setelah loading bar selesai
+  setTimeout(function() {
+    document.getElementById('splashScreen').classList.add('hide');
+  }, tagDelay + 2000);
+})();
+</script>
+<!-- ── END SPLASH SCREEN ──────────────────────────────────────── -->
+
+<!-- ── POPUP PEMBERITAHUAN ───────────────────────────────────── -->
+<div id="announcementOverlay" style="display:none">
+  <div id="announcementModal">
+    <button class="ann-close" onclick="closeAnnouncement()">×</button>
+
+    <h2 class="ann-title" id="ann-title-text">Pemberitahuan !!</h2>
+
+    <!-- Logo di bawah judul, tengah, diperbesar -->
+    <div class="ann-logo">
+      <img src="{{ url_for('static', filename='img/icon.png') }}" alt="ANIMEKU.ID" style="width:120px;height:120px;object-fit:contain;">
+    </div>
+
+    <p class="ann-body" id="ann-text1">
+      Website ini sepenuhnya dikelola oleh <strong>Dayynime</strong>.<br>
+      Kami berkomitmen menghadirkan platform streaming yang bersih, aman, dan <strong>Tanpa Iklan Sama Sekali.</strong>
+    </p>
+    <p class="ann-body" style="margin-top:10px" id="ann-text2">
+      Jika kamu ingin <strong>Berkontribusi</strong> untuk biaya server kami,<br>
+      silakan klik tombol <strong>Dukung ANIMEKU.ID</strong> di bawah. 🙏
+    </p>
+
+    <!-- Tombol -->
+    <div class="ann-actions">
+      <div class="ann-btn-row">
+        <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="ann-btn ann-btn-donate" onclick="closeAnnouncement()" id="ann-donate-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+          <span id="ann-donate-text">Dukung</span>
+        </a>
+        <a href="https://www.mediafire.com/file/re6cd6ypvjoqqu3/AnimeDayy.apk/file" target="_blank" rel="noopener" class="ann-btn ann-btn-apk" id="ann-apk-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7C5.9 2 5 2.9 5 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.83 0-1.5-.67-1.5-1.5S11.17 17 12 17s1.5.67 1.5 1.5S12.83 20 12 20zm5-4H7V4h10v12z"/></svg>
+          Versi APK
+        </a>
+      </div>
+      <button class="ann-btn ann-btn-close" onclick="closeAnnouncement()">
+        Lanjut →
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+#announcementOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#announcementOverlay.ann-visible { opacity: 1; }
+#announcementOverlay.ann-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+#announcementModal {
+  background: var(--bg2, #0e1117);
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: 20px;
+  padding: 32px 24px 24px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  transform: translateY(20px);
+  transition: transform 0.35s cubic-bezier(.22,.68,0,1.2);
+}
+#announcementOverlay.ann-visible #announcementModal { transform: translateY(0); }
+.ann-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  color: var(--text3, #555d70);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.ann-close:hover { color: var(--text, #e8eaf0); }
+.ann-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+.ann-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text, #e8eaf0);
+  margin-bottom: 4px;
+}
+.ann-body {
+  font-size: 13px;
+  color: var(--text2, #8b92a5);
+  line-height: 1.7;
+  margin: 0;
+}
+.ann-body strong { color: var(--text, #e8eaf0); }
+.ann-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+.ann-btn-row {
+  display: flex;
+  gap: 10px;
+}
+.ann-btn-row .ann-btn { flex: 1; }
+.ann-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.ann-btn-donate {
+  background: linear-gradient(135deg, #e63946, #c0202a);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(230,57,70,0.35);
+}
+.ann-btn-donate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(230,57,70,0.5);
+}
+.ann-btn-apk {
+  background: linear-gradient(135deg, #4caf7d, #2e7d52);
+  border: none !important;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(76,175,125,0.35);
+}
+.ann-btn-apk:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(76,175,125,0.5);
+}
+.ann-btn-close {
+  background: linear-gradient(135deg, #f472b6, #db2777);
+  border: none !important;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(244,114,182,0.35);
+}
+.ann-btn-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(244,114,182,0.5);
+  color: #fff;
+}
+</style>
+
+<script>
+const _SB_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+const _SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+
+async function _loadPopupConfig() {
+  try {
+    var res = await fetch(_SB_URL + "/rest/v1/site_config?key=eq.popup_config&select=value", {
+      headers: { "apikey": _SB_ANON, "Authorization": "Bearer " + _SB_ANON }
+    });
+    if (!res.ok) return null;
+    var data = await res.json();
+    if (data.length && data[0].value) return data[0].value;
+  } catch {}
+  return null;
+}
+
+async function _loadSiteSettings() {
+  try {
+    var res = await fetch(_SB_URL + "/rest/v1/site_config?key=eq.site_settings&select=value", {
+      headers: { "apikey": _SB_ANON, "Authorization": "Bearer " + _SB_ANON }
+    });
+    if (!res.ok) return null;
+    var data = await res.json();
+    if (data.length && data[0].value) return data[0].value;
+  } catch {}
+  return null;
+}
+
+(async function() {
+  // Cek site settings dulu (maintenance mode, popup toggle)
+  var settings = await _loadSiteSettings();
+  
+  // Maintenance mode
+  if (settings && settings.maintenance) {
+    if (window.location.pathname !== '/admin') {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#090b0f;flex-direction:column;gap:16px;text-align:center;padding:24px"><div style="font-family:Bebas Neue,sans-serif;font-size:48px;color:#e63946;letter-spacing:3px">MAINTENANCE</div><div style="color:#8b92a5;font-size:14px">Website sedang dalam pemeliharaan.<br>Coba lagi beberapa saat.</div></div>';
+      return;
+    }
+  }
+
+  // Popup disabled?
+  if (settings && settings.popup_disabled) return;
+
+  // Tampil sekali per sesi
+  if (sessionStorage.getItem('annShown')) return;
+  sessionStorage.setItem('annShown', '1');
+
+  // Load popup config dari Supabase
+  var cfg = await _loadPopupConfig();
+  if (cfg) {
+    var titleEl = document.getElementById('ann-title-text');
+    var text1El = document.getElementById('ann-text1');
+    var text2El = document.getElementById('ann-text2');
+    var donateBtn = document.getElementById('ann-donate-btn');
+    var apkBtn    = document.getElementById('ann-apk-btn');
+    var donateTxt = document.getElementById('ann-donate-text');
+    if (titleEl && cfg.title)      titleEl.textContent = cfg.title;
+    if (text1El && cfg.text1)      text1El.innerHTML   = cfg.text1;
+    if (text2El && cfg.text2)      text2El.innerHTML   = cfg.text2;
+    if (donateBtn && cfg.donateLink) donateBtn.href = cfg.donateLink;
+    if (apkBtn && cfg.apkLink)       apkBtn.href    = cfg.apkLink;
+    if (donateTxt && cfg.donateText) donateTxt.textContent = cfg.donateText;
+  }
+
+  var overlay = document.getElementById('announcementOverlay');
+  var splashShown = sessionStorage.getItem('splashShown');
+  var delay = splashShown ? 3600 : 600;
+
+  setTimeout(function() {
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        overlay.classList.add('ann-visible');
+      });
+    });
+  }, delay);
+})();
+
+function closeAnnouncement() {
+  var overlay = document.getElementById('announcementOverlay');
+  overlay.classList.add('ann-hide');
+  overlay.classList.remove('ann-visible');
+  setTimeout(function() { overlay.style.display = 'none'; }, 350);
+}
+</script>
+<!-- ── END POPUP PEMBERITAHUAN ────────────────────────────────── -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="/" class="logo">
@@ -37,6 +418,12 @@
         <a href="/jadwal"    class="nav-link">Jadwal</a>
         <a href="/genres"    class="nav-link">Genre</a>
         <a href="/koleksi"   class="nav-link">Koleksi</a>
+        <a href="/chat"      class="nav-link" style="color:var(--accent)">
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;animation:livePulse 1.5s infinite"></span>
+            Live Chat
+          </span>
+        </a>
       </div>
       <div class="nav-right">
         <button class="nav-icon-btn" id="themeToggle" aria-label="Toggle theme" title="Ganti tema"></button>
@@ -98,6 +485,7 @@
       <a href="/jadwal">Jadwal</a>
       <a href="/genres">Genre</a>
       <a href="/koleksi">Koleksi</a>
+      <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
 
       <!-- Divider -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -128,6 +516,13 @@
     <div class="footer-inner">
       <div class="footer-logo"><span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span></div>
       <p class="footer-tagline">Tempat wibu sejati nonton anime sub indo 🎌</p>
+
+      <!-- Tombol Donasi -->
+      <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="donate-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        Dukung Animeku.ID
+      </a>
+
       <div class="footer-links">
         <a href="/ongoing">Ongoing</a>
         <a href="/completed">Completed</a>
