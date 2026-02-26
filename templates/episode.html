@@ -9,15 +9,12 @@
 {% for ep in episodes %}
   {% if ep.slug == slug %}{% set current_idx.val = loop.index0 %}{% endif %}
 {% endfor %}
-{# API mengurutkan episode dari terbaru ke terlama (index 0 = episode terbaru) #}
-{# Prev = episode lebih lama = index+1, Next = episode lebih baru = index-1 #}
 {% set prev_ep = episodes[current_idx.val + 1] if current_idx.val >= 0 and current_idx.val < episodes|length - 1 else None %}
 {% set next_ep = episodes[current_idx.val - 1] if current_idx.val > 0 else None %}
 
 <div class="player-container">
 
   <!-- BREADCRUMB & JUDUL -->
-  {# Pakai namespace agar variabel bisa diakses di luar loop #}
   {% set ep_ns = namespace(name='') %}
   {% for ep in episodes %}
     {% if ep.slug == slug %}{% set ep_ns.name = ep.name %}{% endif %}
@@ -34,7 +31,6 @@
     <a href="/anime/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ _aslug | replace("-", " ") | title }}</a>
     <span class="breadcrumb-sep">›</span>
     {% endif %}
-    {# Ambil nomor episode dari data.title, misal "Tamon-kun Episode 9 Sub Indo" → "Episode 9" #}
     {% if data.title %}
       {% set parts = data.title.split() %}
       {% set ep_idx = namespace(val=-1) %}
@@ -48,7 +44,6 @@
   </div>
 
   <!-- JUDUL -->
-  {# data.title dari API samehadaku sudah berisi judul lengkap, misal "One Piece Episode 9 Sub Indo" #}
   <h1 class="player-title" style="margin-bottom:4px;font-size:clamp(15px,2.5vw,24px);line-height:1.3">
     {% if data.title %}
       {{ data.title }}
@@ -60,10 +55,403 @@
   </h1>
   <p style="color:var(--text3);font-size:13px;margin-bottom:16px">Animeku.id — Streaming Sub Indo</p>
 
-  <!-- VIDEO PLAYER -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PAYWALL (tampil jika episode_number > 2 dan tidak punya akses) -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  {% if not has_access %}
+  <div class="paywall-wrap" id="paywallSection">
+    <div class="paywall-lock-icon">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h2 class="paywall-title">Episode ini membutuhkan akses</h2>
+    <p class="paywall-subtitle">
+      Kamu sudah menonton <strong>2 episode gratis</strong>.<br>
+      Pilih paket di bawah untuk melanjutkan nonton.
+    </p>
+
+    <div class="paywall-cards">
+      <!-- Kartu Per-Anime -->
+      <div class="paywall-card" onclick="openPaymentModal('per_anime')">
+        <div class="paywall-card-label">HEMAT</div>
+        <div class="paywall-card-icon">🎬</div>
+        <h3 class="paywall-card-title">Subscribe Anime Ini</h3>
+        <div class="paywall-card-price">Rp 5.000</div>
+        <p class="paywall-card-desc">Akses semua episode<br><strong>{{ anime_title }}</strong><br>selamanya</p>
+        <button class="paywall-btn paywall-btn--secondary">Pilih Paket Ini</button>
+      </div>
+
+      <!-- Kartu Bulanan (featured) -->
+      <div class="paywall-card paywall-card--featured" onclick="openPaymentModal('monthly')">
+        <div class="paywall-card-label paywall-card-label--hot">✨ TERBAIK</div>
+        <div class="paywall-card-icon">👑</div>
+        <h3 class="paywall-card-title">Basic Bulanan</h3>
+        <div class="paywall-card-price">Rp 25.000<span class="paywall-per">/bulan</span></div>
+        <p class="paywall-card-desc">Akses <strong>semua anime ongoing</strong><br>tanpa batas selama 30 hari</p>
+        <button class="paywall-btn paywall-btn--primary">Pilih Paket Ini</button>
+      </div>
+    </div>
+
+    <!-- Cek status pending -->
+    <p class="paywall-check-status">Sudah transfer? <button onclick="checkMyPayments()" class="paywall-link-btn">Cek status pembayaran</button></p>
+  </div>
+
+  <!-- MODAL PEMBAYARAN -->
+  <div id="paymentModal" class="pmodal-overlay" style="display:none">
+    <div class="pmodal">
+      <button class="pmodal-close" onclick="closePaymentModal()">✕</button>
+
+      <div class="pmodal-header">
+        <div class="pmodal-icon" id="modalIcon">💳</div>
+        <h3 class="pmodal-title" id="modalTitle">Konfirmasi Pembayaran</h3>
+        <p class="pmodal-subtitle" id="modalSubtitle"></p>
+      </div>
+
+      <!-- Step 1: Info transfer -->
+      <div id="stepTransfer">
+        <div class="pmodal-bank-card">
+          <div class="pmodal-bank-label">Transfer ke</div>
+          <div class="pmodal-bank-name">{{ payment_info.bank }}</div>
+          <div class="pmodal-bank-number">{{ payment_info.number }}</div>
+          <div class="pmodal-bank-holder">a.n. {{ payment_info.name }}</div>
+          <button class="pmodal-copy-btn" onclick="copyRekening()">📋 Salin Nomor Rekening</button>
+        </div>
+
+        <div class="pmodal-amount" id="modalAmount"></div>
+
+        <p class="pmodal-note">
+          ⚠️ Pastikan nominal transfer <strong>tepat</strong> sesuai harga paket.<br>
+          Pembayaran diverifikasi admin dalam <strong>1×24 jam</strong>.
+        </p>
+
+        <button class="pmodal-btn-next" onclick="goToUpload()">
+          Sudah Transfer → Upload Bukti
+        </button>
+      </div>
+
+      <!-- Step 2: Upload bukti -->
+      <div id="stepUpload" style="display:none">
+        <div class="pmodal-upload-area" id="uploadArea" onclick="document.getElementById('proofFile').click()">
+          <div class="pmodal-upload-icon">📷</div>
+          <p class="pmodal-upload-text">Klik untuk pilih foto bukti transfer</p>
+          <p class="pmodal-upload-hint">JPG, PNG, maks 5MB</p>
+          <img id="uploadPreview" src="" alt="" style="display:none;max-width:100%;max-height:200px;border-radius:8px;margin-top:12px">
+        </div>
+        <input type="file" id="proofFile" accept="image/*" style="display:none" onchange="previewFile(event)">
+
+        <div id="uploadProgress" style="display:none;margin-top:12px">
+          <div class="pmodal-progress-bar">
+            <div class="pmodal-progress-fill" id="progressFill"></div>
+          </div>
+          <p class="pmodal-progress-text" id="progressText">Mengupload...</p>
+        </div>
+
+        <button class="pmodal-btn-next" id="submitBtn" onclick="submitPayment()" style="margin-top:16px" disabled>
+          🚀 Kirim Bukti Pembayaran
+        </button>
+
+        <button class="pmodal-btn-back" onclick="goBackToTransfer()">← Kembali</button>
+      </div>
+
+      <!-- Step 3: Sukses -->
+      <div id="stepSuccess" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:56px;margin-bottom:16px">🎉</div>
+        <h3 style="color:var(--text);font-size:18px;margin-bottom:8px">Pembayaran Terkirim!</h3>
+        <p style="color:var(--text2);font-size:14px;line-height:1.7">
+          Bukti transfer kamu sudah kami terima.<br>
+          Admin akan memverifikasi dalam <strong>1×24 jam</strong>.<br>
+          Kamu akan mendapat akses otomatis setelah disetujui.
+        </p>
+        <button class="pmodal-btn-next" onclick="closePaymentModal()" style="margin-top:20px">Tutup</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL STATUS PEMBAYARAN -->
+  <div id="statusModal" class="pmodal-overlay" style="display:none">
+    <div class="pmodal">
+      <button class="pmodal-close" onclick="document.getElementById('statusModal').style.display='none'">✕</button>
+      <h3 style="color:var(--text);font-size:16px;margin-bottom:16px">Status Pembayaran Kamu</h3>
+      <div id="statusContent">
+        <p style="color:var(--text3);font-size:13px">Memuat...</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  /* ── PAYWALL ────────────────────────────────────────────────── */
+  .paywall-wrap {
+    background: var(--bg2, #0d1117);
+    border: 1px solid rgba(230,57,70,0.15);
+    border-radius: 20px;
+    padding: 48px 24px 40px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .paywall-lock-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px; height: 88px;
+    background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(230,57,70,0.04));
+    border: 1px solid rgba(230,57,70,0.2);
+    border-radius: 50%;
+    color: #e63946;
+    margin-bottom: 20px;
+  }
+  .paywall-title {
+    font-family: var(--font-head, 'Bebas Neue', sans-serif);
+    font-size: clamp(20px, 4vw, 28px);
+    color: var(--text, #e8eaf0);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .paywall-subtitle {
+    color: var(--text2, #8b92a5);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .paywall-subtitle strong { color: var(--text, #e8eaf0); }
+
+  .paywall-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .paywall-card {
+    background: var(--card, #161b24);
+    border: 1px solid var(--border, rgba(255,255,255,0.07));
+    border-radius: 16px;
+    padding: 28px 22px 22px;
+    width: 200px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    text-align: center;
+  }
+  .paywall-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(230,57,70,0.3);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+  .paywall-card--featured {
+    border-color: rgba(230,57,70,0.4);
+    background: linear-gradient(145deg, #1a0d10, #161b24);
+    box-shadow: 0 0 0 1px rgba(230,57,70,0.15), 0 8px 32px rgba(230,57,70,0.12);
+  }
+  .paywall-card-label {
+    position: absolute;
+    top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text3);
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .paywall-card-label--hot {
+    background: linear-gradient(135deg, #e63946, #c0202a);
+    border-color: transparent;
+    color: #fff;
+  }
+  .paywall-card-icon { font-size: 32px; margin-bottom: 10px; }
+  .paywall-card-title {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .paywall-card-price {
+    font-family: var(--font-head);
+    font-size: 26px;
+    color: #e63946;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .paywall-per { font-size: 14px; color: var(--text3); font-family: var(--font-body); }
+  .paywall-card-desc {
+    color: var(--text3);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+  .paywall-card-desc strong { color: var(--text2); }
+  .paywall-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .paywall-btn--primary {
+    background: linear-gradient(135deg, #e63946, #c0202a);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(230,57,70,0.35);
+  }
+  .paywall-btn--secondary {
+    background: var(--bg2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .paywall-btn:hover { transform: translateY(-2px); }
+  .paywall-check-status { color: var(--text3); font-size: 13px; margin-top: 8px; }
+  .paywall-link-btn {
+    background: none; border: none; color: var(--accent);
+    font-size: 13px; cursor: pointer; text-decoration: underline;
+    font-family: var(--font-body);
+  }
+
+  /* ── MODAL ──────────────────────────────────────────────────── */
+  .pmodal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  .pmodal {
+    background: var(--bg2, #0d1117);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 32px 24px 28px;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    animation: slideUp 0.3s cubic-bezier(.22,.68,0,1.2);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @keyframes slideUp { from { transform:translateY(24px);opacity:0 } to { transform:translateY(0);opacity:1 } }
+  .pmodal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none;
+    color: var(--text3); font-size: 18px; cursor: pointer;
+    transition: color 0.2s;
+  }
+  .pmodal-close:hover { color: var(--text); }
+  .pmodal-header { text-align: center; margin-bottom: 24px; }
+  .pmodal-icon { font-size: 42px; margin-bottom: 10px; }
+  .pmodal-title { color: var(--text); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .pmodal-subtitle { color: var(--text2); font-size: 13px; }
+
+  .pmodal-bank-card {
+    background: linear-gradient(135deg, #1a0a0d, #0f1520);
+    border: 1px solid rgba(230,57,70,0.25);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .pmodal-bank-label { color: var(--text3); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .pmodal-bank-name { color: #e63946; font-family: var(--font-head); font-size: 22px; letter-spacing: 2px; margin-bottom: 4px; }
+  .pmodal-bank-number { color: var(--text); font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 3px; margin-bottom: 4px; }
+  .pmodal-bank-holder { color: var(--text2); font-size: 13px; margin-bottom: 12px; }
+  .pmodal-copy-btn {
+    background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.3);
+    color: #e63946; font-size: 12px; padding: 6px 14px; border-radius: 8px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .pmodal-copy-btn:hover { background: rgba(230,57,70,0.2); }
+
+  .pmodal-amount {
+    text-align: center;
+    background: rgba(230,57,70,0.08);
+    border: 1px solid rgba(230,57,70,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 28px;
+    font-family: var(--font-head);
+    color: #e63946;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+  .pmodal-note {
+    color: var(--text3); font-size: 12px; line-height: 1.7;
+    background: rgba(255,200,0,0.05);
+    border: 1px solid rgba(255,200,0,0.15);
+    border-radius: 8px; padding: 12px; margin-bottom: 20px;
+  }
+  .pmodal-note strong { color: var(--text2); }
+
+  .pmodal-btn-next {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #e63946, #c0202a);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(230,57,70,0.35);
+  }
+  .pmodal-btn-next:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(230,57,70,0.5); }
+  .pmodal-btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pmodal-btn-back {
+    width: 100%; margin-top: 10px; padding: 10px;
+    background: none; border: 1px solid var(--border);
+    color: var(--text2); border-radius: 10px; font-size: 13px; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .pmodal-btn-back:hover { border-color: var(--text3); }
+
+  .pmodal-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 14px; padding: 32px 20px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .pmodal-upload-area:hover { border-color: #e63946; background: rgba(230,57,70,0.04); }
+  .pmodal-upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .pmodal-upload-text { color: var(--text2); font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .pmodal-upload-hint { color: var(--text3); font-size: 12px; }
+
+  .pmodal-progress-bar { background: var(--card); border-radius: 99px; height: 4px; overflow: hidden; }
+  .pmodal-progress-fill { height: 100%; background: linear-gradient(to right, #e63946, #ff6b6b); border-radius: 99px; width: 0%; transition: width 0.3s; }
+  .pmodal-progress-text { color: var(--text3); font-size: 12px; margin-top: 8px; text-align: center; }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 99px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .status-badge--pending  { background: rgba(255,200,0,0.12); color: #ffd600; border: 1px solid rgba(255,200,0,0.25); }
+  .status-badge--approved { background: rgba(76,175,80,0.12); color: #66bb6a; border: 1px solid rgba(76,175,80,0.25); }
+  .status-badge--rejected { background: rgba(230,57,70,0.12); color: #e63946; border: 1px solid rgba(230,57,70,0.25); }
+  </style>
+
+  {% else %}
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PLAYER (episode 1-2 GRATIS, atau sudah subscribe) -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+
+  <!-- Badge gratis untuk episode 1-2 -->
+  {% if episode_number <= 2 %}
+  <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:#66bb6a;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:12px;letter-spacing:0.5px">
+    ✅ GRATIS — Episode Percobaan
+  </div>
+  {% else %}
+  <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.25);color:#e63946;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:12px;letter-spacing:0.5px">
+    👑 SUBSCRIBER
+  </div>
+  {% endif %}
+
   <div class="player-frame" style="position:relative">
 
-    <!-- PLACEHOLDER: tampil sebelum server dipilih -->
     <div id="playerPlaceholder" style="
       position:absolute;inset:0;
       background:#0a0a0a;
@@ -71,7 +459,6 @@
       align-items:center;justify-content:center;
       gap:20px;z-index:5;border-radius:var(--radius,12px);
     ">
-      <!-- Logo ANIMEKU.ID huruf per huruf -->
       <div class="ph-logo" id="phLogo">
         <span class="ph-a">A</span><span class="ph-n">N</span><span class="ph-i">I</span><span class="ph-m">M</span><span class="ph-e">E</span><span class="ph-k">K</span><span class="ph-u">U</span><span class="ph-dot">.</span><span class="ph-id">ID</span>
       </div>
@@ -115,18 +502,15 @@
       function animateLogo() {
         var spans = document.querySelectorAll('#phLogo span');
         var subtitle = document.getElementById('phSubtitle');
-        // reset
         spans.forEach(function(s) { s.classList.remove('ph-visible'); });
         if (subtitle) {
           subtitle.style.transition = 'none';
           subtitle.style.opacity = '0';
           subtitle.style.transform = 'translateY(12px)';
         }
-        // animasi huruf
         spans.forEach(function(s, i) {
           setTimeout(function() { s.classList.add('ph-visible'); }, 150 + i * 90);
         });
-        // subtitle muncul setelah semua huruf selesai
         var delay = 150 + spans.length * 90 + 100;
         setTimeout(function() {
           if (subtitle) {
@@ -155,12 +539,10 @@
     {% endif %}
   </div>
 
-  <!-- SERVER TABS: Pilih Resolusi → Pilih Server -->
+  <!-- SERVER TABS -->
   {% if data.streams and data.streams | length > 0 %}
   <div class="player-section">
     <p class="player-section-label">PILIH KUALITAS</p>
-
-    <!-- Step 1: Tombol Resolusi -->
     <div class="server-tabs" id="qualityTabs">
       {% set seen_q = namespace(list=[]) %}
       {% for stream in data.streams %}
@@ -176,7 +558,6 @@
       {% endfor %}
     </div>
 
-    <!-- Step 2: Daftar Server per Resolusi -->
     <p class="player-section-label" style="margin-top:14px">PILIH SERVER</p>
     {% set first_q = namespace(val='') %}
     {% for stream in data.streams %}
@@ -210,11 +591,12 @@
   </div>
   {% endif %}
 
-  <!-- NOTICE -->
   <div class="player-notice">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
     <span>Jika video tidak muncul, coba ganti server atau nonaktifkan ad blocker.</span>
   </div>
+
+  {% endif %} {# end has_access #}
 
   <!-- ACTION BAR -->
   <div class="player-action-bar">
@@ -266,11 +648,17 @@
     </button>
     <div class="hidden" id="epListGrid">
       <div class="episodes-grid" style="margin-top:12px">
+        {% set total_eps = episodes | length %}
         {% for ep in episodes %}
+        {% set ep_num = total_eps - loop.index0 %}
         <a href="/episode/{{ ep.slug }}?anime={{ anime_slug }}"
-           class="ep-btn {% if ep.slug == slug %}active{% endif %}">
+           class="ep-btn {% if ep.slug == slug %}active{% endif %}"
+           style="position:relative">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           {{ ep.name }}
+          {% if ep_num > 2 %}
+          <span style="position:absolute;top:2px;right:2px;font-size:8px;color:#e63946" title="Butuh subscribe">🔒</span>
+          {% endif %}
         </a>
         {% endfor %}
       </div>
@@ -280,17 +668,254 @@
 
 </div>
 
+<!-- ── JAVASCRIPT PAYWALL & PLAYER ─────────────────────────────── -->
 <script>
+// ── Konstanta ────────────────────────────────────────────────────
+const ANIME_SLUG_PAGE  = '{{ anime_slug }}';
+const ANIME_TITLE_PAGE = {{ anime_title | tojson }};
+const SUPABASE_URL_CLI = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+const SUPABASE_ANON    = '{{ config.get("SUPABASE_ANON_KEY", "") }}';
+
+// ── State modal ──────────────────────────────────────────────────
+let currentPlan   = null;
+let uploadedProofUrl = null;
+
+function openPaymentModal(planId) {
+  // Cek login dulu
+  const user = getUser();
+  if (!user) {
+    alert('Kamu harus login dulu untuk subscribe!');
+    window.location.href = '/auth/login';
+    return;
+  }
+
+  currentPlan      = planId;
+  uploadedProofUrl = null;
+
+  const modal       = document.getElementById('paymentModal');
+  const modalIcon   = document.getElementById('modalIcon');
+  const modalTitle  = document.getElementById('modalTitle');
+  const modalSub    = document.getElementById('modalSubtitle');
+  const modalAmount = document.getElementById('modalAmount');
+
+  if (planId === 'monthly') {
+    modalIcon.textContent  = '👑';
+    modalTitle.textContent = 'Basic Bulanan';
+    modalSub.textContent   = 'Akses semua anime ongoing selama 30 hari';
+    modalAmount.textContent = 'Rp 25.000';
+  } else {
+    modalIcon.textContent  = '🎬';
+    modalTitle.textContent = 'Subscribe Anime Ini';
+    modalSub.textContent   = ANIME_TITLE_PAGE;
+    modalAmount.textContent = 'Rp 5.000';
+  }
+
+  // Reset ke step 1
+  document.getElementById('stepTransfer').style.display = 'block';
+  document.getElementById('stepUpload').style.display   = 'none';
+  document.getElementById('stepSuccess').style.display  = 'none';
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('submitBtn').disabled = true;
+
+  modal.style.display = 'flex';
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').style.display = 'none';
+}
+
+function goToUpload() {
+  document.getElementById('stepTransfer').style.display = 'none';
+  document.getElementById('stepUpload').style.display   = 'block';
+}
+
+function goBackToTransfer() {
+  document.getElementById('stepUpload').style.display   = 'none';
+  document.getElementById('stepTransfer').style.display = 'block';
+}
+
+function copyRekening() {
+  const num = '{{ payment_info.number }}';
+  navigator.clipboard.writeText(num).then(() => {
+    const btn = document.querySelector('.pmodal-copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Tersalin!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+// Preview foto sebelum upload
+function previewFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File terlalu besar. Maksimal 5MB.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('uploadPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+
+  // Langsung upload ke Supabase Storage
+  uploadProofFile(file);
+}
+
+async function uploadProofFile(file) {
+  const progress     = document.getElementById('uploadProgress');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const submitBtn    = document.getElementById('submitBtn');
+
+  progress.style.display = 'block';
+  progressFill.style.width = '20%';
+  progressText.textContent = 'Mengupload bukti transfer...';
+
+  try {
+    // Minta signed URL dari server
+    const urlResp = await fetch('/api/payment/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name }),
+    });
+    const urlData = await urlResp.json();
+    if (!urlResp.ok || !urlData.upload_url) throw new Error('Gagal buat upload URL');
+
+    progressFill.style.width = '50%';
+    progressText.textContent = 'Menyimpan file...';
+
+    // Upload file ke signed URL
+    const upResp = await fetch(urlData.upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    if (!upResp.ok) throw new Error('Upload gagal');
+
+    uploadedProofUrl = urlData.public_path;
+    progressFill.style.width = '100%';
+    progressText.textContent = '✅ Upload berhasil!';
+    submitBtn.disabled = false;
+
+  } catch (err) {
+    progressText.textContent = '❌ Upload gagal. Coba lagi.';
+    console.error(err);
+  }
+}
+
+async function submitPayment() {
+  if (!uploadedProofUrl) {
+    alert('Upload bukti transfer dulu ya!');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⏳ Mengirim...';
+
+  try {
+    const resp = await fetch('/api/payment/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        plan_id:       currentPlan,
+        anime_slug:    currentPlan === 'per_anime' ? ANIME_SLUG_PAGE : null,
+        anime_title:   currentPlan === 'per_anime' ? ANIME_TITLE_PAGE : null,
+        payment_proof: uploadedProofUrl,
+      }),
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.ok) {
+      document.getElementById('stepUpload').style.display  = 'none';
+      document.getElementById('stepSuccess').style.display = 'block';
+    } else {
+      alert(data.error || 'Gagal mengirim pembayaran. Coba lagi.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '🚀 Kirim Bukti Pembayaran';
+    }
+  } catch (err) {
+    alert('Terjadi error. Coba lagi.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🚀 Kirim Bukti Pembayaran';
+  }
+}
+
+async function checkMyPayments() {
+  const statusModal   = document.getElementById('statusModal');
+  const statusContent = document.getElementById('statusContent');
+  statusModal.style.display = 'flex';
+  statusContent.innerHTML   = '<p style="color:var(--text3);font-size:13px">Memuat status...</p>';
+
+  try {
+    const resp = await fetch('/api/my/subscriptions');
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      statusContent.innerHTML = '<p style="color:#e63946">Login dulu ya!</p>';
+      return;
+    }
+
+    const pending = data.pending_payments || [];
+    const subs    = data.subscriptions    || [];
+
+    let html = '';
+
+    if (subs.length) {
+      html += '<p style="color:var(--text2);font-size:12px;font-family:var(--font-mono);letter-spacing:1px;margin-bottom:8px">LANGGANAN AKTIF</p>';
+      html += subs.map(s => `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${s.plan_id === 'monthly' ? '👑 Basic Bulanan' : '🎬 Per Anime'}</div>
+              ${s.anime_slug ? `<div style="font-size:11px;color:var(--text3);margin-top:2px">${s.anime_slug}</div>` : ''}
+              ${s.expired_at ? `<div style="font-size:11px;color:var(--text3);margin-top:2px">Berakhir: ${new Date(s.expired_at).toLocaleDateString('id-ID')}</div>` : '<div style="font-size:11px;color:#66bb6a;margin-top:2px">Selamanya</div>'}
+            </div>
+            <span class="status-badge status-badge--approved">AKTIF</span>
+          </div>
+        </div>`).join('');
+    }
+
+    if (pending.length) {
+      html += '<p style="color:var(--text2);font-size:12px;font-family:var(--font-mono);letter-spacing:1px;margin-bottom:8px;margin-top:16px">MENUNGGU VERIFIKASI</p>';
+      html += pending.map(p => `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${p.plan_id === 'monthly' ? '👑 Basic Bulanan' : '🎬 ' + (p.anime_title || p.anime_slug)}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Rp ${(p.amount||0).toLocaleString('id-ID')} • ${new Date(p.created_at).toLocaleDateString('id-ID')}</div>
+            </div>
+            <span class="status-badge status-badge--pending">PENDING</span>
+          </div>
+        </div>`).join('');
+    }
+
+    if (!subs.length && !pending.length) {
+      html = '<p style="color:var(--text3);font-size:13px">Belum ada langganan atau pembayaran aktif.</p>';
+    }
+
+    statusContent.innerHTML = html;
+  } catch (err) {
+    statusContent.innerHTML = '<p style="color:#e63946">Gagal memuat status. Coba lagi.</p>';
+  }
+}
+
+// ── Player functions ──────────────────────────────────────────────
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
+}
+
 function selectQuality(btn, quality) {
-  // Highlight tombol resolusi aktif
   document.querySelectorAll('#qualityTabs .server-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Tampilkan grup server yang sesuai
   document.querySelectorAll('.server-group').forEach(g => g.style.display = 'none');
   const group = document.getElementById('group-' + quality);
   if (group) {
     group.style.display = 'flex';
-    // Auto-klik server pertama di grup ini
     const firstSrv = group.querySelector('.server-btn');
     if (firstSrv) switchServer(firstSrv);
   }
@@ -337,28 +962,12 @@ function hidePlaceholder() {
   }
 }
 
-function showPlaceholder() {
-  const ph = document.getElementById('playerPlaceholder');
-  if (ph) {
-    ph.style.display = 'flex';
-    ph.style.opacity = '0';
-    requestAnimationFrame(function() {
-      ph.style.transition = 'opacity 0.4s';
-      ph.style.opacity = '1';
-    });
-    if (typeof window.animateLogoPlaceholder === 'function') {
-      setTimeout(window.animateLogoPlaceholder, 200);
-    }
-  }
-}
-
 function toggleEpList() {
   document.getElementById('epListGrid').classList.toggle('hidden');
   document.getElementById('epToggleBtn').classList.toggle('open');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Auto-load server pertama
   const firstBtn = document.querySelector('.server-btn.active');
   if (firstBtn) switchServer(firstBtn);
 
@@ -372,120 +981,53 @@ document.addEventListener('DOMContentLoaded', function() {
     );
   }
 });
+
+// Tutup modal kalau klik overlay
+document.getElementById('paymentModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closePaymentModal();
+});
+document.getElementById('statusModal')?.addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
 </script>
 
 <!-- KOMENTAR -->
 <div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
-
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
     <div style="width:3px;height:20px;background:var(--accent);border-radius:2px"></div>
     <h3 style="font-size:15px;font-weight:700;color:var(--text);font-family:var(--font-head);letter-spacing:1px;margin:0">KOMENTAR</h3>
   </div>
-
   <div id="commentFormWrap" style="margin-bottom:24px"></div>
-
   <div id="commentList" style="display:flex;flex-direction:column;gap:10px">
     <p style="color:var(--text3);font-size:13px;font-family:var(--font-mono)">Memuat komentar...</p>
   </div>
 </div>
 
 <style>
-.comment-card {
-  display: flex;
-  gap: 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  transition: border-color 0.2s;
-}
-.comment-card:hover { border-color: rgba(230,57,70,0.2); }
-.comment-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 2px solid var(--border);
-}
-.comment-avatar-placeholder {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-family: var(--font-head);
-}
-.comment-name {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text);
-}
-.comment-time {
-  font-size: 11px;
-  color: var(--text3);
-  font-family: var(--font-mono);
-}
-.comment-body {
-  font-size: 14px;
-  color: var(--text2);
-  margin: 6px 0 0;
-  line-height: 1.6;
-  word-break: break-word;
-}
-.comment-delete {
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 0;
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  transition: color 0.2s;
-}
-.comment-delete:hover { color: var(--accent); }
-.comment-input {
-  width: 100%;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  color: var(--text);
-  font-size: 14px;
-  resize: vertical;
-  font-family: var(--font-body);
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-.comment-input:focus {
-  outline: none;
-  border-color: rgba(230,57,70,0.45);
-}
-.comment-input::placeholder { color: var(--text3); }
+.comment-card { display:flex;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:border-color 0.2s; }
+.comment-card:hover { border-color:rgba(230,57,70,0.2); }
+.comment-avatar { width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border); }
+.comment-avatar-placeholder { width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-head); }
+.comment-name { font-weight:600;font-size:13px;color:var(--text); }
+.comment-time { font-size:11px;color:var(--text3);font-family:var(--font-mono); }
+.comment-body { font-size:14px;color:var(--text2);margin:6px 0 0;line-height:1.6;word-break:break-word; }
+.comment-delete { background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;padding:0;margin-top:8px;font-family:var(--font-mono);transition:color 0.2s; }
+.comment-delete:hover { color:var(--accent); }
+.comment-input { width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;color:var(--text);font-size:14px;resize:vertical;font-family:var(--font-body);transition:border-color 0.2s;box-sizing:border-box; }
+.comment-input:focus { outline:none;border-color:rgba(230,57,70,0.45); }
+.comment-input::placeholder { color:var(--text3); }
 </style>
 
 <script>
-const SUPABASE_URL = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+const SUPABASE_URL_CMT  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+const SUPABASE_ANON_CMT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
 const ANIME_SLUG_COMMENT = '{{ anime_slug or slug }}';
 
-// Ambil user dari localStorage
-function getUser() {
-  try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
-}
-function getToken() {
-  return localStorage.getItem('sb_access_token');
-}
+function getCmtUser() { try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; } }
+function getCmtToken() { return localStorage.getItem('sb_access_token'); }
+let currentUser = getCmtUser();
 
-let currentUser = getUser();
-
-async function initComments() {
-  renderCommentForm(currentUser);
-  loadComments();
-}
+async function initComments() { renderCommentForm(currentUser); loadComments(); }
 
 function renderCommentForm(user) {
   const wrap = document.getElementById('commentFormWrap');
@@ -508,8 +1050,8 @@ function renderCommentForm(user) {
 }
 
 async function loadComments() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?anime_slug=eq.${ANIME_SLUG_COMMENT}&order=created_at.desc&select=*`, {
-    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+  const r = await fetch(`${SUPABASE_URL_CMT}/rest/v1/anime_comments?anime_slug=eq.${ANIME_SLUG_COMMENT}&order=created_at.desc&select=*`, {
+    headers: { 'apikey': SUPABASE_ANON_CMT, 'Authorization': `Bearer ${SUPABASE_ANON_CMT}` }
   });
   const comments = await r.json();
   const list = document.getElementById('commentList');
@@ -519,24 +1061,9 @@ async function loadComments() {
   }
   list.innerHTML = comments.map(c => {
     const initial = (c.user_name || 'U')[0].toUpperCase();
-    const avatarHtml = c.user_avatar
-      ? `<img src="${c.user_avatar}" alt="" class="comment-avatar">`
-      : `<div class="comment-avatar-placeholder">${initial}</div>`;
-    const deleteBtn = currentUser && currentUser.id === c.user_id
-      ? `<button onclick="deleteComment('${c.id}')" class="comment-delete">— Hapus</button>`
-      : '';
-    return `
-    <div class="comment-card">
-      ${avatarHtml}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <span class="comment-name">${escHtml(c.user_name||'User')}</span>
-          <span class="comment-time">${timeAgo(c.created_at)}</span>
-        </div>
-        <p class="comment-body">${escHtml(c.content)}</p>
-        ${deleteBtn}
-      </div>
-    </div>`;
+    const avatarHtml = c.user_avatar ? `<img src="${c.user_avatar}" alt="" class="comment-avatar">` : `<div class="comment-avatar-placeholder">${initial}</div>`;
+    const deleteBtn = currentUser && currentUser.id === c.user_id ? `<button onclick="deleteCmt('${c.id}')" class="comment-delete">— Hapus</button>` : '';
+    return `<div class="comment-card">${avatarHtml}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="comment-name">${escHtml(c.user_name||'User')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div><p class="comment-body">${escHtml(c.content)}</p>${deleteBtn}</div></div>`;
   }).join('');
 }
 
@@ -544,45 +1071,26 @@ async function submitComment() {
   const input = document.getElementById('commentInput');
   const content = (input.value||'').trim();
   if (!content) return;
-  const token = getToken();
-  const user = getUser();
+  const token = getCmtToken();
+  const user = getCmtUser();
   if (!token || !user) { alert('Login dulu ya!'); return; }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments`, {
+  const r = await fetch(`${SUPABASE_URL_CMT}/rest/v1/anime_comments`, {
     method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({
-      anime_slug: ANIME_SLUG_COMMENT,
-      user_id: user.id,
-      user_name: user.name,
-      user_avatar: user.avatar,
-      content
-    })
+    headers: { 'apikey': SUPABASE_ANON_CMT, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify({ anime_slug: ANIME_SLUG_COMMENT, user_id: user.id, user_name: user.name, user_avatar: user.avatar, content })
   });
   if (r.ok) { input.value = ''; loadComments(); }
-  else {
-    const err = await r.json().catch(() => ({}));
-    alert('Gagal kirim komentar: ' + (err.message || r.status));
-  }
+  else { const err = await r.json().catch(() => ({})); alert('Gagal kirim komentar: ' + (err.message || r.status)); }
 }
 
-async function deleteComment(id) {
+async function deleteCmt(id) {
   if (!confirm('Hapus komentar ini?')) return;
-  const token = getToken();
-  await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
-  });
+  const token = getCmtToken();
+  await fetch(`${SUPABASE_URL_CMT}/rest/v1/anime_comments?id=eq.${id}`, { method:'DELETE', headers:{'apikey':SUPABASE_ANON_CMT,'Authorization':`Bearer ${token}`} });
   loadComments();
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function timeAgo(iso) {
   const diff = (Date.now() - new Date(iso)) / 1000;
   if (diff < 60) return 'baru saja';

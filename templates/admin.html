@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — Animeku.id{% endblock %}
+
+{% block head %}
+<style>
+  .admin-login-wrap { min-height:80vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .admin-login-box { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px 32px; width:100%; max-width:380px; text-align:center; animation:slideUp 0.4s cubic-bezier(.22,.68,0,1.2); }
+  @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  .login-icon { font-size:48px; margin-bottom:16px; }
+  .login-title { font-family:var(--font-head,'Bebas Neue',sans-serif); font-size:28px; letter-spacing:3px; color:var(--text); margin-bottom:6px; }
+  .login-sub { color:var(--text3); font-size:12px; font-family:var(--font-mono,monospace); letter-spacing:1px; margin-bottom:28px; }
+  .login-input-wrap { position:relative; margin-bottom:14px; }
+  .login-input { width:100%; padding:13px 46px 13px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px; font-family:var(--font-mono,monospace); letter-spacing:2px; box-sizing:border-box; transition:border-color 0.2s; }
+  .login-input:focus { outline:none; border-color:rgba(230,57,70,0.5); }
+  .login-input::placeholder { letter-spacing:1px; font-size:13px; color:var(--text3); }
+  .login-eye { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text3); cursor:pointer; padding:0; transition:color 0.2s; }
+  .login-eye:hover { color:var(--text); }
+  .login-btn { width:100%; padding:14px; background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; font-family:var(--font-body,sans-serif); cursor:pointer; letter-spacing:1px; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 20px rgba(230,57,70,0.35); }
+  .login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(230,57,70,0.5); }
+  .login-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .login-error { margin-top:12px; color:#e63946; font-size:13px; font-family:var(--font-mono); display:none; }
+  .login-error.show { display:block; animation:shake 0.4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .admin-wrap { min-height:100vh; padding:28px 16px 80px; max-width:1200px; margin:0 auto; display:none; }
+  .admin-wrap.visible { display:block; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .admin-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+  .admin-header-left h1 { font-family:var(--font-head,'Bebas Neue',sans-serif); font-size:clamp(22px,5vw,34px); letter-spacing:3px; color:var(--text); margin:0 0 4px; }
+  .admin-header-left p { color:var(--text3); font-size:12px; font-family:var(--font-mono); letter-spacing:1px; margin:0; }
+  .admin-header-right { display:flex; align-items:center; gap:10px; }
+  .admin-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,rgba(230,57,70,0.15),rgba(230,57,70,0.05)); border:1px solid rgba(230,57,70,0.3); color:#e63946; font-size:11px; font-weight:700; font-family:var(--font-mono); letter-spacing:2px; padding:6px 14px; border-radius:99px; }
+  .admin-badge::before { content:''; width:6px; height:6px; background:#e63946; border-radius:50%; animation:pulse-dot 1.5s ease infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+  .btn-logout-admin { padding:7px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; color:var(--text3); font-size:12px; cursor:pointer; transition:all 0.2s; font-family:var(--font-body); }
+  .btn-logout-admin:hover { border-color:#e63946; color:#e63946; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:32px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 18px; position:relative; overflow:hidden; transition:border-color 0.25s,transform 0.25s; }
+  .stat-card:hover { border-color:rgba(230,57,70,0.3); transform:translateY(-2px); }
+  .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(to right,#e63946,transparent); opacity:0; transition:opacity 0.25s; }
+  .stat-card:hover::after { opacity:1; }
+  .stat-label { font-size:10px; font-family:var(--font-mono); letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:10px; }
+  .stat-value { font-family:var(--font-head); font-size:38px; letter-spacing:2px; color:var(--text); line-height:1; margin-bottom:4px; }
+  .stat-value.accent{color:#e63946} .stat-value.green{color:#66bb6a} .stat-value.yellow{color:#ffd600}
+  .stat-sub { font-size:11px; color:var(--text3); }
+
+  .admin-tabs { display:flex; gap:4px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:24px; overflow-x:auto; }
+  .admin-tab { flex-shrink:0; padding:9px 18px; border-radius:9px; background:none; border:none; color:var(--text2); font-size:13px; font-weight:600; font-family:var(--font-body,sans-serif); cursor:pointer; transition:background 0.2s,color 0.2s; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .admin-tab:hover { background:var(--bg2); color:var(--text); }
+  .admin-tab.active { background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; box-shadow:0 4px 14px rgba(230,57,70,0.3); }
+  .tab-badge { background:rgba(255,255,255,0.2); color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:99px; min-width:18px; text-align:center; }
+  .admin-tab:not(.active) .tab-badge { background:rgba(230,57,70,0.15); color:#e63946; }
+
+  .admin-section { display:none; }
+  .admin-section.active { display:block; }
+  .section-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .section-title { font-family:var(--font-head); font-size:18px; letter-spacing:2px; color:var(--text); }
+  .refresh-btn { padding:7px 14px; border-radius:8px; background:var(--bg2); border:1px solid var(--border); color:var(--text2); font-size:12px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:5px; font-family:var(--font-body); }
+  .refresh-btn:hover { border-color:rgba(230,57,70,0.3); color:var(--text); }
+
+  .payments-list { display:flex; flex-direction:column; gap:12px; }
+  .payment-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; transition:border-color 0.2s,opacity 0.3s,transform 0.3s; }
+  .payment-card:hover { border-color:rgba(230,57,70,0.2); }
+  .payment-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .payment-user { display:flex; align-items:center; gap:10px; }
+  .payment-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); flex-shrink:0; }
+  .payment-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; }
+  .payment-email { font-size:11px; color:var(--text3); font-family:var(--font-mono); }
+  .payment-meta { text-align:right; }
+  .payment-amount { font-family:var(--font-head); font-size:22px; color:#e63946; letter-spacing:1px; }
+  .payment-date { font-size:11px; color:var(--text3); font-family:var(--font-mono); margin-top:2px; }
+  .payment-info-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .payment-tag { display:inline-flex; align-items:center; gap:5px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; color:var(--text2); }
+  .payment-proof-link { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; background:rgba(230,57,70,0.08); border:none; border-radius:6px; color:#e63946; font-size:12px; font-weight:600; cursor:pointer; transition:background 0.2s; font-family:var(--font-body); }
+  .payment-proof-link:hover { background:rgba(230,57,70,0.16); }
+  .payment-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .admin-note-input { flex:1; min-width:160px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:12px; font-family:var(--font-body); }
+  .admin-note-input::placeholder { color:var(--text3); }
+  .admin-note-input:focus { outline:none; border-color:rgba(230,57,70,0.4); }
+  .btn-approve { display:flex; align-items:center; gap:6px; padding:9px 18px; background:linear-gradient(135deg,#2e7d52,#1b5e33); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 14px rgba(46,125,82,0.35); font-family:var(--font-body); }
+  .btn-approve:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(46,125,82,0.5); }
+  .btn-reject { display:flex; align-items:center; gap:6px; padding:9px 18px; background:var(--bg2); color:#e63946; border:1px solid rgba(230,57,70,0.3); border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:background 0.2s; font-family:var(--font-body); }
+  .btn-reject:hover { background:rgba(230,57,70,0.1); }
+  .btn-revoke { padding:7px 14px; background:var(--bg2); color:var(--text3); border:1px solid var(--border); border-radius:8px; font-size:12px; cursor:pointer; transition:all 0.2s; font-family:var(--font-body); }
+  .btn-revoke:hover { border-color:#e63946; color:#e63946; }
+
+  .sbadge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:0.5px; }
+  .sbadge-pending  { background:rgba(255,214,0,0.1);  color:#ffd600; border:1px solid rgba(255,214,0,0.25); }
+  .sbadge-approved { background:rgba(102,187,106,0.1); color:#66bb6a; border:1px solid rgba(102,187,106,0.25); }
+  .sbadge-rejected { background:rgba(230,57,70,0.1);  color:#e63946; border:1px solid rgba(230,57,70,0.25); }
+  .sbadge-monthly  { background:rgba(100,180,255,0.1); color:#64b4ff; border:1px solid rgba(100,180,255,0.2); }
+  .sbadge-peranime { background:rgba(200,130,255,0.1); color:#c882ff; border:1px solid rgba(200,130,255,0.2); }
+
+  .sub-table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
+  .sub-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .sub-table th { background:var(--bg2); color:var(--text3); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-family:var(--font-mono); font-weight:600; padding:12px 16px; text-align:left; white-space:nowrap; border-bottom:1px solid var(--border); }
+  .sub-table td { padding:13px 16px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text2); vertical-align:middle; }
+  .sub-table tr:last-child td { border-bottom:none; }
+  .sub-table tr:hover td { background:rgba(255,255,255,0.02); }
+
+  .empty-admin { text-align:center; padding:60px 20px; color:var(--text3); font-size:13px; font-family:var(--font-mono); letter-spacing:1px; }
+  .empty-admin-icon { font-size:42px; margin-bottom:14px; }
+  .admin-loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px; color:var(--text3); font-size:13px; font-family:var(--font-mono); }
+  .loading-dot { width:6px; height:6px; background:#e63946; border-radius:50%; animation:bounce 1.2s infinite; }
+  .loading-dot:nth-child(2){animation-delay:0.15s} .loading-dot:nth-child(3){animation-delay:0.3s}
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  .proof-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn 0.2s; }
+  .proof-modal { background:var(--bg2); border:1px solid var(--border); border-radius:18px; padding:20px; max-width:520px; width:100%; position:relative; }
+  .proof-modal img { width:100%; border-radius:10px; display:block; }
+  .proof-close { position:absolute; top:12px; right:14px; background:rgba(0,0,0,0.5); border:none; color:#fff; font-size:18px; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  #adminToast { position:fixed; bottom:24px; right:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 20px; font-size:13px; font-weight:600; color:var(--text); box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:99999; display:flex; align-items:center; gap:10px; transform:translateY(80px); opacity:0; transition:transform 0.3s cubic-bezier(.22,.68,0,1.2),opacity 0.3s; pointer-events:none; }
+  #adminToast.show { transform:translateY(0); opacity:1; }
+  #adminToast.toast-success { border-color:rgba(102,187,106,0.4); }
+  #adminToast.toast-error   { border-color:rgba(230,57,70,0.4); }
+
+  @media (max-width:600px) {
+    .payment-card-top{flex-direction:column} .payment-meta{text-align:left}
+    .admin-tabs{gap:2px} .admin-tab{padding:8px 12px;font-size:12px}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- LOGIN SCREEN -->
+<div class="admin-login-wrap" id="loginScreen" style="display:none">
+  <div class="admin-login-box">
+    <div class="login-icon">🛡️</div>
+    <div class="login-title">ADMIN LOGIN</div>
+    <p class="login-sub">Animeku.ID Control Center</p>
+    <div class="login-input-wrap">
+      <input type="password" id="adminKeyInput" class="login-input"
+        placeholder="Masukkan Admin Secret Key..."
+        onkeydown="if(event.key==='Enter') doLogin()"
+        autocomplete="current-password">
+      <button class="login-eye" onclick="toggleEye()">
+        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">MASUK → ADMIN PANEL</button>
+    <p class="login-error" id="loginError">❌ Secret key salah. Coba lagi.</p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-wrap" id="adminPanel">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <h1><span style="color:#e63946">A</span>DMIN PANEL</h1>
+      <p>Animeku.ID — Subscription Control Center</p>
+    </div>
+    <div class="admin-header-right">
+      <span class="admin-badge">ADMIN ACCESS</span>
+      <button class="btn-logout-admin" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="statPending">—</div><div class="stat-sub">Menunggu verifikasi</div></div>
+    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value green" id="statApproved">—</div><div class="stat-sub">Dikonfirmasi</div></div>
+    <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value accent" id="statRejected">—</div><div class="stat-sub">Ditolak</div></div>
+    <div class="stat-card"><div class="stat-label">Subscriber Aktif</div><div class="stat-value" id="statSubs">—</div><div class="stat-sub">Langganan berjalan</div></div>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('pending')" id="tab-pending">⏳ Pending <span class="tab-badge" id="badgePending">0</span></button>
+    <button class="admin-tab" onclick="switchTab('approved')" id="tab-approved">✅ Approved</button>
+    <button class="admin-tab" onclick="switchTab('rejected')" id="tab-rejected">❌ Rejected</button>
+    <button class="admin-tab" onclick="switchTab('subscriptions')" id="tab-subscriptions">👑 Subscriber <span class="tab-badge" id="badgeSubs">0</span></button>
+  </div>
+
+  {% for tab in ['pending','approved','rejected'] %}
+  <div class="admin-section {% if tab == 'pending' %}active{% endif %}" id="section-{{ tab }}">
+    <div class="section-toolbar">
+      <span class="section-title">PEMBAYARAN {{ tab.upper() }}</span>
+      <button class="refresh-btn" onclick="loadPayments('{{ tab }}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="payments-list" id="list-{{ tab }}"><div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
+  </div>
+  {% endfor %}
+
+  <div class="admin-section" id="section-subscriptions">
+    <div class="section-toolbar">
+      <span class="section-title">SUBSCRIBER AKTIF</span>
+      <button class="refresh-btn" onclick="loadSubscriptions()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div id="sub-table-container"><div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
+  </div>
+</div>
+
+<!-- PROOF MODAL -->
+<div id="proofOverlay" class="proof-overlay" style="display:none" onclick="closeProof()">
+  <div class="proof-modal" onclick="event.stopPropagation()">
+    <button class="proof-close" onclick="closeProof()">✕</button>
+    <img id="proofImg" src="" alt="Bukti Transfer">
+    <p id="proofCaption" style="color:var(--text3);font-size:12px;font-family:var(--font-mono);margin-top:10px;text-align:center"></p>
+  </div>
+</div>
+
+<div id="adminToast"><span id="toastIcon">✅</span><span id="toastMsg">Berhasil</span></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const STORAGE_KEY = 'animeku_admin_key';
+let ADMIN_KEY = '';
+
+// ── Auth ─────────────────────────────────────────────────────────
+async function doLogin() {
+  const input = document.getElementById('adminKeyInput');
+  const key   = input.value.trim();
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginError');
+  if (!key) return;
+  btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.classList.remove('show');
+  try {
+    const resp = await fetch('/api/admin/payments?status=pending', { headers: { 'X-Admin-Key': key } });
+    if (resp.ok) { ADMIN_KEY = key; localStorage.setItem(STORAGE_KEY, key); showPanel(); }
+    else { err.textContent = '❌ Secret key salah. Coba lagi.'; err.classList.add('show'); input.value=''; input.focus(); }
+  } catch { err.textContent = '❌ Gagal terhubung ke server.'; err.classList.add('show'); }
+  btn.disabled = false; btn.textContent = 'MASUK → ADMIN PANEL';
+}
+function doLogout() {
+  ADMIN_KEY = ''; localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('adminPanel').classList.remove('visible');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminKeyInput').value = '';
+}
+function showPanel() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminPanel').classList.add('visible');
+  loadStats(); loadPayments('pending');
+}
+function toggleEye() {
+  const inp = document.getElementById('adminKeyInput');
+  const ico = document.getElementById('eyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+function adminHeaders() { return { 'X-Admin-Key': ADMIN_KEY, 'Content-Type': 'application/json' }; }
+
+// ── Tabs ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('section-'+tab).classList.add('active');
+  tab === 'subscriptions' ? loadSubscriptions() : loadPayments(tab);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.getElementById('adminToast');
+  document.getElementById('toastIcon').textContent = type==='success'?'✅':'❌';
+  document.getElementById('toastMsg').textContent  = msg;
+  t.className = 'show toast-'+type;
+  setTimeout(()=> t.className='', 3000);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+const fmtRp   = n => 'Rp ' + (n||0).toLocaleString('id-ID');
+const initial = n => (n||'?')[0].toUpperCase();
+const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const loadingHtml = () => `<div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>`;
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtExpiry(iso) {
+  if (!iso) return '<span style="color:#66bb6a;font-weight:700">Selamanya ♾</span>';
+  const d=new Date(iso), diff=Math.ceil((d-new Date())/86400000);
+  const c=diff<3?'#e63946':diff<7?'#ffd600':'#66bb6a';
+  return `<span style="color:${c}">${d.toLocaleDateString('id-ID')} (${diff>0?diff+' hari lagi':'kedaluwarsa'})</span>`;
+}
+
+// ── Stats ─────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const [p,a,r,s] = await Promise.all([
+      fetch('/api/admin/payments?status=pending',  {headers:adminHeaders()}).then(r=>r.json()),
+      fetch('/api/admin/payments?status=approved', {headers:adminHeaders()}).then(r=>r.json()),
+      fetch('/api/admin/payments?status=rejected', {headers:adminHeaders()}).then(r=>r.json()),
+      fetch('/api/admin/subscriptions',            {headers:adminHeaders()}).then(r=>r.json()),
+    ]);
+    document.getElementById('statPending').textContent  = Array.isArray(p)?p.length:'—';
+    document.getElementById('statApproved').textContent = Array.isArray(a)?a.length:'—';
+    document.getElementById('statRejected').textContent = Array.isArray(r)?r.length:'—';
+    document.getElementById('statSubs').textContent     = Array.isArray(s)?s.length:'—';
+    document.getElementById('badgePending').textContent = Array.isArray(p)?p.length:0;
+    document.getElementById('badgeSubs').textContent    = Array.isArray(s)?s.length:0;
+  } catch(e){console.error(e);}
+}
+
+// ── Payments ──────────────────────────────────────────────────────
+async function loadPayments(status) {
+  const c = document.getElementById('list-'+status);
+  c.innerHTML = loadingHtml();
+  try {
+    const resp = await fetch(`/api/admin/payments?status=${status}`, {headers:adminHeaders()});
+    const data = await resp.json();
+    if (!Array.isArray(data)||!data.length) {
+      c.innerHTML = `<div class="empty-admin"><div class="empty-admin-icon">${status==='pending'?'📭':status==='approved'?'🎉':'🗂️'}</div><p>Tidak ada pembayaran ${status}</p></div>`;
+      return;
+    }
+    c.innerHTML = data.map(p=>renderCard(p,status)).join('');
+  } catch { c.innerHTML=`<div class="empty-admin"><p style="color:#e63946">Gagal memuat. Refresh.</p></div>`; }
+}
+
+function renderCard(p, status) {
+  const isPending = status==='pending';
+  const plan  = p.plan_id==='monthly'?'<span class="sbadge sbadge-monthly">👑 BULANAN</span>':'<span class="sbadge sbadge-peranime">🎬 PER ANIME</span>';
+  const badge = `<span class="sbadge sbadge-${p.status}">${p.status.toUpperCase()}</span>`;
+  const proof = p.payment_proof
+    ? `<button class="payment-proof-link" onclick="viewProof('${escHtml(p.payment_proof)}','${escHtml(p.user_name||'')}')">📷 Lihat Bukti</button>`
+    : `<span class="payment-tag" style="color:var(--text3)">Tidak ada bukti</span>`;
+  const actions = isPending ? `
+    <input type="text" class="admin-note-input" id="note-${p.id}" placeholder="Catatan admin (opsional)...">
+    <button class="btn-approve" onclick="reviewPayment('${p.id}','approved')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>APPROVE</button>
+    <button class="btn-reject"  onclick="reviewPayment('${p.id}','rejected')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>REJECT</button>
+  ` : `<span class="payment-tag">Direview: ${escHtml(p.reviewed_by||'—')}</span><span class="payment-tag">${fmtDate(p.reviewed_at)}</span>${p.admin_note?`<span class="payment-tag">📝 ${escHtml(p.admin_note)}</span>`:''}`;
+  return `
+  <div class="payment-card" id="pcard-${p.id}">
+    <div class="payment-card-top">
+      <div class="payment-user">
+        <div class="payment-avatar">${initial(p.user_name)}</div>
+        <div><div class="payment-name">${escHtml(p.user_name||'Unknown')}</div><div class="payment-email">${escHtml(p.user_email||'—')}</div></div>
+      </div>
+      <div class="payment-meta"><div class="payment-amount">${fmtRp(p.amount)}</div><div class="payment-date">${fmtDate(p.created_at)}</div></div>
+    </div>
+    <div class="payment-info-row">${plan} ${badge} ${p.anime_title?`<span class="payment-tag">🎬 ${escHtml(p.anime_title)}</span>`:''} ${proof}</div>
+    <div class="payment-actions">${actions}</div>
+  </div>`;
+}
+
+async function reviewPayment(id, action) {
+  const note = (document.getElementById('note-'+id)?.value||'').trim();
+  const card = document.getElementById('pcard-'+id);
+  if (card) { card.style.opacity='0.5'; card.style.pointerEvents='none'; }
+  try {
+    const resp = await fetch(`/api/admin/payment/${id}/review`, {method:'POST',headers:adminHeaders(),body:JSON.stringify({action,note})});
+    const data = await resp.json();
+    if (resp.ok&&data.ok) {
+      showToast(action==='approved'?'✅ Approved! Subscription aktif.':'❌ Payment ditolak.', action==='approved'?'success':'error');
+      if (card) { card.style.transition='all 0.4s'; card.style.opacity='0'; card.style.transform='translateX(20px)'; setTimeout(()=>card.remove(),400); }
+      loadStats();
+    } else { showToast(data.error||'Gagal review','error'); if(card){card.style.opacity='1';card.style.pointerEvents='';} }
+  } catch(e) { showToast('Error: '+e.message,'error'); if(card){card.style.opacity='1';card.style.pointerEvents='';} }
+}
+
+// ── Subscriptions ─────────────────────────────────────────────────
+async function loadSubscriptions() {
+  const c = document.getElementById('sub-table-container');
+  c.innerHTML = loadingHtml();
+  try {
+    const resp = await fetch('/api/admin/subscriptions', {headers:adminHeaders()});
+    const data = await resp.json();
+    if (!Array.isArray(data)||!data.length) {
+      c.innerHTML=`<div class="empty-admin"><div class="empty-admin-icon">📋</div><p>Belum ada subscriber aktif</p></div>`; return;
+    }
+    c.innerHTML=`<div class="sub-table-wrap"><table class="sub-table"><thead><tr><th>User ID</th><th>Paket</th><th>Anime</th><th>Mulai</th><th>Kedaluwarsa</th><th>Aksi</th></tr></thead><tbody>
+      ${data.map(s=>`<tr id="subrow-${s.id}">
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">${s.user_id?s.user_id.slice(0,12)+'…':'—'}</td>
+        <td>${s.plan_id==='monthly'?'<span class="sbadge sbadge-monthly">👑 BULANAN</span>':'<span class="sbadge sbadge-peranime">🎬 PER ANIME</span>'}</td>
+        <td style="color:var(--text2);font-size:12px">${s.anime_slug?escHtml(s.anime_slug):'<span style="color:var(--text3)">Semua</span>'}</td>
+        <td style="font-size:12px;color:var(--text3)">${fmtDate(s.started_at)}</td>
+        <td style="font-size:12px">${fmtExpiry(s.expired_at)}</td>
+        <td><button class="btn-revoke" onclick="revokeSubscription('${s.id}')">Cabut</button></td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+  } catch { c.innerHTML=`<div class="empty-admin"><p style="color:#e63946">Gagal memuat data.</p></div>`; }
+}
+
+async function revokeSubscription(id) {
+  if (!confirm('Yakin ingin mencabut subscription ini?')) return;
+  const row = document.getElementById('subrow-'+id);
+  if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+  try {
+    const resp = await fetch(`/api/admin/subscription/${id}/revoke`, {method:'POST',headers:adminHeaders()});
+    const data = await resp.json();
+    if (resp.ok&&data.ok) {
+      showToast('Subscription berhasil dicabut','success');
+      if(row){row.style.transition='all 0.3s';row.style.opacity='0';setTimeout(()=>row.remove(),300);}
+      loadStats();
+    } else { showToast('Gagal mencabut','error'); if(row){row.style.opacity='1';row.style.pointerEvents='';} }
+  } catch(e) { showToast('Error: '+e.message,'error'); if(row){row.style.opacity='1';row.style.pointerEvents='';} }
+}
+
+// ── Proof ─────────────────────────────────────────────────────────
+async function viewProof(path, name) {
+  try {
+    const resp = await fetch('/api/admin/proof-url', {method:'POST',headers:adminHeaders(),body:JSON.stringify({path})});
+    const data = await resp.json();
+    document.getElementById('proofImg').src = data.url || path;
+  } catch { document.getElementById('proofImg').src = path; }
+  document.getElementById('proofCaption').textContent = 'Bukti transfer dari '+name;
+  document.getElementById('proofOverlay').style.display = 'flex';
+}
+function closeProof() { document.getElementById('proofOverlay').style.display='none'; document.getElementById('proofImg').src=''; }
+
+// ── Init: auto-login jika key tersimpan ───────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const resp = await fetch('/api/admin/payments?status=pending', {headers:{'X-Admin-Key':saved}});
+      if (resp.ok) { ADMIN_KEY=saved; showPanel(); return; }
+    } catch {}
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  document.getElementById('loginScreen').style.display = 'flex';
+  setTimeout(()=>document.getElementById('adminKeyInput').focus(), 100);
+});
+</script>
+{% endblock %}
