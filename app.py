@@ -628,7 +628,20 @@ def my_subscriptions():
 @app.route("/api/payment/upload-proof", methods=["POST"])
 def payment_upload_proof():
     """Upload bukti transfer langsung ke Cloudinary dari server."""
+    # Cek auth: bisa dari Flask session ATAU Authorization header (localStorage token)
     user = session.get("user")
+    if not user:
+        auth_header  = request.headers.get("Authorization", "")
+        access_token = auth_header.replace("Bearer ", "").strip()
+        if access_token:
+            user_resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
+            if user_resp.ok:
+                ud = user_resp.json()
+                user = {
+                    "id":    ud.get("id"),
+                    "name":  ud.get("user_metadata", {}).get("full_name", "User"),
+                    "email": ud.get("email", ""),
+                }
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
