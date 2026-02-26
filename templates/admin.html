@@ -707,7 +707,7 @@ let bannedUsers     = JSON.parse(localStorage.getItem("admin_banned") || "[]");
 let currentTab      = "stats";
 
 // ── INIT ───────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   let user = null;
   try { user = JSON.parse(localStorage.getItem("sb_user")); } catch {}
 
@@ -720,13 +720,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("adminWelcome").textContent = "Halo, " + user.name + " 👋";
   document.getElementById("adminIdDisplay").textContent = user.id;
 
-  await loadBannedUsers();
   loadStats();
   loadChatMessages();
   loadComments();
   loadUsers();
   loadPopupConfig();
-  loadSiteSettings();
 });
 
 // ── HELPERS ────────────────────────────────────────────────────
