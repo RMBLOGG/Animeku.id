@@ -413,6 +413,11 @@ def chat():
     return render_template("chat.html")
 
 
+@app.route("/admin")
+def admin():
+    return render_template("admin.html")
+
+
 # ── API Proxy ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/search/<keyword>")
