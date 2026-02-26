@@ -492,7 +492,7 @@
 
   <!-- Auth Banner (hanya muncul kalau belum login) -->
   <div class="chat-auth-banner" id="authBanner" style="display:none">
-    <span>✨ Kamu sedang chat sebagai <strong>Anonim</strong>. <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">Login</a> untuk tampil dengan nama & avatar kamu!</span>
+    <span>✨ Kamu sedang chat sebagai <strong id="anonNameBanner">Anonim</strong>. <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">Login</a> untuk tampil dengan nama & avatar kamu!</span>
     <button onclick="document.getElementById('authBanner').style.display='none'" style="color:var(--text3);font-size:18px;line-height:1">×</button>
   </div>
 
@@ -642,13 +642,22 @@ function initUser() {
       anonId = "anon_" + Math.random().toString(36).slice(2, 10);
       localStorage.setItem("anon_chat_id", anonId);
     }
+    // Buat nomor 4 digit konsisten dari anonId
+    let anonNum = localStorage.getItem("anon_chat_num");
+    if (!anonNum) {
+      anonNum = String(Math.floor(1000 + Math.random() * 9000));
+      localStorage.setItem("anon_chat_num", anonNum);
+    }
+    const anonName = "Anonim#" + anonNum;
     currentUser = {
       id:      anonId,
-      name:    "Anonim",
+      name:    anonName,
       avatar:  "",
       is_anon: true,
     };
     document.getElementById("authBanner").style.display = "flex";
+    const bannerName = document.getElementById("anonNameBanner");
+    if (bannerName) bannerName.textContent = anonName;
   }
 }
 
@@ -959,7 +968,7 @@ function renderOnlineUsers(users) {
       ${u.user_avatar
         ? `<img src="${escHtml(u.user_avatar)}" alt="">`
         : `<div class="online-user-dot"></div>`}
-      <span>${escHtml(u.is_anon ? "Anonim" : u.user_name)}</span>
+      <span>${escHtml(u.is_anon ? (u.user_name || "Anonim") : u.user_name)}</span>
     </div>
   `).join("");
 }
@@ -1004,7 +1013,7 @@ function buildMsgEl(msg, isOwn, animate = true) {
   } else {
     const ph    = document.createElement("div");
     ph.className = "msg-avatar-placeholder";
-    ph.textContent = msg.is_anon ? "?" : (msg.user_name || "?")[0].toUpperCase();
+    ph.textContent = msg.is_anon ? "#" : (msg.user_name || "?")[0].toUpperCase();
     avatarWrap.appendChild(ph);
   }
   wrapper.appendChild(avatarWrap);
@@ -1018,7 +1027,7 @@ function buildMsgEl(msg, isOwn, animate = true) {
   meta.className = "msg-meta";
   const nameEl   = document.createElement("span");
   nameEl.className = "msg-name" + (isOwn ? " is-me" : "") + (msg.is_anon ? " is-anon" : "");
-  nameEl.textContent = msg.is_anon ? "Anonim" : (msg.user_name || "User");
+  nameEl.textContent = msg.is_anon ? (msg.user_name || "Anonim") : (msg.user_name || "User");
   if (isAdmin(msg.user_id)) {
     nameEl.classList.add("is-admin");
     const badge = document.createElement("span");
@@ -1075,7 +1084,7 @@ function buildMsgEl(msg, isOwn, animate = true) {
   replyBtn.className   = "msg-action-btn";
   replyBtn.title       = "Balas";
   replyBtn.textContent = "↩";
-  replyBtn.onclick     = () => setReply(msg.id, msg.is_anon ? "Anonim" : (msg.user_name||"User"), msg.content);
+  replyBtn.onclick     = () => setReply(msg.id, msg.user_name || (msg.is_anon ? "Anonim" : "User"), msg.content);
   actions.appendChild(replyBtn);
 
   // Delete btn (hanya milik sendiri)
