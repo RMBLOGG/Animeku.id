@@ -24,6 +24,69 @@
       .desktop-auth-item { display: none !important; }
     }
   </style>
+
+<style>
+/* ── NAV MORE DROPDOWN ─── */
+.nav-more {
+  position: relative;
+}
+.nav-more-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.nav-more-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.nav-more-btn.open  { color: var(--text); background: rgba(255,255,255,0.06); }
+
+.nav-more-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 170px;
+  z-index: 2000;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  animation: dropIn 0.2s cubic-bezier(.22,.68,0,1.2) both;
+}
+.nav-more-dropdown.show { display: block; }
+@keyframes dropIn {
+  from { opacity:0; transform:translateY(-8px) scale(0.97); }
+  to   { opacity:1; transform:none; }
+}
+.nav-more-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text2);
+  font-family: var(--font-body);
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.nav-more-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.nav-more-live { color: var(--accent) !important; font-weight: 600; }
+.nav-more-live:hover { background: rgba(230,57,70,0.08) !important; }
+.nav-more-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+</style>
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -417,14 +480,22 @@ function closeAnnouncement() {
         <a href="/popular"   class="nav-link">Populer</a>
         <a href="/jadwal"    class="nav-link">Jadwal</a>
         <a href="/genres"    class="nav-link">Genre</a>
-        <a href="/koleksi"   class="nav-link">Koleksi</a>
-        <a href="/animelist" class="nav-link">A-Z</a>
-        <a href="/chat"      class="nav-link" style="color:var(--accent)">
-          <span style="display:inline-flex;align-items:center;gap:5px">
-            <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;animation:livePulse 1.5s infinite"></span>
-            Live Chat
-          </span>
-        </a>
+        <!-- Dropdown Lainnya -->
+        <div class="nav-more" id="navMore">
+          <button class="nav-link nav-more-btn" onclick="toggleNavMore(event)">
+            Lainnya
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:3px"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="nav-more-dropdown" id="navMoreDropdown">
+            <a href="/koleksi"   class="nav-more-item">❤️ Koleksi</a>
+            <a href="/animelist" class="nav-more-item">🔤 Anime A-Z</a>
+            <div class="nav-more-divider"></div>
+            <a href="/chat" class="nav-more-item nav-more-live">
+              <span style="width:7px;height:7px;background:var(--accent);border-radius:50%;display:inline-block;animation:livePulse 1.5s infinite;flex-shrink:0"></span>
+              Live Chat
+            </a>
+          </div>
+        </div>
       </div>
       <div class="nav-right">
         <button class="nav-icon-btn" id="themeToggle" aria-label="Toggle theme" title="Ganti tema"></button>
@@ -604,6 +675,25 @@ function closeAnnouncement() {
   }
   loadAuthState();
   </script>
+
+<script>
+function toggleNavMore(e) {
+  e.stopPropagation();
+  var dd  = document.getElementById('navMoreDropdown');
+  var btn = document.querySelector('.nav-more-btn');
+  var isOpen = dd.classList.contains('show');
+  dd.classList.toggle('show', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#navMore')) {
+    var dd  = document.getElementById('navMoreDropdown');
+    var btn = document.querySelector('.nav-more-btn');
+    if (dd)  dd.classList.remove('show');
+    if (btn) btn.classList.remove('open');
+  }
+});
+</script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
