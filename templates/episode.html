@@ -111,12 +111,51 @@
 
       <!-- Step 1: Info transfer -->
       <div id="stepTransfer">
-        <div class="pmodal-bank-card">
-          <div class="pmodal-bank-label">Transfer ke</div>
-          <div class="pmodal-bank-name">{{ payment_info.bank }}</div>
-          <div class="pmodal-bank-number">{{ payment_info.number }}</div>
-          <div class="pmodal-bank-holder">a.n. {{ payment_info.name }}</div>
-          <button class="pmodal-copy-btn" onclick="copyRekening()">📋 Salin Nomor Rekening</button>
+        <p style="color:var(--text3);font-size:10px;font-family:var(--font-mono);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;text-align:center">Pilih metode pembayaran</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+
+          <div class="ewallet-card" id="ew-dana" onclick="selectEwallet('dana')">
+            <div class="ewallet-left">
+              <div class="ewallet-logo" style="background:linear-gradient(135deg,#118ef4,#0067d0)">
+                <span style="color:#fff;font-size:12px;font-weight:900;font-family:sans-serif">D</span>
+              </div>
+              <div>
+                <div class="ewallet-name" style="color:#118ef4">DANA</div>
+                <div class="ewallet-num">0823-2078-1747</div>
+                <div class="ewallet-an">a.n. Dayynime</div>
+              </div>
+            </div>
+            <button class="ewallet-copy-btn" onclick="event.stopPropagation();copyEwallet('0823-2078-1747','btn-dana')" id="btn-dana">📋 Salin</button>
+          </div>
+
+          <div class="ewallet-card" id="ew-ovo" onclick="selectEwallet('ovo')">
+            <div class="ewallet-left">
+              <div class="ewallet-logo" style="background:linear-gradient(135deg,#4c2a86,#7b2dff)">
+                <span style="color:#fff;font-size:12px;font-weight:900;font-family:sans-serif">O</span>
+              </div>
+              <div>
+                <div class="ewallet-name" style="color:#7b2dff">OVO</div>
+                <div class="ewallet-num">0823-2078-1747</div>
+                <div class="ewallet-an">a.n. Dayynime</div>
+              </div>
+            </div>
+            <button class="ewallet-copy-btn" onclick="event.stopPropagation();copyEwallet('0823-2078-1747','btn-ovo')" id="btn-ovo">📋 Salin</button>
+          </div>
+
+          <div class="ewallet-card" id="ew-gopay" onclick="selectEwallet('gopay')">
+            <div class="ewallet-left">
+              <div class="ewallet-logo" style="background:linear-gradient(135deg,#00b14f,#007a36)">
+                <span style="color:#fff;font-size:12px;font-weight:900;font-family:sans-serif">G</span>
+              </div>
+              <div>
+                <div class="ewallet-name" style="color:#00b14f">GoPay</div>
+                <div class="ewallet-num">0823-2078-1747</div>
+                <div class="ewallet-an">a.n. Dayynime</div>
+              </div>
+            </div>
+            <button class="ewallet-copy-btn" onclick="event.stopPropagation();copyEwallet('0823-2078-1747','btn-gopay')" id="btn-gopay">📋 Salin</button>
+          </div>
+
         </div>
 
         <div class="pmodal-amount" id="modalAmount"></div>
@@ -352,24 +391,30 @@
   .pmodal-title { color: var(--text); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
   .pmodal-subtitle { color: var(--text2); font-size: 13px; }
 
-  .pmodal-bank-card {
-    background: linear-gradient(135deg, #1a0a0d, #0f1520);
-    border: 1px solid rgba(230,57,70,0.25);
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 16px;
+  /* ewallet cards */
+  .ewallet-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 14px; cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s, background 0.2s;
   }
-  .pmodal-bank-label { color: var(--text3); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
-  .pmodal-bank-name { color: #e63946; font-family: var(--font-head); font-size: 22px; letter-spacing: 2px; margin-bottom: 4px; }
-  .pmodal-bank-number { color: var(--text); font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 3px; margin-bottom: 4px; }
-  .pmodal-bank-holder { color: var(--text2); font-size: 13px; margin-bottom: 12px; }
-  .pmodal-copy-btn {
-    background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.3);
-    color: #e63946; font-size: 12px; padding: 6px 14px; border-radius: 8px;
-    cursor: pointer; transition: background 0.2s;
+  .ewallet-card:hover { background: rgba(255,255,255,0.03); transform: translateX(2px); }
+  .ewallet-card.ew-selected { border-color: rgba(230,57,70,0.4); background: rgba(230,57,70,0.04); }
+  .ewallet-left { display: flex; align-items: center; gap: 12px; }
+  .ewallet-logo {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
   }
-  .pmodal-copy-btn:hover { background: rgba(230,57,70,0.2); }
+  .ewallet-name { font-family: var(--font-head); font-size: 16px; letter-spacing: 1px; font-weight: 800; margin-bottom: 2px; }
+  .ewallet-num  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 1px; }
+  .ewallet-an   { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .ewallet-copy-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600;
+    color: var(--text2); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    font-family: var(--font-body);
+  }
+  .ewallet-copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
 
   .pmodal-amount {
     text-align: center;
@@ -735,13 +780,31 @@ function goBackToTransfer() {
   document.getElementById('stepTransfer').style.display = 'block';
 }
 
-function copyRekening() {
-  const num = '{{ payment_info.number }}';
-  navigator.clipboard.writeText(num).then(() => {
-    const btn = document.querySelector('.pmodal-copy-btn');
+function selectEwallet(name) {
+  document.querySelectorAll('.ewallet-card').forEach(c => c.classList.remove('ew-selected'));
+  const card = document.getElementById('ew-' + name);
+  if (card) card.classList.add('ew-selected');
+}
+
+function copyEwallet(number, btnId) {
+  const cleanNum = number.replace(/-/g, '');
+  navigator.clipboard.writeText(cleanNum).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
     const orig = btn.textContent;
     btn.textContent = '✅ Tersalin!';
-    setTimeout(() => btn.textContent = orig, 2000);
+    btn.style.color = '#66bb6a';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  }).catch(() => {
+    // Fallback untuk browser yang tidak support clipboard API
+    const el = document.createElement('textarea');
+    el.value = cleanNum;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    const btn = document.getElementById(btnId);
+    if (btn) { const o = btn.textContent; btn.textContent = '✅ Tersalin!'; setTimeout(() => btn.textContent = o, 2000); }
   });
 }
 
