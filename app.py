@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify, session, redirect, s
 import requests
 import json
 import os
+import hashlib
+import hmac
 from upstash_redis import Redis
 from datetime import datetime, timedelta
 
@@ -24,6 +26,11 @@ PAYMENT_INFO = {
     "number":  os.environ.get("PAYMENT_NUMBER", "1234567890"),
     "name":    os.environ.get("PAYMENT_NAME", "Nama Pemilik"),
 }
+
+# Cloudinary config untuk upload bukti transfer
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "dzfkklsza")
+CLOUDINARY_API_KEY    = os.environ.get("CLOUDINARY_API_KEY", "588474134734416")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "9c12YJe5rZSYSg7zROQuvmVZ7mg")
 
 def supabase_headers(access_token=None, use_service_key=False):
     key = SUPABASE_SERVICE_KEY if use_service_key else SUPABASE_ANON_KEY
@@ -618,31 +625,49 @@ def my_subscriptions():
     return jsonify({"subscriptions": subs or [], "pending_payments": payments or []})
 
 
-@app.route("/api/payment/upload-url", methods=["POST"])
-def payment_upload_url():
-    """Buat signed URL untuk upload bukti transfer ke Supabase Storage."""
+@app.route("/api/payment/upload-proof", methods=["POST"])
+def payment_upload_proof():
+    """Upload bukti transfer langsung ke Cloudinary dari server."""
     user = session.get("user")
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
-    data = request.get_json() or {}
-    filename = data.get("filename", "bukti.jpg")
-    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
-    path = f"{user['id']}/{int(time.time())}.{ext}"
+    if "file" not in request.files:
+        return jsonify({"error": "File tidak ditemukan"}), 400
 
-    r = requests.post(
-        f"{SUPABASE_URL}/storage/v1/object/sign/payment-proofs/{path}",
-        headers=supabase_headers(use_service_key=True),
-        json={"expiresIn": 300}
-    )
+    file = request.files["file"]
+    if file.content_length and file.content_length > 5 * 1024 * 1024:
+        return jsonify({"error": "File terlalu besar, maks 5MB"}), 400
 
-    if r.ok:
-        signed = r.json()
-        return jsonify({
-            "upload_url":  f"{SUPABASE_URL}{signed.get('signedURL', '')}",
-            "public_path": path,
-        })
-    return jsonify({"error": "Gagal buat upload URL"}), 500
+    # Buat signature Cloudinary
+    timestamp  = int(time.time())
+    folder     = "payment-proofs"
+    public_id  = f"{folder}/{user['id']}_{timestamp}"
+    params_str = f"folder={folder}&public_id={user['id']}_{timestamp}&timestamp={timestamp}{CLOUDINARY_API_SECRET}"
+    signature  = hashlib.sha1(params_str.encode()).hexdigest()
+
+    try:
+        upload_resp = requests.post(
+            f"https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/upload",
+            data={
+                "api_key":   CLOUDINARY_API_KEY,
+                "timestamp": timestamp,
+                "signature": signature,
+                "folder":    folder,
+                "public_id": f"{user['id']}_{timestamp}",
+            },
+            files={"file": (file.filename, file.stream, file.content_type)},
+            timeout=30,
+        )
+        if not upload_resp.ok:
+            return jsonify({"error": "Upload ke Cloudinary gagal", "detail": upload_resp.text}), 500
+
+        result   = upload_resp.json()
+        img_url  = result.get("secure_url", "")
+        return jsonify({"ok": True, "url": img_url})
+
+    except Exception as e:
+        return jsonify({"error": f"Upload error: {str(e)}"}), 500
 
 
 # ── Admin API ──────────────────────────────────────────────────────────────────
@@ -769,28 +794,14 @@ def admin_subscriptions():
 
 @app.route("/api/admin/proof-url", methods=["POST"])
 def admin_proof_url():
-    """Buat signed URL sementara untuk admin lihat bukti transfer."""
+    """Return URL bukti transfer — sekarang pakai Cloudinary, URL sudah langsung bisa diakses."""
     if not require_admin():
         return jsonify({"error": "Forbidden"}), 403
 
     data = request.get_json() or {}
     path = data.get("path", "")
-
-    # path bisa berupa full URL atau hanya path relatif
-    if path.startswith("http"):
-        # ambil path relatif dari URL
-        path = path.split("/payment-proofs/")[-1] if "/payment-proofs/" in path else path
-
-    r = requests.post(
-        f"{SUPABASE_URL}/storage/v1/object/sign/payment-proofs/{path}",
-        headers=supabase_headers(use_service_key=True),
-        json={"expiresIn": 120}  # berlaku 2 menit
-    )
-
-    if r.ok:
-        signed = r.json()
-        return jsonify({"url": f"{SUPABASE_URL}{signed.get('signedURL', '')}"})
-    return jsonify({"url": path}), 200  # fallback
+    # Cloudinary URL sudah berupa https:// langsung, kembalikan apa adanya
+    return jsonify({"url": path})
 
 
 @app.route("/api/admin/subscription/<sub_id>/revoke", methods=["POST"])
