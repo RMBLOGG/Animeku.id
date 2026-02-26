@@ -1,427 +1,1082 @@
 {% extends "base.html" %}
-{% block title %}Admin Panel — Animeku.id{% endblock %}
+{% block title %}Admin Dashboard — Animeku.id{% endblock %}
 
 {% block head %}
 <style>
-  .admin-login-wrap { min-height:80vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .admin-login-box { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px 32px; width:100%; max-width:380px; text-align:center; animation:slideUp 0.4s cubic-bezier(.22,.68,0,1.2); }
-  @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  .login-icon { font-size:48px; margin-bottom:16px; }
-  .login-title { font-family:var(--font-head,'Bebas Neue',sans-serif); font-size:28px; letter-spacing:3px; color:var(--text); margin-bottom:6px; }
-  .login-sub { color:var(--text3); font-size:12px; font-family:var(--font-mono,monospace); letter-spacing:1px; margin-bottom:28px; }
-  .login-input-wrap { position:relative; margin-bottom:14px; }
-  .login-input { width:100%; padding:13px 46px 13px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px; font-family:var(--font-mono,monospace); letter-spacing:2px; box-sizing:border-box; transition:border-color 0.2s; }
-  .login-input:focus { outline:none; border-color:rgba(230,57,70,0.5); }
-  .login-input::placeholder { letter-spacing:1px; font-size:13px; color:var(--text3); }
-  .login-eye { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text3); cursor:pointer; padding:0; transition:color 0.2s; }
-  .login-eye:hover { color:var(--text); }
-  .login-btn { width:100%; padding:14px; background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; font-family:var(--font-body,sans-serif); cursor:pointer; letter-spacing:1px; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 20px rgba(230,57,70,0.35); }
-  .login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(230,57,70,0.5); }
-  .login-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-  .login-error { margin-top:12px; color:#e63946; font-size:13px; font-family:var(--font-mono); display:none; }
-  .login-error.show { display:block; animation:shake 0.4s; }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+/* ── ADMIN PAGE ───────────────────────────────── */
+.admin-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  min-height: 100vh;
+}
 
-  .admin-wrap { min-height:100vh; padding:28px 16px 80px; max-width:1200px; margin:0 auto; display:none; }
-  .admin-wrap.visible { display:block; animation:fadeIn 0.3s ease; }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .admin-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--border); }
-  .admin-header-left h1 { font-family:var(--font-head,'Bebas Neue',sans-serif); font-size:clamp(22px,5vw,34px); letter-spacing:3px; color:var(--text); margin:0 0 4px; }
-  .admin-header-left p { color:var(--text3); font-size:12px; font-family:var(--font-mono); letter-spacing:1px; margin:0; }
-  .admin-header-right { display:flex; align-items:center; gap:10px; }
-  .admin-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,rgba(230,57,70,0.15),rgba(230,57,70,0.05)); border:1px solid rgba(230,57,70,0.3); color:#e63946; font-size:11px; font-weight:700; font-family:var(--font-mono); letter-spacing:2px; padding:6px 14px; border-radius:99px; }
-  .admin-badge::before { content:''; width:6px; height:6px; background:#e63946; border-radius:50%; animation:pulse-dot 1.5s ease infinite; }
-  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
-  .btn-logout-admin { padding:7px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; color:var(--text3); font-size:12px; cursor:pointer; transition:all 0.2s; font-family:var(--font-body); }
-  .btn-logout-admin:hover { border-color:#e63946; color:#e63946; }
+/* Access Denied */
+.admin-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  text-align: center;
+}
+.admin-denied h2 {
+  font-family: var(--font-head);
+  font-size: 32px;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+.admin-denied p { color: var(--text2); font-size: 14px; }
 
-  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:32px; }
-  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 18px; position:relative; overflow:hidden; transition:border-color 0.25s,transform 0.25s; }
-  .stat-card:hover { border-color:rgba(230,57,70,0.3); transform:translateY(-2px); }
-  .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(to right,#e63946,transparent); opacity:0; transition:opacity 0.25s; }
-  .stat-card:hover::after { opacity:1; }
-  .stat-label { font-size:10px; font-family:var(--font-mono); letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:10px; }
-  .stat-value { font-family:var(--font-head); font-size:38px; letter-spacing:2px; color:var(--text); line-height:1; margin-bottom:4px; }
-  .stat-value.accent{color:#e63946} .stat-value.green{color:#66bb6a} .stat-value.yellow{color:#ffd600}
-  .stat-sub { font-size:11px; color:var(--text3); }
+/* Header */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.admin-title {
+  font-family: var(--font-head);
+  font-size: 28px;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-badge-title {
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #000;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+}
 
-  .admin-tabs { display:flex; gap:4px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:24px; overflow-x:auto; }
-  .admin-tab { flex-shrink:0; padding:9px 18px; border-radius:9px; background:none; border:none; color:var(--text2); font-size:13px; font-weight:600; font-family:var(--font-body,sans-serif); cursor:pointer; transition:background 0.2s,color 0.2s; display:flex; align-items:center; gap:7px; white-space:nowrap; }
-  .admin-tab:hover { background:var(--bg2); color:var(--text); }
-  .admin-tab.active { background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; box-shadow:0 4px 14px rgba(230,57,70,0.3); }
-  .tab-badge { background:rgba(255,255,255,0.2); color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:99px; min-width:18px; text-align:center; }
-  .admin-tab:not(.active) .tab-badge { background:rgba(230,57,70,0.15); color:#e63946; }
+/* Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+.admin-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: var(--trans);
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.admin-tab.active { background: var(--accent); color: #fff; }
 
-  .admin-section { display:none; }
-  .admin-section.active { display:block; }
-  .section-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
-  .section-title { font-family:var(--font-head); font-size:18px; letter-spacing:2px; color:var(--text); }
-  .refresh-btn { padding:7px 14px; border-radius:8px; background:var(--bg2); border:1px solid var(--border); color:var(--text2); font-size:12px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:5px; font-family:var(--font-body); }
-  .refresh-btn:hover { border-color:rgba(230,57,70,0.3); color:var(--text); }
+/* Tab Panes */
+.admin-pane { display: none; }
+.admin-pane.active { display: block; }
 
-  .payments-list { display:flex; flex-direction:column; gap:12px; }
-  .payment-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; transition:border-color 0.2s,opacity 0.3s,transform 0.3s; }
-  .payment-card:hover { border-color:rgba(230,57,70,0.2); }
-  .payment-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-  .payment-user { display:flex; align-items:center; gap:10px; }
-  .payment-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#e63946,#c0202a); color:#fff; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); flex-shrink:0; }
-  .payment-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; }
-  .payment-email { font-size:11px; color:var(--text3); font-family:var(--font-mono); }
-  .payment-meta { text-align:right; }
-  .payment-amount { font-family:var(--font-head); font-size:22px; color:#e63946; letter-spacing:1px; }
-  .payment-date { font-size:11px; color:var(--text3); font-family:var(--font-mono); margin-top:2px; }
-  .payment-info-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-  .payment-tag { display:inline-flex; align-items:center; gap:5px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; color:var(--text2); }
-  .payment-proof-link { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; background:rgba(230,57,70,0.08); border:none; border-radius:6px; color:#e63946; font-size:12px; font-weight:600; cursor:pointer; transition:background 0.2s; font-family:var(--font-body); }
-  .payment-proof-link:hover { background:rgba(230,57,70,0.16); }
-  .payment-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .admin-note-input { flex:1; min-width:160px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:12px; font-family:var(--font-body); }
-  .admin-note-input::placeholder { color:var(--text3); }
-  .admin-note-input:focus { outline:none; border-color:rgba(230,57,70,0.4); }
-  .btn-approve { display:flex; align-items:center; gap:6px; padding:9px 18px; background:linear-gradient(135deg,#2e7d52,#1b5e33); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 14px rgba(46,125,82,0.35); font-family:var(--font-body); }
-  .btn-approve:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(46,125,82,0.5); }
-  .btn-reject { display:flex; align-items:center; gap:6px; padding:9px 18px; background:var(--bg2); color:#e63946; border:1px solid rgba(230,57,70,0.3); border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:background 0.2s; font-family:var(--font-body); }
-  .btn-reject:hover { background:rgba(230,57,70,0.1); }
-  .btn-revoke { padding:7px 14px; background:var(--bg2); color:var(--text3); border:1px solid var(--border); border-radius:8px; font-size:12px; cursor:pointer; transition:all 0.2s; font-family:var(--font-body); }
-  .btn-revoke:hover { border-color:#e63946; color:#e63946; }
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  text-align: center;
+}
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 36px;
+  color: var(--text);
+  letter-spacing: 1px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-value.accent { color: var(--accent); }
+.stat-value.gold   { color: var(--gold); }
+.stat-value.green  { color: #4caf7d; }
+.stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-  .sbadge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:0.5px; }
-  .sbadge-pending  { background:rgba(255,214,0,0.1);  color:#ffd600; border:1px solid rgba(255,214,0,0.25); }
-  .sbadge-approved { background:rgba(102,187,106,0.1); color:#66bb6a; border:1px solid rgba(102,187,106,0.25); }
-  .sbadge-rejected { background:rgba(230,57,70,0.1);  color:#e63946; border:1px solid rgba(230,57,70,0.25); }
-  .sbadge-monthly  { background:rgba(100,180,255,0.1); color:#64b4ff; border:1px solid rgba(100,180,255,0.2); }
-  .sbadge-peranime { background:rgba(200,130,255,0.1); color:#c882ff; border:1px solid rgba(200,130,255,0.2); }
+/* Section card */
+.admin-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.admin-section-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-section-body { padding: 0; }
 
-  .sub-table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
-  .sub-table { width:100%; border-collapse:collapse; font-size:13px; }
-  .sub-table th { background:var(--bg2); color:var(--text3); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-family:var(--font-mono); font-weight:600; padding:12px 16px; text-align:left; white-space:nowrap; border-bottom:1px solid var(--border); }
-  .sub-table td { padding:13px 16px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text2); vertical-align:middle; }
-  .sub-table tr:last-child td { border-bottom:none; }
-  .sub-table tr:hover td { background:rgba(255,255,255,0.02); }
+/* Table */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: middle;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-  .empty-admin { text-align:center; padding:60px 20px; color:var(--text3); font-size:13px; font-family:var(--font-mono); letter-spacing:1px; }
-  .empty-admin-icon { font-size:42px; margin-bottom:14px; }
-  .admin-loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px; color:var(--text3); font-size:13px; font-family:var(--font-mono); }
-  .loading-dot { width:6px; height:6px; background:#e63946; border-radius:50%; animation:bounce 1.2s infinite; }
-  .loading-dot:nth-child(2){animation-delay:0.15s} .loading-dot:nth-child(3){animation-delay:0.3s}
-  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+/* User row */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-info img {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.user-avatar-ph {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.user-name { font-weight: 600; color: var(--text); font-size: 13px; }
+.user-sub  { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
 
-  .proof-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn 0.2s; }
-  .proof-modal { background:var(--bg2); border:1px solid var(--border); border-radius:18px; padding:20px; max-width:520px; width:100%; position:relative; }
-  .proof-modal img { width:100%; border-radius:10px; display:block; }
-  .proof-close { position:absolute; top:12px; right:14px; background:rgba(0,0,0,0.5); border:none; color:#fff; font-size:18px; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.badge-admin  { background: rgba(244,162,97,0.15); color: #f4a261; border: 1px solid rgba(244,162,97,0.3); }
+.badge-user   { background: rgba(139,146,165,0.1); color: var(--text3); border: 1px solid var(--border); }
+.badge-anon   { background: rgba(85,93,112,0.1);  color: var(--text3); border: 1px solid var(--border); font-style: italic; }
+.badge-banned { background: rgba(230,57,70,0.15); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
 
-  #adminToast { position:fixed; bottom:24px; right:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 20px; font-size:13px; font-weight:600; color:var(--text); box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:99999; display:flex; align-items:center; gap:10px; transform:translateY(80px); opacity:0; transition:transform 0.3s cubic-bezier(.22,.68,0,1.2),opacity 0.3s; pointer-events:none; }
-  #adminToast.show { transform:translateY(0); opacity:1; }
-  #adminToast.toast-success { border-color:rgba(102,187,106,0.4); }
-  #adminToast.toast-error   { border-color:rgba(230,57,70,0.4); }
+/* Buttons */
+.btn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--trans);
+  font-family: var(--font-body);
+}
+.btn-danger  { background: rgba(230,57,70,0.15); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
+.btn-danger:hover  { background: rgba(230,57,70,0.3); }
+.btn-success { background: rgba(76,175,125,0.15); color: #4caf7d; border: 1px solid rgba(76,175,125,0.3); }
+.btn-success:hover { background: rgba(76,175,125,0.3); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-gold    { background: rgba(244,162,97,0.15); color: var(--gold); border: 1px solid rgba(244,162,97,0.3); }
+.btn-gold:hover { background: rgba(244,162,97,0.3); }
+.btn-sm { padding: 4px 9px; font-size: 11px; }
 
-  @media (max-width:600px) {
-    .payment-card-top{flex-direction:column} .payment-meta{text-align:left}
-    .admin-tabs{gap:2px} .admin-tab{padding:8px 12px;font-size:12px}
-  }
+/* Message preview */
+.msg-preview {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text2);
+}
+
+/* Popup editor */
+.popup-editor {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.form-input, .form-textarea {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.form-input:focus, .form-textarea:focus { border-color: rgba(230,57,70,0.4); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+/* Toast */
+.admin-toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  padding: 10px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: toastIn 0.3s ease both;
+}
+@keyframes toastIn {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:none; }
+}
+.admin-toast.error { border-color: rgba(230,57,70,0.4); color: var(--accent); }
+.admin-toast.success { border-color: rgba(76,175,125,0.4); color: #4caf7d; }
+
+/* Empty state */
+.empty-row td {
+  text-align: center;
+  padding: 32px !important;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+/* Loading */
+.loading-row td {
+  text-align: center;
+  padding: 32px !important;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+/* Refresh btn */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.refresh-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+/* Search input */
+.search-input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  width: 200px;
+  transition: border-color 0.2s;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.search-input:focus { border-color: rgba(230,57,70,0.4); }
+
+/* Maintenance toggle */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  width: 16px; height: 16px;
+  left: 3px; bottom: 3px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: #fff; }
+.toggle-label { font-size: 14px; color: var(--text2); }
+
+/* Chart bar */
+.chart-bar-wrap { padding: 16px 20px; }
+.chart-bar-item { margin-bottom: 14px; }
+.chart-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 5px;
+}
+.chart-bar-track {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--accent), var(--accent2));
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="admin-page" id="adminPage" style="display:none">
 
-<!-- LOGIN SCREEN -->
-<div class="admin-login-wrap" id="loginScreen" style="display:none">
-  <div class="admin-login-box">
-    <div class="login-icon">🛡️</div>
-    <div class="login-title">ADMIN LOGIN</div>
-    <p class="login-sub">Animeku.ID Control Center</p>
-    <div class="login-input-wrap">
-      <input type="password" id="adminKeyInput" class="login-input"
-        placeholder="Masukkan Admin Secret Key..."
-        onkeydown="if(event.key==='Enter') doLogin()"
-        autocomplete="current-password">
-      <button class="login-eye" onclick="toggleEye()">
-        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">MASUK → ADMIN PANEL</button>
-    <p class="login-error" id="loginError">❌ Secret key salah. Coba lagi.</p>
-  </div>
-</div>
-
-<!-- ADMIN PANEL -->
-<div class="admin-wrap" id="adminPanel">
+  <!-- Header -->
   <div class="admin-header">
-    <div class="admin-header-left">
-      <h1><span style="color:#e63946">A</span>DMIN PANEL</h1>
-      <p>Animeku.ID — Subscription Control Center</p>
+    <div class="admin-title">
+      Dashboard <span class="admin-badge-title">⭐ ADMIN</span>
     </div>
-    <div class="admin-header-right">
-      <span class="admin-badge">ADMIN ACCESS</span>
-      <button class="btn-logout-admin" onclick="doLogout()">Logout</button>
-    </div>
+    <div style="font-size:13px;color:var(--text3);font-family:var(--font-mono)" id="adminWelcome"></div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="statPending">—</div><div class="stat-sub">Menunggu verifikasi</div></div>
-    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value green" id="statApproved">—</div><div class="stat-sub">Dikonfirmasi</div></div>
-    <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value accent" id="statRejected">—</div><div class="stat-sub">Ditolak</div></div>
-    <div class="stat-card"><div class="stat-label">Subscriber Aktif</div><div class="stat-value" id="statSubs">—</div><div class="stat-sub">Langganan berjalan</div></div>
-  </div>
-
+  <!-- Tabs -->
   <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchTab('pending')" id="tab-pending">⏳ Pending <span class="tab-badge" id="badgePending">0</span></button>
-    <button class="admin-tab" onclick="switchTab('approved')" id="tab-approved">✅ Approved</button>
-    <button class="admin-tab" onclick="switchTab('rejected')" id="tab-rejected">❌ Rejected</button>
-    <button class="admin-tab" onclick="switchTab('subscriptions')" id="tab-subscriptions">👑 Subscriber <span class="tab-badge" id="badgeSubs">0</span></button>
+    <button class="admin-tab active" onclick="switchTab('stats')" id="tab-stats">
+      📊 Statistik
+    </button>
+    <button class="admin-tab" onclick="switchTab('chat')" id="tab-chat">
+      💬 Chat
+    </button>
+    <button class="admin-tab" onclick="switchTab('comments')" id="tab-comments">
+      🗨️ Komentar
+    </button>
+    <button class="admin-tab" onclick="switchTab('users')" id="tab-users">
+      👥 User
+    </button>
+    <button class="admin-tab" onclick="switchTab('popup')" id="tab-popup">
+      📢 Popup
+    </button>
+    <button class="admin-tab" onclick="switchTab('settings')" id="tab-settings">
+      ⚙️ Pengaturan
+    </button>
   </div>
 
-  {% for tab in ['pending','approved','rejected'] %}
-  <div class="admin-section {% if tab == 'pending' %}active{% endif %}" id="section-{{ tab }}">
-    <div class="section-toolbar">
-      <span class="section-title">PEMBAYARAN {{ tab.upper() }}</span>
-      <button class="refresh-btn" onclick="loadPayments('{{ tab }}')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        Refresh
-      </button>
+  <!-- ── STATISTIK ─────────────────────────────── -->
+  <div class="admin-pane active" id="pane-stats">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value accent" id="stat-users">—</div>
+        <div class="stat-label">Total User</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-chat">—</div>
+        <div class="stat-label">Pesan Chat</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value gold" id="stat-comments">—</div>
+        <div class="stat-label">Komentar Anime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green" id="stat-online">—</div>
+        <div class="stat-label">Online Sekarang</div>
+      </div>
     </div>
-    <div class="payments-list" id="list-{{ tab }}"><div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
-  </div>
-  {% endfor %}
 
-  <div class="admin-section" id="section-subscriptions">
-    <div class="section-toolbar">
-      <span class="section-title">SUBSCRIBER AKTIF</span>
-      <button class="refresh-btn" onclick="loadSubscriptions()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        Refresh
-      </button>
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">👑 User Paling Aktif di Chat</div>
+        <button class="refresh-btn" onclick="loadStats()">↻ Refresh</button>
+      </div>
+      <div class="admin-section-body">
+        <div class="chart-bar-wrap" id="activeUsersChart">
+          <div style="color:var(--text3);font-size:13px">Memuat...</div>
+        </div>
+      </div>
     </div>
-    <div id="sub-table-container"><div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
   </div>
+
+  <!-- ── CHAT ──────────────────────────────────── -->
+  <div class="admin-pane" id="pane-chat">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">💬 Semua Pesan Chat</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="search-input" placeholder="Cari pesan..." oninput="filterChat(this.value)" id="chatSearch">
+          <button class="refresh-btn" onclick="loadChatMessages()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Pesan</th>
+              <th>Waktu</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="chatTableBody">
+            <tr class="loading-row"><td colspan="4">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KOMENTAR ───────────────────────────────── -->
+  <div class="admin-pane" id="pane-comments">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">🗨️ Semua Komentar Anime</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="search-input" placeholder="Cari komentar..." oninput="filterComments(this.value)" id="commentSearch">
+          <button class="refresh-btn" onclick="loadComments()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Anime</th>
+              <th>Komentar</th>
+              <th>Waktu</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="commentTableBody">
+            <tr class="loading-row"><td colspan="5">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── USER ──────────────────────────────────── -->
+  <div class="admin-pane" id="pane-users">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">👥 Daftar User</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="search-input" placeholder="Cari user..." oninput="filterUsers(this.value)" id="userSearch">
+          <button class="refresh-btn" onclick="loadUsers()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Pesan Chat</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr class="loading-row"><td colspan="5">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── POPUP EDITOR ───────────────────────────── -->
+  <div class="admin-pane" id="pane-popup">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">📢 Edit Popup Pemberitahuan</div>
+        <span style="font-size:11px;color:var(--text3)">Perubahan langsung tersimpan ke Supabase</span>
+      </div>
+      <div class="admin-section-body">
+        <div class="popup-editor">
+          <div class="form-group">
+            <label class="form-label">Judul Popup</label>
+            <input type="text" class="form-input" id="popupTitle" placeholder="Pemberitahuan !!" value="Pemberitahuan !!">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Isi Teks (paragraf 1)</label>
+            <textarea class="form-textarea" id="popupText1" placeholder="Website ini sepenuhnya dikelola oleh...">Website ini sepenuhnya dikelola oleh <strong>Dayynime</strong>.<br>Kami berkomitmen menghadirkan platform streaming yang bersih, aman, dan <strong>Tanpa Iklan Sama Sekali.</strong></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Isi Teks (paragraf 2)</label>
+            <textarea class="form-textarea" id="popupText2" placeholder="Jika kamu ingin Berkontribusi...">Jika kamu ingin <strong>Berkontribusi</strong> untuk biaya server kami,<br>silakan klik tombol <strong>Dukung ANIMEKU.ID</strong> di bawah. 🙏</textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Link Tombol Dukung</label>
+              <input type="text" class="form-input" id="popupDonateLink" placeholder="https://sociabuzz.com/...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Link Tombol APK</label>
+              <input type="text" class="form-input" id="popupApkLink" placeholder="https://...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teks Tombol Dukung</label>
+            <input type="text" class="form-input" id="popupDonateText" placeholder="Dukung" value="Dukung">
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="savePopupConfig()">💾 Simpan Perubahan</button>
+            <button class="btn" style="border:1px solid var(--border);color:var(--text2)" onclick="loadPopupConfig()">↻ Reset</button>
+          </div>
+          <div id="popupSaveMsg" style="font-size:12px;color:#4caf7d;display:none">✓ Berhasil disimpan!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">👁️ Preview Popup</div>
+        <button class="btn btn-sm" style="border:1px solid var(--border);color:var(--text2)" onclick="previewPopup()">Lihat Preview</button>
+      </div>
+      <div style="padding:16px;font-size:13px;color:var(--text3)">
+        Klik "Lihat Preview" untuk melihat tampilan popup sebelum disimpan.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PENGATURAN ─────────────────────────────── -->
+  <div class="admin-pane" id="pane-settings">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">⚙️ Pengaturan Site</div>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:20px">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:3px">Mode Maintenance</div>
+            <div style="font-size:12px;color:var(--text3)">Tampilkan halaman maintenance ke semua pengunjung</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:3px">Popup Pemberitahuan</div>
+            <div style="font-size:12px;color:var(--text3)">Aktifkan/nonaktifkan popup saat pengunjung masuk</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="popupToggle" checked onchange="togglePopupSetting(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:3px">Live Chat</div>
+            <div style="font-size:12px;color:var(--text3)">Aktifkan/nonaktifkan halaman live chat</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="chatToggle" checked onchange="toggleChatSetting(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:12px">🗑️ Hapus Semua Pesan Chat</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Hapus seluruh riwayat pesan di live chat. Tindakan ini tidak bisa dibatalkan!</div>
+          <button class="btn btn-danger" onclick="clearAllChat()">🗑️ Hapus Semua Pesan Chat</button>
+        </div>
+
+        <div style="padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:12px">📋 Info Admin</div>
+          <div style="font-size:12px;color:var(--text3);font-family:var(--font-mono);line-height:2">
+            Admin ID: <span style="color:var(--gold)" id="adminIdDisplay">—</span><br>
+            Session: <span style="color:#4caf7d" id="adminSessionDisplay">Active</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- PROOF MODAL -->
-<div id="proofOverlay" class="proof-overlay" style="display:none" onclick="closeProof()">
-  <div class="proof-modal" onclick="event.stopPropagation()">
-    <button class="proof-close" onclick="closeProof()">✕</button>
-    <img id="proofImg" src="" alt="Bukti Transfer">
-    <p id="proofCaption" style="color:var(--text3);font-size:12px;font-family:var(--font-mono);margin-top:10px;text-align:center"></p>
-  </div>
+<!-- Access Denied -->
+<div class="admin-denied" id="adminDenied" style="display:none">
+  <div style="font-size:48px">🚫</div>
+  <h2>AKSES DITOLAK</h2>
+  <p>Halaman ini hanya bisa diakses oleh Admin.<br>Login dengan akun admin terlebih dahulu.</p>
+  <a href="/auth/login" class="btn btn-primary" style="margin-top:8px">Login</a>
 </div>
-
-<div id="adminToast"><span id="toastIcon">✅</span><span id="toastMsg">Berhasil</span></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const STORAGE_KEY = 'animeku_admin_key';
-let ADMIN_KEY = '';
+// ── CONFIG ─────────────────────────────────────────────────────
+const SUPABASE_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+const ADMIN_IDS     = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 
-// ── Auth ─────────────────────────────────────────────────────────
-async function doLogin() {
-  const input = document.getElementById('adminKeyInput');
-  const key   = input.value.trim();
-  const btn   = document.getElementById('loginBtn');
-  const err   = document.getElementById('loginError');
-  if (!key) return;
-  btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.classList.remove('show');
-  try {
-    const resp = await fetch('/api/admin/payments?status=pending', { headers: { 'X-Admin-Key': key } });
-    if (resp.ok) { ADMIN_KEY = key; localStorage.setItem(STORAGE_KEY, key); showPanel(); }
-    else { err.textContent = '❌ Secret key salah. Coba lagi.'; err.classList.add('show'); input.value=''; input.focus(); }
-  } catch { err.textContent = '❌ Gagal terhubung ke server.'; err.classList.add('show'); }
-  btn.disabled = false; btn.textContent = 'MASUK → ADMIN PANEL';
-}
-function doLogout() {
-  ADMIN_KEY = ''; localStorage.removeItem(STORAGE_KEY);
-  document.getElementById('adminPanel').classList.remove('visible');
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminKeyInput').value = '';
-}
-function showPanel() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('adminPanel').classList.add('visible');
-  loadStats(); loadPayments('pending');
-}
-function toggleEye() {
-  const inp = document.getElementById('adminKeyInput');
-  const ico = document.getElementById('eyeIcon');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    inp.type = 'password';
-    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+// ── DATA CACHE ─────────────────────────────────────────────────
+let allChatMessages = [];
+let allComments     = [];
+let allUsers        = [];
+let bannedUsers     = JSON.parse(localStorage.getItem("admin_banned") || "[]");
+let currentTab      = "stats";
+
+// ── INIT ───────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  let user = null;
+  try { user = JSON.parse(localStorage.getItem("sb_user")); } catch {}
+
+  if (!user || !ADMIN_IDS.includes(user.id)) {
+    document.getElementById("adminDenied").style.display = "flex";
+    return;
   }
-}
-function adminHeaders() { return { 'X-Admin-Key': ADMIN_KEY, 'Content-Type': 'application/json' }; }
 
-// ── Tabs ─────────────────────────────────────────────────────────
+  document.getElementById("adminPage").style.display = "block";
+  document.getElementById("adminWelcome").textContent = "Halo, " + user.name + " 👋";
+  document.getElementById("adminIdDisplay").textContent = user.id;
+
+  loadStats();
+  loadChatMessages();
+  loadComments();
+  loadUsers();
+  loadPopupConfig();
+});
+
+// ── HELPERS ────────────────────────────────────────────────────
+function sbH() {
+  const token = localStorage.getItem("sb_access_token");
+  return {
+    "apikey": SUPABASE_ANON,
+    "Content-Type": "application/json",
+    "Authorization": token ? `Bearer ${token}` : `Bearer ${SUPABASE_ANON}`,
+  };
+}
+
+function fmtTime(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("id-ID", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+function escH(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function toast(msg, type="") {
+  const el = document.createElement("div");
+  el.className = "admin-toast " + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function userAvatar(u) {
+  if (u.user_avatar) return `<img src="${escH(u.user_avatar)}" alt="">`;
+  return `<div class="user-avatar-ph">${escH((u.user_name||"?")[0].toUpperCase())}</div>`;
+}
+
+// ── TABS ───────────────────────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('section-'+tab).classList.add('active');
-  tab === 'subscriptions' ? loadSubscriptions() : loadPayments(tab);
+  document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".admin-pane").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  document.getElementById("pane-" + tab).classList.add("active");
+  currentTab = tab;
 }
 
-// ── Toast ─────────────────────────────────────────────────────────
-function showToast(msg, type='success') {
-  const t = document.getElementById('adminToast');
-  document.getElementById('toastIcon').textContent = type==='success'?'✅':'❌';
-  document.getElementById('toastMsg').textContent  = msg;
-  t.className = 'show toast-'+type;
-  setTimeout(()=> t.className='', 3000);
-}
-
-// ── Helpers ───────────────────────────────────────────────────────
-const fmtRp   = n => 'Rp ' + (n||0).toLocaleString('id-ID');
-const initial = n => (n||'?')[0].toUpperCase();
-const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const loadingHtml = () => `<div class="admin-loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>`;
-function fmtDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-}
-function fmtExpiry(iso) {
-  if (!iso) return '<span style="color:#66bb6a;font-weight:700">Selamanya ♾</span>';
-  const d=new Date(iso), diff=Math.ceil((d-new Date())/86400000);
-  const c=diff<3?'#e63946':diff<7?'#ffd600':'#66bb6a';
-  return `<span style="color:${c}">${d.toLocaleDateString('id-ID')} (${diff>0?diff+' hari lagi':'kedaluwarsa'})</span>`;
-}
-
-// ── Stats ─────────────────────────────────────────────────────────
+// ── STATISTIK ──────────────────────────────────────────────────
 async function loadStats() {
   try {
-    const [p,a,r,s] = await Promise.all([
-      fetch('/api/admin/payments?status=pending',  {headers:adminHeaders()}).then(r=>r.json()),
-      fetch('/api/admin/payments?status=approved', {headers:adminHeaders()}).then(r=>r.json()),
-      fetch('/api/admin/payments?status=rejected', {headers:adminHeaders()}).then(r=>r.json()),
-      fetch('/api/admin/subscriptions',            {headers:adminHeaders()}).then(r=>r.json()),
-    ]);
-    document.getElementById('statPending').textContent  = Array.isArray(p)?p.length:'—';
-    document.getElementById('statApproved').textContent = Array.isArray(a)?a.length:'—';
-    document.getElementById('statRejected').textContent = Array.isArray(r)?r.length:'—';
-    document.getElementById('statSubs').textContent     = Array.isArray(s)?s.length:'—';
-    document.getElementById('badgePending').textContent = Array.isArray(p)?p.length:0;
-    document.getElementById('badgeSubs').textContent    = Array.isArray(s)?s.length:0;
-  } catch(e){console.error(e);}
-}
+    // Total chat messages
+    const chatRes = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.global&select=user_id,user_name,is_anon`, { headers: sbH() });
+    const chatData = chatRes.ok ? await chatRes.json() : [];
+    document.getElementById("stat-chat").textContent = chatData.length;
 
-// ── Payments ──────────────────────────────────────────────────────
-async function loadPayments(status) {
-  const c = document.getElementById('list-'+status);
-  c.innerHTML = loadingHtml();
-  try {
-    const resp = await fetch(`/api/admin/payments?status=${status}`, {headers:adminHeaders()});
-    const data = await resp.json();
-    if (!Array.isArray(data)||!data.length) {
-      c.innerHTML = `<div class="empty-admin"><div class="empty-admin-icon">${status==='pending'?'📭':status==='approved'?'🎉':'🗂️'}</div><p>Tidak ada pembayaran ${status}</p></div>`;
-      return;
-    }
-    c.innerHTML = data.map(p=>renderCard(p,status)).join('');
-  } catch { c.innerHTML=`<div class="empty-admin"><p style="color:#e63946">Gagal memuat. Refresh.</p></div>`; }
-}
+    // Total comments
+    const comRes = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?select=id`, { headers: sbH() });
+    const comData = comRes.ok ? await comRes.json() : [];
+    document.getElementById("stat-comments").textContent = comData.length;
 
-function renderCard(p, status) {
-  const isPending = status==='pending';
-  const plan  = p.plan_id==='monthly'?'<span class="sbadge sbadge-monthly">👑 BULANAN</span>':'<span class="sbadge sbadge-peranime">🎬 PER ANIME</span>';
-  const badge = `<span class="sbadge sbadge-${p.status}">${p.status.toUpperCase()}</span>`;
-  const proof = p.payment_proof
-    ? `<button class="payment-proof-link" onclick="viewProof('${escHtml(p.payment_proof)}','${escHtml(p.user_name||'')}')">📷 Lihat Bukti</button>`
-    : `<span class="payment-tag" style="color:var(--text3)">Tidak ada bukti</span>`;
-  const actions = isPending ? `
-    <input type="text" class="admin-note-input" id="note-${p.id}" placeholder="Catatan admin (opsional)...">
-    <button class="btn-approve" onclick="reviewPayment('${p.id}','approved')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>APPROVE</button>
-    <button class="btn-reject"  onclick="reviewPayment('${p.id}','rejected')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>REJECT</button>
-  ` : `<span class="payment-tag">Direview: ${escHtml(p.reviewed_by||'—')}</span><span class="payment-tag">${fmtDate(p.reviewed_at)}</span>${p.admin_note?`<span class="payment-tag">📝 ${escHtml(p.admin_note)}</span>`:''}`;
-  return `
-  <div class="payment-card" id="pcard-${p.id}">
-    <div class="payment-card-top">
-      <div class="payment-user">
-        <div class="payment-avatar">${initial(p.user_name)}</div>
-        <div><div class="payment-name">${escHtml(p.user_name||'Unknown')}</div><div class="payment-email">${escHtml(p.user_email||'—')}</div></div>
+    // Online users
+    const cutoff = new Date(Date.now() - 60000).toISOString();
+    const onRes = await fetch(`${SUPABASE_URL}/rest/v1/chat_presence?last_seen=gte.${cutoff}&select=user_id`, { headers: sbH() });
+    const onData = onRes.ok ? await onRes.json() : [];
+    document.getElementById("stat-online").textContent = onData.length;
+
+    // Unique users (non-anon)
+    const uniqueUsers = [...new Set(chatData.filter(m => !m.is_anon).map(m => m.user_id))];
+    document.getElementById("stat-users").textContent = uniqueUsers.length;
+
+    // Active users chart
+    const counts = {};
+    chatData.forEach(m => {
+      const key = m.is_anon ? "Anonim" : (m.user_name || "User");
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const max = sorted[0]?.[1] || 1;
+    const chart = document.getElementById("activeUsersChart");
+    if (!sorted.length) { chart.innerHTML = `<div style="color:var(--text3);font-size:13px">Belum ada data</div>`; return; }
+    chart.innerHTML = sorted.map(([name, count]) => `
+      <div class="chart-bar-item">
+        <div class="chart-bar-label"><span>${escH(name)}</span><span>${count} pesan</span></div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${(count/max*100).toFixed(1)}%"></div></div>
       </div>
-      <div class="payment-meta"><div class="payment-amount">${fmtRp(p.amount)}</div><div class="payment-date">${fmtDate(p.created_at)}</div></div>
-    </div>
-    <div class="payment-info-row">${plan} ${badge} ${p.anime_title?`<span class="payment-tag">🎬 ${escHtml(p.anime_title)}</span>`:''} ${proof}</div>
-    <div class="payment-actions">${actions}</div>
-  </div>`;
+    `).join("");
+  } catch(e) { console.error(e); }
 }
 
-async function reviewPayment(id, action) {
-  const note = (document.getElementById('note-'+id)?.value||'').trim();
-  const card = document.getElementById('pcard-'+id);
-  if (card) { card.style.opacity='0.5'; card.style.pointerEvents='none'; }
+// ── CHAT MESSAGES ──────────────────────────────────────────────
+async function loadChatMessages() {
+  const tbody = document.getElementById("chatTableBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="4">Memuat...</td></tr>`;
   try {
-    const resp = await fetch(`/api/admin/payment/${id}/review`, {method:'POST',headers:adminHeaders(),body:JSON.stringify({action,note})});
-    const data = await resp.json();
-    if (resp.ok&&data.ok) {
-      showToast(action==='approved'?'✅ Approved! Subscription aktif.':'❌ Payment ditolak.', action==='approved'?'success':'error');
-      if (card) { card.style.transition='all 0.4s'; card.style.opacity='0'; card.style.transform='translateX(20px)'; setTimeout(()=>card.remove(),400); }
-      loadStats();
-    } else { showToast(data.error||'Gagal review','error'); if(card){card.style.opacity='1';card.style.pointerEvents='';} }
-  } catch(e) { showToast('Error: '+e.message,'error'); if(card){card.style.opacity='1';card.style.pointerEvents='';} }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.global&order=created_at.desc&limit=100&select=*`, { headers: sbH() });
+    if (!res.ok) throw new Error();
+    allChatMessages = await res.json();
+    renderChatTable(allChatMessages);
+  } catch { tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Gagal memuat data</td></tr>`; }
 }
 
-// ── Subscriptions ─────────────────────────────────────────────────
-async function loadSubscriptions() {
-  const c = document.getElementById('sub-table-container');
-  c.innerHTML = loadingHtml();
+function renderChatTable(msgs) {
+  const tbody = document.getElementById("chatTableBody");
+  if (!msgs.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Tidak ada pesan</td></tr>`; return; }
+  tbody.innerHTML = msgs.map(m => `
+    <tr id="crow-${m.id}">
+      <td>
+        <div class="user-info">
+          ${m.user_avatar ? `<img src="${escH(m.user_avatar)}" alt="">` : `<div class="user-avatar-ph">${escH((m.user_name||"?")[0])}</div>`}
+          <div>
+            <div class="user-name">${escH(m.is_anon ? "Anonim" : m.user_name)}</div>
+            <div class="user-sub">${m.is_anon ? "anonim" : escH(m.user_id?.slice(0,8)+"...")}</div>
+          </div>
+        </div>
+      </td>
+      <td><div class="msg-preview" title="${escH(m.content)}">${escH(m.content)}</div></td>
+      <td style="white-space:nowrap;color:var(--text3);font-size:12px;font-family:var(--font-mono)">${fmtTime(m.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-danger" onclick="deleteChatMsg('${m.id}')">🗑️ Hapus</button>
+          ${!m.is_anon ? `<button class="btn btn-sm btn-gold" onclick="banUser('${escH(m.user_id)}','${escH(m.user_name)}')">🚫 Ban</button>` : ""}
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function filterChat(q) {
+  const filtered = allChatMessages.filter(m =>
+    (m.content||"").toLowerCase().includes(q.toLowerCase()) ||
+    (m.user_name||"").toLowerCase().includes(q.toLowerCase())
+  );
+  renderChatTable(filtered);
+}
+
+async function deleteChatMsg(id) {
+  if (!confirm("Hapus pesan ini?")) return;
   try {
-    const resp = await fetch('/api/admin/subscriptions', {headers:adminHeaders()});
-    const data = await resp.json();
-    if (!Array.isArray(data)||!data.length) {
-      c.innerHTML=`<div class="empty-admin"><div class="empty-admin-icon">📋</div><p>Belum ada subscriber aktif</p></div>`; return;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?id=eq.${id}`, { method: "DELETE", headers: sbH() });
+    if (!res.ok) throw new Error();
+    allChatMessages = allChatMessages.filter(m => m.id !== id);
+    document.getElementById("crow-" + id)?.remove();
+    toast("✓ Pesan dihapus", "success");
+  } catch { toast("Gagal hapus pesan", "error"); }
+}
+
+// ── KOMENTAR ───────────────────────────────────────────────────
+async function loadComments() {
+  const tbody = document.getElementById("commentTableBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Memuat...</td></tr>`;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?order=created_at.desc&limit=100&select=*`, { headers: sbH() });
+    if (!res.ok) throw new Error();
+    allComments = await res.json();
+    renderCommentTable(allComments);
+  } catch { tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat data</td></tr>`; }
+}
+
+function renderCommentTable(comments) {
+  const tbody = document.getElementById("commentTableBody");
+  if (!comments.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Tidak ada komentar</td></tr>`; return; }
+  tbody.innerHTML = comments.map(c => `
+    <tr id="comrow-${c.id}">
+      <td>
+        <div class="user-info">
+          ${c.user_avatar ? `<img src="${escH(c.user_avatar)}" alt="">` : `<div class="user-avatar-ph">${escH((c.user_name||"?")[0])}</div>`}
+          <div class="user-name">${escH(c.user_name||"User")}</div>
+        </div>
+      </td>
+      <td style="color:var(--accent);font-size:12px;font-family:var(--font-mono)">${escH(c.anime_slug||"—")}</td>
+      <td><div class="msg-preview" title="${escH(c.content)}">${escH(c.content)}</div></td>
+      <td style="white-space:nowrap;color:var(--text3);font-size:12px;font-family:var(--font-mono)">${fmtTime(c.created_at)}</td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteComment('${c.id}')">🗑️ Hapus</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function filterComments(q) {
+  const filtered = allComments.filter(c =>
+    (c.content||"").toLowerCase().includes(q.toLowerCase()) ||
+    (c.user_name||"").toLowerCase().includes(q.toLowerCase()) ||
+    (c.anime_slug||"").toLowerCase().includes(q.toLowerCase())
+  );
+  renderCommentTable(filtered);
+}
+
+async function deleteComment(id) {
+  if (!confirm("Hapus komentar ini?")) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/anime_comments?id=eq.${id}`, { method: "DELETE", headers: sbH() });
+    if (!res.ok) throw new Error();
+    allComments = allComments.filter(c => c.id !== id);
+    document.getElementById("comrow-" + id)?.remove();
+    toast("✓ Komentar dihapus", "success");
+  } catch { toast("Gagal hapus komentar", "error"); }
+}
+
+// ── USERS ──────────────────────────────────────────────────────
+async function loadUsers() {
+  const tbody = document.getElementById("userTableBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Memuat...</td></tr>`;
+  try {
+    // Ambil unique users dari chat messages
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.global&select=user_id,user_name,user_avatar,is_anon`, { headers: sbH() });
+    if (!res.ok) throw new Error();
+    const msgs = await res.json();
+
+    // Aggregate per user
+    const userMap = {};
+    msgs.forEach(m => {
+      if (!userMap[m.user_id]) {
+        userMap[m.user_id] = { user_id: m.user_id, user_name: m.user_name, user_avatar: m.user_avatar, is_anon: m.is_anon, msg_count: 0 };
+      }
+      userMap[m.user_id].msg_count++;
+    });
+    allUsers = Object.values(userMap).sort((a,b) => b.msg_count - a.msg_count);
+    renderUserTable(allUsers);
+  } catch { tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat data</td></tr>`; }
+}
+
+function renderUserTable(users) {
+  const tbody = document.getElementById("userTableBody");
+  if (!users.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Tidak ada data user</td></tr>`; return; }
+  tbody.innerHTML = users.map(u => {
+    const isAdmin  = ADMIN_IDS.includes(u.user_id);
+    const isBanned = bannedUsers.includes(u.user_id);
+    return `
+    <tr id="urow-${u.user_id}">
+      <td>
+        <div class="user-info">
+          ${u.user_avatar ? `<img src="${escH(u.user_avatar)}" alt="">` : `<div class="user-avatar-ph">${escH((u.user_name||"?")[0])}</div>`}
+          <div>
+            <div class="user-name">${escH(u.is_anon ? "Anonim" : u.user_name)}</div>
+            <div class="user-sub">${escH(u.user_id?.slice(0,12)+"...")}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        ${isAdmin  ? `<span class="badge badge-admin">⭐ ADMIN</span>` :
+          u.is_anon ? `<span class="badge badge-anon">Anonim</span>` :
+                      `<span class="badge badge-user">User</span>`}
+      </td>
+      <td style="font-family:var(--font-mono);color:var(--text2)">${u.msg_count}</td>
+      <td>
+        ${isBanned ? `<span class="badge badge-banned">🚫 Banned</span>` : `<span style="color:#4caf7d;font-size:12px">✓ Aktif</span>`}
+      </td>
+      <td>
+        ${!isAdmin && !u.is_anon ? `
+          ${isBanned
+            ? `<button class="btn btn-sm btn-success" onclick="unbanUser('${escH(u.user_id)}')">✓ Unban</button>`
+            : `<button class="btn btn-sm btn-danger" onclick="banUser('${escH(u.user_id)}','${escH(u.user_name)}')">🚫 Ban</button>`
+          }
+        ` : "—"}
+      </td>
+    </tr>
+  `}).join("");
+}
+
+function filterUsers(q) {
+  const filtered = allUsers.filter(u =>
+    (u.user_name||"").toLowerCase().includes(q.toLowerCase()) ||
+    (u.user_id||"").toLowerCase().includes(q.toLowerCase())
+  );
+  renderUserTable(filtered);
+}
+
+function banUser(uid, name) {
+  if (!confirm(`Ban user "${name}"? Mereka tidak bisa mengirim pesan.`)) return;
+  if (!bannedUsers.includes(uid)) bannedUsers.push(uid);
+  localStorage.setItem("admin_banned", JSON.stringify(bannedUsers));
+  toast(`🚫 ${name} telah di-ban`, "success");
+  renderUserTable(allUsers);
+}
+
+function unbanUser(uid) {
+  bannedUsers = bannedUsers.filter(id => id !== uid);
+  localStorage.setItem("admin_banned", JSON.stringify(bannedUsers));
+  toast("✓ User di-unban", "success");
+  renderUserTable(allUsers);
+}
+
+// ── POPUP CONFIG ───────────────────────────────────────────────
+async function loadPopupConfig() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.popup_config&select=*`, { headers: sbH() });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.length && data[0].value) {
+      const cfg = typeof data[0].value === "string" ? JSON.parse(data[0].value) : data[0].value;
+      if (cfg.title)       document.getElementById("popupTitle").value      = cfg.title;
+      if (cfg.text1)       document.getElementById("popupText1").value      = cfg.text1;
+      if (cfg.text2)       document.getElementById("popupText2").value      = cfg.text2;
+      if (cfg.donateLink)  document.getElementById("popupDonateLink").value = cfg.donateLink;
+      if (cfg.apkLink)     document.getElementById("popupApkLink").value    = cfg.apkLink;
+      if (cfg.donateText)  document.getElementById("popupDonateText").value = cfg.donateText;
     }
-    c.innerHTML=`<div class="sub-table-wrap"><table class="sub-table"><thead><tr><th>User ID</th><th>Paket</th><th>Anime</th><th>Mulai</th><th>Kedaluwarsa</th><th>Aksi</th></tr></thead><tbody>
-      ${data.map(s=>`<tr id="subrow-${s.id}">
-        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">${s.user_id?s.user_id.slice(0,12)+'…':'—'}</td>
-        <td>${s.plan_id==='monthly'?'<span class="sbadge sbadge-monthly">👑 BULANAN</span>':'<span class="sbadge sbadge-peranime">🎬 PER ANIME</span>'}</td>
-        <td style="color:var(--text2);font-size:12px">${s.anime_slug?escHtml(s.anime_slug):'<span style="color:var(--text3)">Semua</span>'}</td>
-        <td style="font-size:12px;color:var(--text3)">${fmtDate(s.started_at)}</td>
-        <td style="font-size:12px">${fmtExpiry(s.expired_at)}</td>
-        <td><button class="btn-revoke" onclick="revokeSubscription('${s.id}')">Cabut</button></td>
-      </tr>`).join('')}
-    </tbody></table></div>`;
-  } catch { c.innerHTML=`<div class="empty-admin"><p style="color:#e63946">Gagal memuat data.</p></div>`; }
+  } catch {}
 }
 
-async function revokeSubscription(id) {
-  if (!confirm('Yakin ingin mencabut subscription ini?')) return;
-  const row = document.getElementById('subrow-'+id);
-  if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+async function savePopupConfig() {
+  const cfg = {
+    title:      document.getElementById("popupTitle").value,
+    text1:      document.getElementById("popupText1").value,
+    text2:      document.getElementById("popupText2").value,
+    donateLink: document.getElementById("popupDonateLink").value,
+    apkLink:    document.getElementById("popupApkLink").value,
+    donateText: document.getElementById("popupDonateText").value,
+  };
   try {
-    const resp = await fetch(`/api/admin/subscription/${id}/revoke`, {method:'POST',headers:adminHeaders()});
-    const data = await resp.json();
-    if (resp.ok&&data.ok) {
-      showToast('Subscription berhasil dicabut','success');
-      if(row){row.style.transition='all 0.3s';row.style.opacity='0';setTimeout(()=>row.remove(),300);}
-      loadStats();
-    } else { showToast('Gagal mencabut','error'); if(row){row.style.opacity='1';row.style.pointerEvents='';} }
-  } catch(e) { showToast('Error: '+e.message,'error'); if(row){row.style.opacity='1';row.style.pointerEvents='';} }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
+      method: "POST",
+      headers: { ...sbH(), "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({ key: "popup_config", value: cfg }),
+    });
+    if (!res.ok) throw new Error();
+    const msg = document.getElementById("popupSaveMsg");
+    msg.style.display = "block";
+    setTimeout(() => msg.style.display = "none", 3000);
+    toast("✓ Popup berhasil disimpan!", "success");
+  } catch { toast("Gagal menyimpan popup", "error"); }
 }
 
-// ── Proof ─────────────────────────────────────────────────────────
-function viewProof(path, name) {
-  // Cloudinary URL sudah bisa diakses langsung - tidak perlu signed URL lagi
-  document.getElementById('proofImg').src = path;
-  document.getElementById('proofCaption').textContent = 'Bukti transfer dari ' + name;
-  document.getElementById('proofOverlay').style.display = 'flex';
+function previewPopup() {
+  sessionStorage.removeItem("annShown");
+  window.location.reload();
 }
-function closeProof() { document.getElementById('proofOverlay').style.display='none'; document.getElementById('proofImg').src=''; }
 
-// ── Init: auto-login jika key tersimpan ───────────────────────────
-document.addEventListener('DOMContentLoaded', async function() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const resp = await fetch('/api/admin/payments?status=pending', {headers:{'X-Admin-Key':saved}});
-      if (resp.ok) { ADMIN_KEY=saved; showPanel(); return; }
-    } catch {}
-    localStorage.removeItem(STORAGE_KEY);
-  }
-  document.getElementById('loginScreen').style.display = 'flex';
-  setTimeout(()=>document.getElementById('adminKeyInput').focus(), 100);
-});
+// ── SETTINGS ───────────────────────────────────────────────────
+function toggleMaintenance(on) {
+  localStorage.setItem("admin_maintenance", on ? "1" : "0");
+  toast(on ? "⚠️ Mode maintenance aktif" : "✓ Mode maintenance dinonaktifkan", on ? "error" : "success");
+}
+
+function togglePopupSetting(on) {
+  localStorage.setItem("admin_popup_disabled", on ? "0" : "1");
+  toast(on ? "✓ Popup diaktifkan" : "Popup dinonaktifkan", "success");
+}
+
+function toggleChatSetting(on) {
+  localStorage.setItem("admin_chat_disabled", on ? "0" : "1");
+  toast(on ? "✓ Live chat diaktifkan" : "Live chat dinonaktifkan", "success");
+}
+
+async function clearAllChat() {
+  if (!confirm("⚠️ Hapus SEMUA pesan chat? Tindakan ini tidak bisa dibatalkan!")) return;
+  if (!confirm("Yakin? Semua pesan akan hilang permanen!")) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.global`, { method: "DELETE", headers: sbH() });
+    if (!res.ok) throw new Error();
+    allChatMessages = [];
+    renderChatTable([]);
+    toast("✓ Semua pesan chat dihapus", "success");
+    loadStats();
+  } catch { toast("Gagal hapus semua pesan", "error"); }
+}
 </script>
 {% endblock %}
