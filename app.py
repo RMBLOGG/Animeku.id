@@ -33,11 +33,15 @@ CLOUDINARY_API_KEY    = os.environ.get("CLOUDINARY_API_KEY", "588474134734416")
 CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "9c12YJe5rZSYSg7zROQuvmVZ7mg")
 
 def supabase_headers(access_token=None, use_service_key=False):
-    key = SUPABASE_SERVICE_KEY if use_service_key else SUPABASE_ANON_KEY
-    h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
+    # Gunakan service key di apikey dan Authorization kalau use_service_key=True
     if use_service_key and SUPABASE_SERVICE_KEY:
-        h["Authorization"] = f"Bearer {SUPABASE_SERVICE_KEY}"
-    elif access_token:
+        return {
+            "apikey":        SUPABASE_SERVICE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            "Content-Type":  "application/json",
+        }
+    h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
+    if access_token:
         h["Authorization"] = f"Bearer {access_token}"
     else:
         h["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
@@ -613,6 +617,7 @@ def payment_submit():
 
     if r.ok:
         return jsonify({"ok": True, "message": "Pembayaran berhasil dikirim! Verifikasi admin 1×24 jam."})
+    print(f"[payment_submit] Supabase error {r.status_code}: {r.text}")
     return jsonify({"error": "Gagal submit pembayaran", "detail": r.text}), 500
 
 
