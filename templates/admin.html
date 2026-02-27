@@ -725,6 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadComments();
   loadUsers();
   loadPopupConfig();
+  loadSiteSettings();
 });
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -1051,19 +1052,55 @@ function previewPopup() {
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────
-function toggleMaintenance(on) {
-  localStorage.setItem("admin_maintenance", on ? "1" : "0");
-  toast(on ? "⚠️ Mode maintenance aktif" : "✓ Mode maintenance dinonaktifkan", on ? "error" : "success");
+async function loadSiteSettings() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.site_settings&select=value`, { headers: sbH() });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.length && data[0].value) {
+      const cfg = data[0].value;
+      const maintenanceEl = document.getElementById("maintenanceToggle");
+      const popupEl       = document.getElementById("popupToggle");
+      const chatEl        = document.getElementById("chatToggle");
+      if (maintenanceEl) maintenanceEl.checked = !!cfg.maintenance;
+      if (popupEl)       popupEl.checked       = !cfg.popup_disabled;
+      if (chatEl)        chatEl.checked         = !cfg.chat_disabled;
+    }
+  } catch(e) { console.error("Gagal load site settings:", e); }
 }
 
-function togglePopupSetting(on) {
-  localStorage.setItem("admin_popup_disabled", on ? "0" : "1");
-  toast(on ? "✓ Popup diaktifkan" : "Popup dinonaktifkan", "success");
+async function _saveSiteSettings(patch) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.site_settings&select=value`, { headers: sbH() });
+  const data = res.ok ? await res.json() : [];
+  const current = (data.length && data[0].value) ? data[0].value : {};
+  const updated = { ...current, ...patch };
+  const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
+    method: "POST",
+    headers: { ...sbH(), "Prefer": "resolution=merge-duplicates" },
+    body: JSON.stringify({ key: "site_settings", value: updated }),
+  });
+  if (!saveRes.ok) throw new Error("Gagal simpan ke Supabase");
 }
 
-function toggleChatSetting(on) {
-  localStorage.setItem("admin_chat_disabled", on ? "0" : "1");
-  toast(on ? "✓ Live chat diaktifkan" : "Live chat dinonaktifkan", "success");
+async function toggleMaintenance(on) {
+  try {
+    await _saveSiteSettings({ maintenance: on });
+    toast(on ? "⚠️ Mode maintenance aktif" : "✓ Mode maintenance dinonaktifkan", on ? "error" : "success");
+  } catch { toast("Gagal update maintenance", "error"); }
+}
+
+async function togglePopupSetting(on) {
+  try {
+    await _saveSiteSettings({ popup_disabled: !on });
+    toast(on ? "✓ Popup diaktifkan" : "Popup dinonaktifkan", "success");
+  } catch { toast("Gagal update popup setting", "error"); }
+}
+
+async function toggleChatSetting(on) {
+  try {
+    await _saveSiteSettings({ chat_disabled: !on });
+    toast(on ? "✓ Live chat diaktifkan" : "Live chat dinonaktifkan", "success");
+  } catch { toast("Gagal update chat setting", "error"); }
 }
 
 async function clearAllChat() {
