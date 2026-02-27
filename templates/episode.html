@@ -2,9 +2,6 @@
 {% block title %}{{ data.title if data else 'Nonton Episode' }} — Animeku.id{% endblock %}
 
 {% block content %}
-{# episode_base & anime_base di-inject oleh route — default ke samehadaku #}
-{% set episode_base = episode_base if episode_base is defined else '/episode' %}
-{% set anime_base   = anime_base   if anime_base   is defined else '/anime' %}
 {% if data %}
 
 {% set episodes = anime_data.detail.episodes if anime_data and anime_data.detail and anime_data.detail.episodes else [] %}
@@ -31,10 +28,10 @@
     <span class="breadcrumb-sep">›</span>
     {% set _aslug = anime_slug or (data.anime_id if data else '') %}
     {% if anime_data and anime_data.detail %}
-    <a href="{{ anime_base }}/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ anime_data.detail.title }}</a>
+    <a href="/anime/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ anime_data.detail.title }}</a>
     <span class="breadcrumb-sep">›</span>
     {% elif _aslug %}
-    <a href="{{ anime_base }}/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ _aslug | replace("-", " ") | title }}</a>
+    <a href="/anime/{{ _aslug }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block">{{ _aslug | replace("-", " ") | title }}</a>
     <span class="breadcrumb-sep">›</span>
     {% endif %}
     {# Ambil nomor episode dari data.title, misal "Tamon-kun Episode 9 Sub Indo" → "Episode 9" #}
@@ -222,7 +219,7 @@
   <!-- ACTION BAR -->
   <div class="player-action-bar">
     {% if anime_slug %}
-    <a href="{{ anime_base }}/{{ anime_slug }}" class="btn btn-ghost btn-sm">
+    <a href="/anime/{{ anime_slug }}" class="btn btn-ghost btn-sm">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       Detail Anime
     </a>
@@ -235,7 +232,7 @@
 
     <div class="ep-prev-next">
       {% if prev_ep %}
-      <a href="{{ episode_base }}/{{ prev_ep.slug }}?anime={{ anime_slug }}" class="btn btn-ghost btn-sm">
+      <a href="/episode/{{ prev_ep.slug }}?anime={{ anime_slug }}" class="btn btn-ghost btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
         Prev
       </a>
@@ -247,7 +244,7 @@
       {% endif %}
 
       {% if next_ep %}
-      <a href="{{ episode_base }}/{{ next_ep.slug }}?anime={{ anime_slug }}" class="btn btn-primary btn-sm">
+      <a href="/episode/{{ next_ep.slug }}?anime={{ anime_slug }}" class="btn btn-primary btn-sm">
         Next
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </a>
@@ -270,7 +267,7 @@
     <div class="hidden" id="epListGrid">
       <div class="episodes-grid" style="margin-top:12px">
         {% for ep in episodes %}
-        <a href="{{ episode_base }}/{{ ep.slug }}?anime={{ anime_slug }}"
+        <a href="/episode/{{ ep.slug }}?anime={{ anime_slug }}"
            class="ep-btn {% if ep.slug == slug %}active{% endif %}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           {{ ep.name }}

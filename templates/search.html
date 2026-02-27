@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Cari "{{ query }}" — Animeku.id{% endblock %}
 {% block content %}
-{% set anime_base = anime_base if anime_base is defined else '/anime' %}
 <div class="search-page-bar">
   <div class="search-page-inner">
     <h2 style="font-family:var(--font-head);font-size:28px;margin-bottom:20px;letter-spacing:1px">
@@ -25,7 +24,7 @@
       </div>
       <div class="anime-grid lg stagger">
         {% for anime in animes %}
-        <a href="{{ anime_base }}/{{ anime.slug }}" class="anime-card">
+        <a href="/anime/{{ anime.slug }}" class="anime-card">
           <div class="card-poster">
             <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
             <div class="card-overlay">

@@ -2,8 +2,6 @@
 {% block title %}Animeku.id — Nonton Anime Sub Indo Gratis{% endblock %}
 
 {% block content %}
-{# anime_base di-inject oleh route — default ke samehadaku #}
-{% set anime_base = anime_base if anime_base is defined else '/anime' %}
 
 <!-- HERO -->
 {% if data and data.ongoing %}
@@ -31,7 +29,7 @@
       </div>
       <p class="hero-desc">Nonton anime sub indo terlengkap & terbaru. Streaming gratis kualitas HD langsung di browser kamu.</p>
       <div class="hero-actions">
-        <a href="{{ anime_base }}/{{ featured.slug }}" class="btn btn-primary" id="heroLink">
+        <a href="/anime/{{ featured.slug }}" class="btn btn-primary" id="heroLink">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           Tonton Sekarang
         </a>
@@ -68,7 +66,6 @@ const heroAnimes = [
   }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
-const ANIME_BASE = {{ anime_base | tojson }};
 
 let heroCurrent = 0;
 
@@ -86,7 +83,7 @@ function heroGoTo(n) {
   }, 300);
 
   document.getElementById('heroTitle').textContent = a.title;
-  document.getElementById('heroLink').href = `${ANIME_BASE}/${a.slug}`;
+  document.getElementById('heroLink').href = `/anime/${a.slug}`;
   document.getElementById('heroMeta').innerHTML =
     (a.type ? `<span class="hero-tag">${a.type}</span>` : '') +
     (a.episode ? `<span class="hero-tag accent">${a.episode}</span>` : '') +
@@ -118,7 +115,7 @@ function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(()
       {% if schedule.schedule %}
         {% set first_day = schedule.schedule.keys() | list | first %}
         {% for item in schedule.schedule[first_day][:8] %}
-        <a href="{{ anime_base }}/{{ item.slug }}" class="schedule-item">
+        <a href="/anime/{{ item.slug }}" class="schedule-item">
           <span class="schedule-time">{{ item.time if item.time else '—' }}</span>
           <span>{{ item.title }}</span>
           {% if item.episode %}<span class="schedule-ep">{{ item.episode }}</span>{% endif %}
@@ -131,7 +128,6 @@ function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(()
 
 <script>
 const scheduleData = {{ schedule.schedule | tojson | safe if schedule.schedule else '{}' }};
-const SCHED_ANIME_BASE = {{ anime_base | tojson }};
 
 // Parse "0d 2h 37m" -> total detik
 function parseEstimation(str) {
@@ -178,7 +174,7 @@ function buildItemHtml(item) {
   }
 
   return `
-    <a href="${SCHED_ANIME_BASE}/${item.slug}" class="schedule-item">
+    <a href="/anime/${item.slug}" class="schedule-item">
       ${timeHtml}
       <span>${item.title}</span>
       ${item.episode ? `<span class="schedule-ep">${item.episode}</span>` : ''}
@@ -252,7 +248,7 @@ setInterval(function() {
     </div>
     <div class="anime-grid ongoing-grid stagger">
       {% for anime in data.ongoing[:10] %}
-      <a href="{{ anime_base }}/{{ anime.slug }}" class="anime-card">
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
         <div class="card-poster">
           <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
           <div class="card-overlay">
@@ -286,7 +282,7 @@ setInterval(function() {
     </div>
     <div class="anime-grid lg stagger">
       {% for anime in popular.animes[:10] %}
-      <a href="{{ anime_base }}/{{ anime.slug }}" class="anime-card">
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
         <div class="card-poster">
           <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
           <div class="card-overlay">
@@ -320,7 +316,7 @@ setInterval(function() {
     </div>
     <div class="anime-grid stagger">
       {% for anime in data.recent[:10] %}
-      <a href="{{ anime_base }}/{{ anime.slug }}" class="anime-card">
+      <a href="/anime/{{ anime.slug }}" class="anime-card">
         <div class="card-poster">
           <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
           <div class="card-overlay">
