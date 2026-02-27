@@ -492,23 +492,37 @@ body::before{
 }
 .live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.2s ease-in-out infinite}
 
-.lb-row{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 20px;
-  border-bottom:1px solid var(--border);
-  transition:.15s ease;
+/* ── TOP DONATUR GRID ── */
+.lb-grid-wrap{padding:20px 16px 16px}
+.lb-grid-info{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:12px}
+.lb-top1-wrap{display:flex;justify-content:center;margin-bottom:12px}
+.lb-card-item{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px 14px 14px;text-align:center;position:relative;
+  transition:.2s ease;cursor:default;
 }
-.lb-row:last-child{border-bottom:none}
-.lb-row:hover{background:rgba(255,255,255,0.02)}
-.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;width:28px;text-align:center;flex-shrink:0}
-.lb-av{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--bg2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:700;color:var(--text2);flex-shrink:0;
-}
-.lb-name{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb-amt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red);font-weight:600;flex-shrink:0}
+.lb-card-item:hover{border-color:rgba(230,57,70,0.25);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.4)}
+.lb-card-item.rank-1{border-color:rgba(244,162,97,0.4);background:linear-gradient(145deg,#131820,#0e1117);box-shadow:0 0 0 1px rgba(244,162,97,0.15),0 8px 28px rgba(0,0,0,0.4);width:160px}
+.lb-card-item.rank-1:hover{border-color:rgba(244,162,97,0.7);box-shadow:0 0 0 1px rgba(244,162,97,0.3),0 16px 40px rgba(244,162,97,0.15)}
+.lb-card-item.rank-2,.lb-card-item.rank-3{width:130px}
+.lb-card-item.rank-other{width:110px}
+.lb-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:22px;line-height:1}
+.lb-rank-badge{position:absolute;top:8px;right:8px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text3)}
+.rank-1 .lb-rank-badge{background:rgba(244,162,97,0.15);color:var(--gold)}
+.rank-2 .lb-rank-badge{background:rgba(192,192,220,0.12);color:#c0c0dc}
+.rank-3 .lb-rank-badge{background:rgba(200,140,80,0.12);color:#c88c50}
+.lb-av-circle{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--bg2),#1a2035);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text2);margin:0 auto 10px;overflow:hidden}
+.rank-1 .lb-av-circle{width:72px;height:72px;font-size:26px;border-color:rgba(244,162,97,0.5);box-shadow:0 0 14px rgba(244,162,97,0.2)}
+.rank-2 .lb-av-circle{border-color:rgba(192,192,220,0.4)}
+.rank-3 .lb-av-circle{border-color:rgba(200,140,80,0.4)}
+.lb-av-circle img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.lb-card-name{font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;max-width:100%}
+.rank-1 .lb-card-name{font-size:13px}
+.lb-card-amt{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--red)}
+.rank-1 .lb-card-amt{font-size:13px}
+.lb-top-badge{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--gold);background:rgba(244,162,97,0.1);border:1px solid rgba(244,162,97,0.25);padding:2px 8px;border-radius:99px}
+.lb-row2{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
+.lb-row-others{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
 /* Feed */
 .feed-card{display:flex;flex-direction:column}
@@ -677,7 +691,7 @@ body::before{
         </div>
 
         <div class="lb-card reveal">
-          <div class="card-head">🏆 Top Supporter</div>
+          <div class="card-head">🏆 Top Donatur Animeku.ID</div>
           <div id="lbBody"><div class="donasi-loading">Memuat...</div></div>
         </div>
 
@@ -864,15 +878,46 @@ revealEls.forEach(el => observer.observe(el));
   function renderLb(lb) {
     const el = document.getElementById("lbBody");
     if (!lb || !lb.length) { el.innerHTML = `<div class="donasi-loading">Belum ada supporter 🙏</div>`; return; }
-    const ic = ["🥇","🥈","🥉"];
-    el.innerHTML = lb.slice(0,5).map((item, i) => `
-      <div class="lb-row">
-        <div class="lb-rank">${i<3?ic[i]:(i+1)}</div>
-        <div class="lb-av">${esc((item.name||"?")[0].toUpperCase())}</div>
-        <div class="lb-name">${esc(item.name)}</div>
-        <div class="lb-amt">${fmtRp(item.total)}</div>
-      </div>
-    `).join("");
+
+    function makeCard(item, i) {
+      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+      const initial   = (item.name||"?")[0].toUpperCase();
+      const crown     = i === 0 ? `<div class="lb-crown">👑</div>` : '';
+      const badge     = i === 0 ? `<div class="lb-top-badge">⭐ Top Donation</div>` : '';
+      const rankLabel = i === 0 ? '#1' : i === 1 ? '#2' : i === 2 ? '#3' : `#${i+1}`;
+      return `
+        <div class="lb-card-item ${rankClass}">
+          ${crown}
+          <div class="lb-rank-badge">${rankLabel}</div>
+          <div class="lb-av-circle">${initial}</div>
+          <div class="lb-card-name">${esc(item.name||"Anonim")}</div>
+          <div class="lb-card-amt">${fmtRp(item.total)}</div>
+          ${badge}
+        </div>`;
+    }
+
+    let html = '<div class="lb-grid-wrap">';
+    // Rank 1 — tengah atas
+    if (lb.length >= 1) {
+      html += `<div class="lb-top1-wrap">${makeCard(lb[0], 0)}</div>`;
+    }
+    // Rank 2 & 3 — baris kedua
+    if (lb.length >= 2) {
+      html += '<div class="lb-row2">';
+      if (lb[1]) html += makeCard(lb[1], 1);
+      if (lb[2]) html += makeCard(lb[2], 2);
+      html += '</div>';
+    }
+    // Rank 4+ — baris ketiga
+    const others = lb.slice(3, 8);
+    if (others.length) {
+      html += '<div class="lb-row-others">';
+      others.forEach((item, j) => { html += makeCard(item, j + 3); });
+      html += '</div>';
+    }
+    html += `<div class="lb-grid-info">Menampilkan ${lb.length} teratas dari ${lb.length} top Donatur</div>`;
+    html += '</div>';
+    el.innerHTML = html;
   }
 
   function renderFeed(donations) {
