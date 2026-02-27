@@ -1184,10 +1184,11 @@ function appendMessage(msg, animate = true) {
     if (el.textContent.includes("Memuat") || el.textContent.includes("pertama")) el.remove();
   });
 
-  // Pesan donasi → render sebagai banner khusus
+  // Pesan donasi → render sebagai banner khusus + tampilkan toast
   if (msg.is_donation) {
     const el = buildDonationMsgEl(msg, animate);
     container.appendChild(el);
+    if (animate) showDonationToast(msg);
     return;
   }
 
@@ -1202,17 +1203,21 @@ function buildDonationMsgEl(msg, animate = true) {
   wrapper.id = "msg-" + msg.id;
   if (!animate) wrapper.style.animation = "none";
 
-  const amountFmt = msg.amount
-    ? "Rp " + Number(msg.amount).toLocaleString("id-ID")
-    : "";
+  const amount    = msg.amount || 0;
+  const amountFmt = amount ? "Rp " + Number(amount).toLocaleString("id-ID") : "";
   const donorName = msg.donor_name || msg.user_name || "Supporter";
-  const donorMsg  = msg.message || "";
+  // Ambil pesan dari field message atau ekstrak dari content
+  let donorMsg = msg.message || "";
+  if (!donorMsg && msg.content) {
+    const match = msg.content.match(/💬 "(.+)"$/);
+    if (match) donorMsg = match[1];
+  }
 
   wrapper.innerHTML = `
     <div class="donation-icon">💸</div>
     <div class="donation-body">
       <div class="donation-name">❤️ ${escHtml(donorName)}</div>
-      <div class="donation-amount">${escHtml(amountFmt)}</div>
+      ${amountFmt ? `<div class="donation-amount">${escHtml(amountFmt)}</div>` : ""}
       ${donorMsg ? `<div class="donation-msg">"${escHtml(donorMsg)}"</div>` : ""}
       <div class="donation-thanks">Makasih udah support Animeku.ID! 🙏</div>
     </div>
