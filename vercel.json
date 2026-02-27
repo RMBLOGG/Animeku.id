@@ -1,12 +1,10 @@
+
 {
   "version": 2,
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python",
-      "config": {
-        "includeFiles": ["animasu_extension.py"]
-      }
+      "use": "@vercel/python"
     },
     {
       "src": "static/**",
