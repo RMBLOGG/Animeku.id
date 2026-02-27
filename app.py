@@ -523,20 +523,34 @@ def delete_comment(comment_id):
 
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
+    WEBHOOK_TOKEN = "sbwhook-6ccpbrs7ai09fzbiluxdtwqn"
+    
     data = request.get_json(silent=True) or {}
 
-    # Debug: log semua yang masuk
-    print(f"[Webhook] Headers: {dict(request.headers)}")
-    print(f"[Webhook] Body: {data}")
+    # Cek token dari SEMUA kemungkinan lokasi
+    token = (
+        request.headers.get("X-Webhook-Token") or
+        request.headers.get("X-Sociabuzz-Token") or
+        request.headers.get("X-Token") or
+        request.headers.get("Authorization", "").replace("Bearer ", "").strip() or
+        request.args.get("token") or
+        data.get("token") or
+        data.get("webhook_token") or
+        ""
+    )
+
+    if token != WEBHOOK_TOKEN:
+        print(f"[Webhook] Token gagal: '{token}'")
+        # Tetap return 200 agar Sociabuzz tidak retry terus
+        return jsonify({"ok": True}), 200
 
     donor_name = data.get("donatur_name", data.get("name", "Anonymous"))
     amount     = data.get("amount", 0)
     message    = data.get("message", "")
     order_id   = data.get("order_id", data.get("id", ""))
 
-    print(f"[Sociabuzz] Donasi dari {donor_name}: Rp{amount} - {message}")
+    print(f"[Sociabuzz] ✅ Donasi VALID dari {donor_name}: Rp{amount} - {message}")
 
-    # Langsung return 200 tanpa cek token dulu
     return jsonify({"ok": True, "received": order_id}), 200
 
 if __name__ == "__main__":
