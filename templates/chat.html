@@ -369,6 +369,152 @@
   letter-spacing: 0.5px;
 }
 
+/* ── DONATION MESSAGE in chat ── */
+.msg-donation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 8px 0;
+  background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(255,107,107,0.06));
+  border: 1px solid rgba(230,57,70,0.3);
+  border-radius: 12px;
+  animation: donation-pop 0.5s cubic-bezier(.22,.68,0,1.4) both;
+  position: relative;
+  overflow: hidden;
+}
+.msg-donation::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(230,57,70,0.04), transparent);
+  animation: donation-shine 2s ease 0.5s both;
+}
+@keyframes donation-pop {
+  from { opacity:0; transform: scale(0.92) translateY(8px); }
+  to   { opacity:1; transform: none; }
+}
+@keyframes donation-shine {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(200%); }
+}
+.donation-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.donation-body { flex: 1; min-width: 0; }
+.donation-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+}
+.donation-amount {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 2px 0;
+}
+.donation-msg {
+  font-size: 12px;
+  color: var(--text2);
+  font-style: italic;
+  margin-top: 3px;
+}
+.donation-thanks {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ── DONATION TOAST NOTIFICATION overlay ── */
+#donationToast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(.22,.68,0,1.4);
+  width: min(360px, 92vw);
+}
+#donationToast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.donation-toast-inner {
+  background: linear-gradient(135deg, #1a0608, #200a0c);
+  border: 1px solid rgba(230,57,70,0.5);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(230,57,70,0.3), 0 2px 8px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+.donation-toast-inner::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #e63946, #ff6b6b, transparent);
+}
+.dt-emoji { font-size: 32px; flex-shrink: 0; animation: dt-bounce 0.6s ease 0.2s both; }
+@keyframes dt-bounce {
+  0%   { transform: scale(0) rotate(-20deg); }
+  60%  { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.dt-body { flex: 1; min-width: 0; }
+.dt-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  margin-bottom: 3px;
+}
+.dt-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dt-amount {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.dt-msg {
+  font-size: 12px;
+  color: var(--text2);
+  font-style: italic;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dt-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(to right, #e63946, #ff6b6b);
+  border-radius: 0 0 16px 16px;
+  animation: dt-progress 5s linear forwards;
+}
+@keyframes dt-progress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
 /* Sidebar */
 .chat-sidebar {
   display: flex;
@@ -474,6 +620,21 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- ── DONATION TOAST NOTIFICATION ── -->
+<div id="donationToast">
+  <div class="donation-toast-inner">
+    <div class="dt-emoji">💸</div>
+    <div class="dt-body">
+      <div class="dt-label">Support Masuk!</div>
+      <div class="dt-name" id="dt-name">—</div>
+      <div class="dt-amount" id="dt-amount">—</div>
+      <div class="dt-msg" id="dt-msg" style="display:none"></div>
+    </div>
+    <div class="dt-progress" id="dt-progress"></div>
+  </div>
+</div>
+
 <div class="chat-page">
 
   <!-- Header -->
@@ -772,6 +933,18 @@ function subscribeRealtime() {
         }
       })
       .subscribe();
+
+    // ── Subscribe tabel donations untuk toast notifikasi ──
+    client
+      .channel("donations-feed")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table:  "donations",
+      }, (payload) => {
+        showDonationToast(payload.new);
+      })
+      .subscribe();
   };
   document.head.appendChild(script);
 }
@@ -1011,9 +1184,40 @@ function appendMessage(msg, animate = true) {
     if (el.textContent.includes("Memuat") || el.textContent.includes("pertama")) el.remove();
   });
 
+  // Pesan donasi → render sebagai banner khusus
+  if (msg.is_donation) {
+    const el = buildDonationMsgEl(msg, animate);
+    container.appendChild(el);
+    return;
+  }
+
   const isOwn = msg.user_id === currentUser.id;
   const el    = buildMsgEl(msg, isOwn, animate);
   container.appendChild(el);
+}
+
+function buildDonationMsgEl(msg, animate = true) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "msg-donation";
+  wrapper.id = "msg-" + msg.id;
+  if (!animate) wrapper.style.animation = "none";
+
+  const amountFmt = msg.amount
+    ? "Rp " + Number(msg.amount).toLocaleString("id-ID")
+    : "";
+  const donorName = msg.donor_name || msg.user_name || "Supporter";
+  const donorMsg  = msg.message || "";
+
+  wrapper.innerHTML = `
+    <div class="donation-icon">💸</div>
+    <div class="donation-body">
+      <div class="donation-name">❤️ ${escHtml(donorName)}</div>
+      <div class="donation-amount">${escHtml(amountFmt)}</div>
+      ${donorMsg ? `<div class="donation-msg">"${escHtml(donorMsg)}"</div>` : ""}
+      <div class="donation-thanks">Makasih udah support Animeku.ID! 🙏</div>
+    </div>
+  `;
+  return wrapper;
 }
 
 function buildMsgEl(msg, isOwn, animate = true) {
@@ -1184,6 +1388,42 @@ function showToast(msg, isError = false) {
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
+}
+
+// ── DONATION TOAST ─────────────────────────────────────────────
+let donationToastTimer = null;
+function showDonationToast(donation) {
+  const toast     = document.getElementById("donationToast");
+  const nameEl    = document.getElementById("dt-name");
+  const amountEl  = document.getElementById("dt-amount");
+  const msgEl     = document.getElementById("dt-msg");
+  const progressEl= document.getElementById("dt-progress");
+
+  const name   = donation.donor_name || "Supporter";
+  const amount = donation.amount || 0;
+  const amtFmt = "Rp " + Number(amount).toLocaleString("id-ID");
+  const note   = donation.message || "";
+
+  nameEl.textContent   = name;
+  amountEl.textContent = amtFmt;
+  if (note) {
+    msgEl.textContent    = `"${note}"`;
+    msgEl.style.display  = "block";
+  } else {
+    msgEl.style.display  = "none";
+  }
+
+  // Reset progress bar animation
+  progressEl.style.animation = "none";
+  progressEl.offsetHeight; // reflow
+  progressEl.style.animation = "dt-progress 5s linear forwards";
+
+  // Show
+  if (donationToastTimer) clearTimeout(donationToastTimer);
+  toast.classList.add("show");
+  donationToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 5500);
 }
 </script>
 {% endblock %}
