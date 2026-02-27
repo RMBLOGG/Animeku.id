@@ -640,6 +640,66 @@ body::before{
   </div>
 </section>
 
+<!-- DONASI -->
+<section class="donasi" id="donasi">
+  <div class="donasi-inner">
+    <div class="donasi-header reveal">
+      <div class="section-eyebrow">// Support Us</div>
+      <div class="section-title">DUKUNG ANIMEKU.ID</div>
+      <p class="donasi-sub">Website ini dikelola secara mandiri. Setiap dukunganmu sangat berarti untuk menjaga server tetap berjalan! 🙏</p>
+    </div>
+
+    <div class="donasi-grid">
+
+      <!-- Kiri: Goal + Leaderboard -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="goal-card reveal">
+          <div class="goal-top">
+            <div>
+              <div class="goal-label">Target Bulan Ini</div>
+              <div class="goal-month" id="goalMonth">—</div>
+            </div>
+            <div class="goal-pct" id="goalPct">0%</div>
+          </div>
+          <div class="goal-amounts">
+            <span class="goal-current" id="goalCurrent">Rp 0</span>
+            <span class="goal-sep">/</span>
+            <span class="goal-target" id="goalTarget">Rp 300.000</span>
+          </div>
+          <div class="goal-track">
+            <div class="goal-fill" id="goalFill"></div>
+          </div>
+          <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="support-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+            Support via Sociabuzz
+          </a>
+        </div>
+
+        <div class="lb-card reveal">
+          <div class="card-head">🏆 Top Supporter</div>
+          <div id="lbBody"><div class="donasi-loading">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- Kanan: Live Feed -->
+      <div class="donasi-right">
+        <div class="feed-card reveal">
+          <div class="card-head">
+            💸 Live Donation Feed
+            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          </div>
+          <div class="feed-list" id="feedList">
+            <div class="donasi-loading">Menunggu donasi masuk...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- FITUR -->
 <section class="features" id="fitur">
   <div class="section-header reveal">
@@ -710,66 +770,6 @@ body::before{
         <div class="phone-screen-line"></div>
       </div>
       <div class="phone-glow"></div>
-    </div>
-  </div>
-</section>
-
-<!-- DONASI -->
-<section class="donasi" id="donasi">
-  <div class="donasi-inner">
-    <div class="donasi-header reveal">
-      <div class="section-eyebrow">// Support Us</div>
-      <div class="section-title">DUKUNG ANIMEKU.ID</div>
-      <p class="donasi-sub">Website ini dikelola secara mandiri. Setiap dukunganmu sangat berarti untuk menjaga server tetap berjalan! 🙏</p>
-    </div>
-
-    <div class="donasi-grid">
-
-      <!-- Kiri: Goal + Leaderboard -->
-      <div style="display:flex;flex-direction:column;gap:16px">
-
-        <div class="goal-card reveal">
-          <div class="goal-top">
-            <div>
-              <div class="goal-label">Target Bulan Ini</div>
-              <div class="goal-month" id="goalMonth">—</div>
-            </div>
-            <div class="goal-pct" id="goalPct">0%</div>
-          </div>
-          <div class="goal-amounts">
-            <span class="goal-current" id="goalCurrent">Rp 0</span>
-            <span class="goal-sep">/</span>
-            <span class="goal-target" id="goalTarget">Rp 300.000</span>
-          </div>
-          <div class="goal-track">
-            <div class="goal-fill" id="goalFill"></div>
-          </div>
-          <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="support-btn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
-            Support via Sociabuzz
-          </a>
-        </div>
-
-        <div class="lb-card reveal">
-          <div class="card-head">🏆 Top Supporter</div>
-          <div id="lbBody"><div class="donasi-loading">Memuat...</div></div>
-        </div>
-
-      </div>
-
-      <!-- Kanan: Live Feed -->
-      <div class="donasi-right">
-        <div class="feed-card reveal">
-          <div class="card-head">
-            💸 Live Donation Feed
-            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
-          </div>
-          <div class="feed-list" id="feedList">
-            <div class="donasi-loading">Menunggu donasi masuk...</div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
