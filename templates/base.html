@@ -253,6 +253,16 @@
           Versi APK
         </a>
       </div>
+      <div class="ann-btn-row" style="margin-top:0">
+        <a href="https://dayydesu.vercel.app" target="_blank" rel="noopener" class="ann-btn ann-btn-site" onclick="closeAnnouncement()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          DayyDesu
+        </a>
+        <a href="https://dayystream.vercel.app" target="_blank" rel="noopener" class="ann-btn ann-btn-site" onclick="closeAnnouncement()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          DayyStream
+        </a>
+      </div>
       <button class="ann-btn ann-btn-close" onclick="closeAnnouncement()">
         Lanjut →
       </button>
@@ -364,6 +374,28 @@
   border: none !important;
   color: #fff;
   box-shadow: 0 4px 16px rgba(76,175,125,0.35);
+}
+.ann-btn-site {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body, sans-serif);
+  text-decoration: none;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text2, #8b92a5);
+}
+.ann-btn-site:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text, #e8eaf0);
+  transform: translateY(-1px);
 }
 .ann-btn-apk:hover {
   transform: translateY(-2px);
