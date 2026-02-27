@@ -247,7 +247,8 @@ def detail(slug):
                 }
             }
         }
-    return render_template("detail.html", data=data, slug=slug)
+    return render_template("detail.html", data=data, slug=slug,
+                           episode_base="/episode", anime_base="/anime")
 
 
 @app.route("/episode/<slug>")
@@ -303,7 +304,8 @@ def episode(slug):
         }
 
     return render_template("episode.html", data=data, slug=slug,
-                           anime_slug=anime_slug, anime_data=anime_data)
+                           anime_slug=anime_slug, anime_data=anime_data,
+                           episode_base="/episode", anime_base="/anime")
 
 
 @app.route("/api/server/<server_id>")
