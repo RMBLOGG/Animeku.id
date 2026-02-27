@@ -191,33 +191,48 @@ def home():
 @animasu_bp.route("/anime/<slug>")
 def detail(slug):
     raw = fetch_animasu(f"{ANIMASU_PREFIX}/anime/{slug}")
+    print(f"[animasu] detail raw keys: {list(raw.keys()) if raw else None}")
     data = None
-    if raw and raw.get("status") == "success":
-        d = raw.get("detail", {})
-        eps    = [{"name": e.get("name", ""), "slug": e.get("slug", "")}
-                  for e in d.get("episodes", [])]
-        genres = _norm_genres(d.get("genres", []))
-        data = {
-            "detail": {
-                "title":    d.get("title", ""),
-                "poster":   d.get("poster", ""),
-                "synopsis": d.get("synopsis", ""),
-                "trailer":  d.get("trailer", ""),
-                "genres":   genres,
-                "episodes": eps,
-                "info": {
-                    "japanese":      d.get("synonym", ""),
-                    "status":        d.get("status", ""),
-                    "type":          d.get("type", ""),
-                    "score":         d.get("rating", ""),
-                    "total_episode": "",
-                    "duration":      d.get("duration", ""),
-                    "released":      d.get("aired", ""),
-                    "studio":        d.get("studio", ""),
-                    "season":        d.get("season", ""),
+    if raw:
+        # Coba berbagai struktur response yang mungkin
+        # Struktur 1: { "status": "success", "detail": {...} }
+        # Struktur 2: { "data": { "detail": {...} } }
+        # Struktur 3: { "detail": {...} } langsung
+        d = None
+        if raw.get("detail"):
+            d = raw["detail"]
+        elif raw.get("data") and raw["data"].get("detail"):
+            d = raw["data"]["detail"]
+        elif raw.get("data"):
+            d = raw["data"]
+
+        print(f"[animasu] detail d keys: {list(d.keys()) if d else None}")
+
+        if d:
+            eps    = [{"name": e.get("name", ""), "slug": e.get("slug", "")}
+                      for e in d.get("episodes", d.get("episodeList", []))]
+            genres = _norm_genres(d.get("genres", d.get("genreList", [])))
+            data = {
+                "detail": {
+                    "title":    d.get("title", ""),
+                    "poster":   d.get("poster", ""),
+                    "synopsis": d.get("synopsis", ""),
+                    "trailer":  d.get("trailer", ""),
+                    "genres":   genres,
+                    "episodes": eps,
+                    "info": {
+                        "japanese":      d.get("synonym", d.get("japanese", "")),
+                        "status":        d.get("status", ""),
+                        "type":          d.get("type", ""),
+                        "score":         d.get("rating", d.get("score", "")),
+                        "total_episode": d.get("episode_count", ""),
+                        "duration":      d.get("duration", ""),
+                        "released":      d.get("aired", d.get("release", "")),
+                        "studio":        d.get("studio", d.get("studios", "")),
+                        "season":        d.get("season", ""),
+                    }
                 }
             }
-        }
     # Pakai template detail.html yang sama, tapi slug episode harus diawali
     # dengan prefix provider agar route episode animasu kepanggil.
     # Template perlu tahu base URL episode → kirim via extra context
