@@ -593,6 +593,26 @@ let atBottom       = true;
 
 // ── INIT ───────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
+  // ── Cek apakah chat dinonaktifkan admin ──
+  try {
+    const cfgRes = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.site_settings&select=value`, {
+      headers: { "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` }
+    });
+    if (cfgRes.ok) {
+      const cfgData = await cfgRes.json();
+      if (cfgData.length && cfgData[0].value && cfgData[0].value.chat_disabled) {
+        document.querySelector("main").innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center;padding:24px">
+            <div style="font-size:48px">🔇</div>
+            <div style="font-family:var(--font-head,sans-serif);font-size:28px;letter-spacing:2px;color:var(--text,#e8eaf0)">CHAT DINONAKTIFKAN</div>
+            <div style="font-size:14px;color:var(--text2,#8b92a5);max-width:280px;line-height:1.7">Live chat sedang dinonaktifkan oleh admin.<br>Coba lagi beberapa saat.</div>
+            <a href="/" style="margin-top:8px;padding:10px 24px;background:var(--accent,#e63946);color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">Kembali ke Beranda</a>
+          </div>`;
+        return;
+      }
+    }
+  } catch(e) { console.error("Gagal cek site_settings:", e); }
+
   initUser();
   await loadMessages();
   subscribeRealtime();
