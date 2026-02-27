@@ -150,28 +150,33 @@ body::before{
 
 .hero-title{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(56px,14vw,108px);
+  font-size:clamp(44px,14vw,108px);
   letter-spacing:4px;
-  line-height:.95;
+  line-height:1;
   margin-bottom:8px;
   opacity:0;animation:fade-up .7s ease .25s forwards;
+  white-space:nowrap;
 }
 .hero-title .line2{
-  display:block;
-  -webkit-text-stroke:1px rgba(230,57,70,0.4);
+  display:inline;
+  -webkit-text-stroke:1px rgba(230,57,70,0.5);
   color:transparent;
-  font-size:clamp(48px,11vw,88px);
 }
 .hero-title .acc{color:var(--red)}
+@media(max-width:400px){
+  .hero-title{ font-size:clamp(36px,10vw,52px); letter-spacing:1px; }
+}
 
 .hero-sub{
   font-family:'JetBrains Mono',monospace;
-  font-size:clamp(11px,2vw,13px);
-  letter-spacing:5px;
+  font-size:clamp(10px,2vw,13px);
+  letter-spacing:3px;
   color:var(--text3);
   text-transform:uppercase;
   margin-bottom:32px;
   opacity:0;animation:fade-up .7s ease .4s forwards;
+  white-space:normal;
+  word-break:break-word;
 }
 
 .hero-desc{
@@ -217,18 +222,23 @@ body::before{
 /* stats row */
 .hero-stats{
   display:flex;gap:0;justify-content:center;
-  margin-top:56px;
+  margin-top:48px;
   opacity:0;animation:fade-up .7s ease .8s forwards;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  scrollbar-width:none;
 }
+.hero-stats::-webkit-scrollbar{display:none}
 .hero-stat{
-  padding:0 32px;
+  padding:0 20px;
   border-right:1px solid var(--border);
   text-align:center;
+  flex-shrink:0;
 }
 .hero-stat:last-child{border-right:none}
 .hero-stat-num{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(28px,5vw,40px);
+  font-size:clamp(24px,5vw,40px);
   color:var(--text);
   letter-spacing:1px;
   line-height:1;
@@ -236,12 +246,14 @@ body::before{
 .hero-stat-num span{color:var(--red)}
 .hero-stat-label{
   font-family:'JetBrains Mono',monospace;
-  font-size:10px;color:var(--text3);
-  letter-spacing:2px;text-transform:uppercase;
+  font-size:9px;color:var(--text3);
+  letter-spacing:1.5px;text-transform:uppercase;
   margin-top:4px;
 }
-@media(max-width:500px){
-  .hero-stat{padding:0 18px}
+@media(max-width:400px){
+  .hero-stat{padding:0 12px}
+  .hero-stat-num{font-size:22px}
+  .hero-stat-label{font-size:8px;letter-spacing:1px}
 }
 
 /* bottom fade */
@@ -586,8 +598,7 @@ body::before{
     </div>
 
     <h1 class="hero-title">
-      ANIMEKU
-      <span class="line2"><span class="acc">.</span>ID</span>
+      ANIMEKU<span class="line2"><span class="acc">.</span>ID</span>
     </h1>
 
     <p class="hero-sub">Tempatnya wibu sejati &nbsp;//&nbsp; Free &nbsp;•&nbsp; HD &nbsp;•&nbsp; No Ads</p>
