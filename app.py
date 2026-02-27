@@ -521,32 +521,22 @@ def delete_comment(comment_id):
                         params={"id": f"eq.{comment_id}", "user_id": f"eq.{user_id}"})
     return jsonify({"ok": r.ok})
 
-# ── Sociabuzz Webhook ──────────────────────────────────────────────────────────
-
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
-    token = request.headers.get("X-Webhook-Token") or request.args.get("token", "")
-    WEBHOOK_TOKEN = os.environ.get("SOCIABUZZ_WEBHOOK_TOKEN", "sbwhook-6ccpbrs7ai09fzbiluxdtwqn")
-
-    if token != WEBHOOK_TOKEN:
-        return jsonify({"error": "Unauthorized"}), 401
-
     data = request.get_json(silent=True) or {}
 
-    print(f"[Sociabuzz Webhook] Data masuk: {data}")
+    # Debug: log semua yang masuk
+    print(f"[Webhook] Headers: {dict(request.headers)}")
+    print(f"[Webhook] Body: {data}")
 
-    # Ambil info donasi
-    donor_name = data.get("donatur_name", "Anonymous")
+    donor_name = data.get("donatur_name", data.get("name", "Anonymous"))
     amount     = data.get("amount", 0)
     message    = data.get("message", "")
-    order_id   = data.get("order_id", "")
+    order_id   = data.get("order_id", data.get("id", ""))
 
-    # TODO: Simpan ke Supabase / kirim notifikasi, dll.
-    # Contoh insert ke Supabase:
-    # requests.post(f"{SUPABASE_URL}/rest/v1/donations",
-    #               headers={**supabase_headers(), "Prefer": "return=representation"},
-    #               json={"donor": donor_name, "amount": amount, "message": message})
+    print(f"[Sociabuzz] Donasi dari {donor_name}: Rp{amount} - {message}")
 
+    # Langsung return 200 tanpa cek token dulu
     return jsonify({"ok": True, "received": order_id}), 200
 
 if __name__ == "__main__":
