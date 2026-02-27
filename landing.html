@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animeku.ID — Nonton Anime Sub Indo Gratis</title>
+<meta name="description" content="Streaming anime sub indo gratis, tanpa iklan, kualitas HD. Tempatnya wibu sejati.">
+<link rel="icon" type="image/png" href="/static/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:#07090d;
+  color:#e8eaf0;
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* ── CSS VARS ── */
+:root{
+  --red:#e63946;
+  --red2:#ff6b6b;
+  --bg:#07090d;
+  --bg2:#0e1117;
+  --card:#111520;
+  --border:rgba(255,255,255,0.07);
+  --text:#e8eaf0;
+  --text2:#8b92a5;
+  --text3:#3d4557;
+  --gold:#f4a261;
+}
+
+/* ── NOISE + SCANLINES ── */
+body::before{
+  content:"";position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.5;
+}
+
+/* ── NAVBAR ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:0 24px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(7,9,13,0);
+  border-bottom:1px solid rgba(255,255,255,0);
+  transition:background .4s ease, border-color .4s ease;
+}
+.nav.scrolled{
+  background:rgba(7,9,13,0.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:3px;
+}
+.nav-logo .a{color:var(--red)}
+.nav-logo .dot{color:var(--red)}
+.nav-logo .id{color:var(--text2);font-size:16px}
+.nav-links{display:flex;gap:4px}
+.nav-links a{
+  padding:7px 14px;border-radius:7px;
+  font-size:13px;font-weight:500;color:var(--text2);
+  transition:.2s ease;
+}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,0.06)}
+.nav-cta{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 20px;border-radius:8px;
+  background:var(--red);color:#fff;
+  font-size:13px;font-weight:700;
+  transition:.2s ease;
+  box-shadow:0 4px 16px rgba(230,57,70,0.35);
+}
+.nav-cta:hover{background:var(--red2);transform:translateY(-1px);box-shadow:0 6px 24px rgba(230,57,70,0.5)}
+.nav-cta svg{flex-shrink:0}
+@media(max-width:640px){
+  .nav-links{display:none}
+}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  padding:80px 24px 60px;
+}
+
+/* Animated gradient mesh bg */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(230,57,70,0.12) 0%, transparent 60%),
+             radial-gradient(ellipse 50% 40% at 80% 80%, rgba(230,57,70,0.06) 0%, transparent 50%),
+             #07090d;
+}
+.hero-grid{
+  position:absolute;inset:0;z-index:1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size:72px 72px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+}
+/* floating particles */
+.particles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.particle{
+  position:absolute;
+  width:2px;height:2px;
+  background:rgba(230,57,70,0.6);
+  border-radius:50%;
+  animation:float-up linear infinite;
+}
+@keyframes float-up{
+  0%{transform:translateY(100vh) translateX(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:.5}
+  100%{transform:translateY(-100px) translateX(var(--dx));opacity:0}
+}
+
+/* hero content */
+.hero-inner{
+  position:relative;z-index:5;
+  max-width:760px;width:100%;
+  text-align:center;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(230,57,70,0.1);
+  border:1px solid rgba(230,57,70,0.25);
+  color:var(--red);
+  font-size:11px;font-weight:700;
+  padding:6px 16px;border-radius:20px;
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:28px;
+  opacity:0;animation:fade-up .7s ease .1s forwards;
+}
+.hero-eyebrow-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--red);
+  animation:blink 1.2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(44px,14vw,108px);
+  letter-spacing:4px;
+  line-height:1;
+  margin-bottom:8px;
+  opacity:0;animation:fade-up .7s ease .25s forwards;
+  white-space:nowrap;
+}
+.hero-title .line2{
+  display:inline;
+  -webkit-text-stroke:1px rgba(230,57,70,0.5);
+  color:transparent;
+}
+.hero-title .acc{color:var(--red)}
+@media(max-width:400px){
+  .hero-title{ font-size:clamp(36px,10vw,52px); letter-spacing:1px; }
+}
+
+.hero-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(10px,2vw,13px);
+  letter-spacing:3px;
+  color:var(--text3);
+  text-transform:uppercase;
+  margin-bottom:32px;
+  opacity:0;animation:fade-up .7s ease .4s forwards;
+  white-space:normal;
+  word-break:break-word;
+}
+
+.hero-desc{
+  font-size:clamp(14px,2.5vw,17px);
+  color:var(--text2);
+  line-height:1.9;
+  max-width:520px;
+  margin:0 auto 40px;
+  font-weight:300;
+  opacity:0;animation:fade-up .7s ease .5s forwards;
+}
+
+.hero-actions{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:fade-up .7s ease .65s forwards;
+}
+.btn-watch{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 36px;border-radius:12px;
+  background:var(--red);color:#fff;
+  font-size:16px;font-weight:700;
+  transition:.25s ease;
+  box-shadow:0 6px 28px rgba(230,57,70,0.45);
+  position:relative;overflow:hidden;
+}
+.btn-watch::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.12),transparent);
+  opacity:0;transition:.2s ease;
+}
+.btn-watch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(230,57,70,0.6)}
+.btn-watch:hover::before{opacity:1}
+.btn-apk{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:15px 28px;border-radius:12px;
+  background:rgba(255,255,255,0.06);color:var(--text);
+  font-size:15px;font-weight:600;
+  border:1px solid var(--border);
+  transition:.25s ease;
+}
+.btn-apk:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+/* stats row */
+.hero-stats{
+  display:flex;gap:0;justify-content:center;
+  margin-top:48px;
+  opacity:0;animation:fade-up .7s ease .8s forwards;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.hero-stats::-webkit-scrollbar{display:none}
+.hero-stat{
+  padding:0 20px;
+  border-right:1px solid var(--border);
+  text-align:center;
+  flex-shrink:0;
+}
+.hero-stat:last-child{border-right:none}
+.hero-stat-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(24px,5vw,40px);
+  color:var(--text);
+  letter-spacing:1px;
+  line-height:1;
+}
+.hero-stat-num span{color:var(--red)}
+.hero-stat-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text3);
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-top:4px;
+}
+@media(max-width:400px){
+  .hero-stat{padding:0 12px}
+  .hero-stat-num{font-size:22px}
+  .hero-stat-label{font-size:8px;letter-spacing:1px}
+}
+
+/* bottom fade */
+.hero::after{
+  content:"";position:absolute;bottom:0;left:0;right:0;
+  height:160px;
+  background:linear-gradient(to bottom,transparent,var(--bg));
+  z-index:4;pointer-events:none;
+}
+
+/* ── FEATURES ── */
+.features{
+  padding:80px 24px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.section-header{
+  text-align:center;margin-bottom:48px;
+}
+.section-eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:4px;
+  text-transform:uppercase;color:var(--red);
+  margin-bottom:12px;
+}
+.section-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,6vw,52px);
+  letter-spacing:2px;color:var(--text);
+  line-height:1;
+}
+.feat-grid{
+  max-width:1100px;margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+.feat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px 22px;
+  transition:.25s ease;
+  position:relative;overflow:hidden;
+}
+.feat-card::before{
+  content:"";position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,transparent,rgba(230,57,70,0.4),transparent);
+  opacity:0;transition:.25s ease;
+}
+.feat-card:hover{
+  border-color:rgba(230,57,70,0.2);
+  transform:translateY(-4px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.4);
+}
+.feat-card:hover::before{opacity:1}
+.feat-icon{font-size:36px;margin-bottom:16px;display:block}
+.feat-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:1px;
+  color:var(--text);margin-bottom:8px;
+}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.75;font-weight:300}
+
+/* ── APK ── */
+.apk-section{
+  padding:80px 24px;
+  position:relative;overflow:hidden;
+}
+.apk-glow{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse,rgba(230,57,70,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.apk-inner{
+  max-width:960px;margin:0 auto;
+  display:flex;align-items:center;gap:60px;flex-wrap:wrap;
+  position:relative;z-index:2;
+}
+.apk-content{flex:1;min-width:260px}
+.apk-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(230,57,70,0.1);
+  border:1px solid rgba(230,57,70,0.25);
+  color:var(--red);font-size:11px;font-weight:700;
+  padding:5px 14px;border-radius:20px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:2px;
+  margin-bottom:20px;
+}
+.apk-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,6vw,52px);
+  letter-spacing:2px;color:var(--text);
+  line-height:1.05;margin-bottom:14px;
+}
+.apk-title span{color:var(--red)}
+.apk-desc{font-size:14px;color:var(--text2);line-height:1.85;margin-bottom:28px;font-weight:300;max-width:400px}
+.apk-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 32px;border-radius:12px;
+  background:linear-gradient(135deg,var(--red),#c0202a);color:#fff;
+  font-size:15px;font-weight:700;
+  box-shadow:0 6px 24px rgba(230,57,70,0.4);
+  transition:.25s ease;margin-bottom:16px;
+}
+.apk-btn:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(230,57,70,0.6)}
+.apk-chips{display:flex;gap:8px;flex-wrap:wrap}
+.apk-chip{
+  padding:4px 12px;border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+  font-size:11px;color:var(--text3);
+  font-family:'JetBrains Mono',monospace;
+}
+.apk-visual{
+  flex-shrink:0;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.phone-mock{
+  width:170px;height:300px;
+  background:linear-gradient(145deg,#181e2a,#0e1117);
+  border:1px solid rgba(230,57,70,0.15);
+  border-radius:32px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;
+  box-shadow:0 32px 72px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.04);
+  position:relative;
+}
+.phone-mock::before{
+  content:"";position:absolute;top:14px;
+  width:54px;height:5px;
+  background:rgba(255,255,255,0.08);border-radius:3px;
+}
+.phone-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;letter-spacing:4px;color:var(--text);
+}
+.phone-logo .a{color:var(--red)}
+.phone-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;
+}
+.phone-screen-line{
+  width:80px;height:1px;
+  background:linear-gradient(to right,transparent,rgba(230,57,70,0.3),transparent);
+  margin:4px 0;
+}
+.phone-glow{
+  position:absolute;
+  width:240px;height:240px;
+  background:radial-gradient(circle,rgba(230,57,70,0.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* ── DONASI SECTION ── */
+.donasi{
+  padding:80px 24px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+}
+.donasi-inner{max-width:1100px;margin:0 auto}
+.donasi-header{margin-bottom:40px}
+.donasi-header .section-eyebrow{text-align:center}
+.donasi-header .section-title{text-align:center}
+.donasi-sub{
+  text-align:center;font-size:14px;color:var(--text2);
+  font-weight:300;line-height:1.8;max-width:420px;
+  margin:12px auto 0;
+}
+
+.donasi-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+@media(max-width:768px){.donasi-grid{grid-template-columns:1fr}}
+
+/* Goal */
+.goal-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.goal-card::after{
+  content:"";position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,var(--red),var(--red2));
+}
+.goal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.goal-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
+.goal-month{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
+.goal-pct{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:1px;line-height:1}
+.goal-amounts{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.goal-current{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--text);letter-spacing:1px}
+.goal-sep{color:var(--text3);font-size:18px}
+.goal-target{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text3)}
+.goal-track{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin-bottom:20px}
+.goal-fill{height:100%;background:linear-gradient(to right,var(--red),var(--red2));border-radius:99px;width:0%;transition:width 1.4s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(230,57,70,0.5)}
+.support-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px;border-radius:10px;
+  background:linear-gradient(135deg,var(--red),#c0202a);color:#fff;
+  font-size:14px;font-weight:700;
+  transition:.2s ease;box-shadow:0 4px 18px rgba(230,57,70,0.35);
+}
+.support-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(230,57,70,0.55)}
+
+/* Leaderboard */
+.lb-card,.feed-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.card-head{
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.live-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(230,57,70,0.12);
+  border:1px solid rgba(230,57,70,0.3);
+  color:var(--red);font-size:9px;padding:2px 8px;border-radius:99px;
+  margin-left:auto;
+}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.2s ease-in-out infinite}
+
+.lb-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;
+  border-bottom:1px solid var(--border);
+  transition:.15s ease;
+}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover{background:rgba(255,255,255,0.02)}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.lb-av{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--text2);flex-shrink:0;
+}
+.lb-name{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-amt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red);font-weight:600;flex-shrink:0}
+
+/* Feed */
+.feed-card{display:flex;flex-direction:column}
+.donasi-right{display:flex;flex-direction:column;gap:16px}
+.feed-list{max-height:320px;overflow-y:auto}
+.feed-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  animation:feed-in .4s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes feed-in{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.feed-row:last-child{border-bottom:none}
+.feed-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.feed-info{flex:1;min-width:0}
+.feed-name{font-size:13px;font-weight:600;color:var(--text)}
+.feed-amt{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--red)}
+.feed-msg{font-size:11px;color:var(--text3);font-style:italic;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.donasi-loading{padding:28px;text-align:center;color:var(--text3);font-size:13px;font-family:'JetBrains Mono',monospace}
+
+/* ── FOOTER ── */
+.footer{
+  padding:48px 24px;
+  border-top:1px solid var(--border);
+  text-align:center;
+}
+.footer-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;letter-spacing:4px;color:var(--text);
+  margin-bottom:10px;
+}
+.footer-logo .a{color:var(--red)}
+.footer-logo .dot{color:var(--red)}
+.footer-logo .id{color:var(--text3);font-size:20px}
+.footer-tagline{font-size:13px;color:var(--text3);font-weight:300;margin-bottom:24px}
+.footer-links{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
+.footer-links a{
+  padding:6px 14px;border-radius:7px;
+  font-size:13px;color:var(--text2);
+  border:1px solid var(--border);
+  transition:.2s ease;
+}
+.footer-links a:hover{color:var(--text);border-color:rgba(230,57,70,0.3)}
+.footer-copy{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:1px}
+
+/* ── ANIMATIONS ── */
+@keyframes fade-up{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--card);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="nav" id="mainNav">
+  <div class="nav-logo"><span class="a">A</span>NIMEKU<span class="dot">.</span><span class="id">ID</span></div>
+  <div class="nav-links">
+    <a href="#fitur">Fitur</a>
+    <a href="#apk">APK</a>
+    <a href="#donasi">Donasi</a>
+  </div>
+  <a href="/home" class="nav-cta">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+    Tonton Sekarang
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Streaming Anime Sub Indo
+    </div>
+
+    <h1 class="hero-title">
+      ANIMEKU<span class="line2"><span class="acc">.</span>ID</span>
+    </h1>
+
+    <p class="hero-sub">Tempatnya wibu sejati &nbsp;//&nbsp; Free &nbsp;•&nbsp; HD &nbsp;•&nbsp; No Ads</p>
+
+    <p class="hero-desc">
+      Nonton anime sub indo lengkap, terbaru, dan berkualitas HD.
+      Gratis selamanya, tanpa iklan, langsung di browser kamu.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/home" class="btn-watch">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Mulai Nonton
+      </a>
+      <a href="https://www.mediafire.com/file/w66awqk0t7873go/Animeku.id.apk/file" target="_blank" rel="noopener" class="btn-apk">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7C5.9 2 5 2.9 5 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.83 0-1.5-.67-1.5-1.5S11.17 17 12 17s1.5.67 1.5 1.5S12.83 20 12 20zm5-4H7V4h10v12z"/></svg>
+        Download APK
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">1000<span>+</span></div>
+        <div class="hero-stat-label">Anime</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">0<span>₿</span></div>
+        <div class="hero-stat-label">Biaya</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">0<span>🚫</span></div>
+        <div class="hero-stat-label">Iklan</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">HD<span>+</span></div>
+        <div class="hero-stat-label">Kualitas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DONASI -->
+<section class="donasi" id="donasi">
+  <div class="donasi-inner">
+    <div class="donasi-header reveal">
+      <div class="section-eyebrow">// Support Us</div>
+      <div class="section-title">DUKUNG ANIMEKU.ID</div>
+      <p class="donasi-sub">Website ini dikelola secara mandiri. Setiap dukunganmu sangat berarti untuk menjaga server tetap berjalan! 🙏</p>
+    </div>
+
+    <div class="donasi-grid">
+
+      <!-- Kiri: Goal + Leaderboard -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="goal-card reveal">
+          <div class="goal-top">
+            <div>
+              <div class="goal-label">Target Bulan Ini</div>
+              <div class="goal-month" id="goalMonth">—</div>
+            </div>
+            <div class="goal-pct" id="goalPct">0%</div>
+          </div>
+          <div class="goal-amounts">
+            <span class="goal-current" id="goalCurrent">Rp 0</span>
+            <span class="goal-sep">/</span>
+            <span class="goal-target" id="goalTarget">Rp 300.000</span>
+          </div>
+          <div class="goal-track">
+            <div class="goal-fill" id="goalFill"></div>
+          </div>
+          <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="support-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+            Support via Sociabuzz
+          </a>
+        </div>
+
+        <div class="lb-card reveal">
+          <div class="card-head">🏆 Top Supporter</div>
+          <div id="lbBody"><div class="donasi-loading">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- Kanan: Live Feed -->
+      <div class="donasi-right">
+        <div class="feed-card reveal">
+          <div class="card-head">
+            💸 Live Donation Feed
+            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          </div>
+          <div class="feed-list" id="feedList">
+            <div class="donasi-loading">Menunggu donasi masuk...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FITUR -->
+<section class="features" id="fitur">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">// Why Animeku.ID</div>
+    <div class="section-title">KENAPA PILIH KAMI?</div>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card reveal">
+      <span class="feat-icon">🚫</span>
+      <div class="feat-name">Tanpa Iklan</div>
+      <div class="feat-desc">Nonton tanpa gangguan popup, banner, atau video iklan. Bersih total dari awal sampai akhir episode.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">⚡</span>
+      <div class="feat-name">Update Cepat</div>
+      <div class="feat-desc">Episode baru langsung tersedia setelah rilis di Jepang. Selalu yang pertama nonton kelanjutannya.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🎌</span>
+      <div class="feat-name">Sub Indo</div>
+      <div class="feat-desc">Semua anime hadir dengan subtitle bahasa Indonesia yang akurat, mudah dibaca, dan nyaman di mata.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">📱</span>
+      <div class="feat-name">Versi APK</div>
+      <div class="feat-desc">Tersedia aplikasi Android ringan (~6MB) untuk pengalaman nonton yang lebih nyaman di HP.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🔴</span>
+      <div class="feat-name">Live Chat</div>
+      <div class="feat-desc">Ngobrol bareng ribuan wibu lain secara real-time. Komunitas aktif yang seru dan selalu ramai!</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🆓</span>
+      <div class="feat-name">Gratis Selamanya</div>
+      <div class="feat-desc">Tidak perlu daftar, berlangganan, atau bayar apapun. Semua konten terbuka bebas untuk semua orang.</div>
+    </div>
+  </div>
+</section>
+
+<!-- APK -->
+<section class="apk-section" id="apk">
+  <div class="apk-glow"></div>
+  <div class="apk-inner">
+    <div class="apk-content reveal">
+      <div class="apk-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7C5.9 2 5 2.9 5 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        Tersedia di Android
+      </div>
+      <h2 class="apk-title">Download<br><span>Versi APK</span></h2>
+      <p class="apk-desc">Nikmati pengalaman nonton anime yang lebih mulus dan responsif langsung dari HP kamu. Ringan, cepat, tanpa bloat.</p>
+      <a href="https://www.mediafire.com/file/w66awqk0t7873go/Animeku.id.apk/file" target="_blank" rel="noopener" class="apk-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Gratis
+      </a>
+      <div class="apk-chips">
+        <span class="apk-chip">Android 5.0+</span>
+        <span class="apk-chip">~6 MB</span>
+        <span class="apk-chip">Gratis</span>
+        <span class="apk-chip">No Ads</span>
+      </div>
+    </div>
+    <div class="apk-visual reveal">
+      <div class="phone-mock">
+        <div class="phone-logo"><span class="a">A</span>NIMEKU<span style="color:var(--red)">.</span><span style="color:var(--text3);font-size:.65em">ID</span></div>
+        <div class="phone-screen-line"></div>
+        <div class="phone-sub">Nonton Anime Sub Indo</div>
+        <div class="phone-screen-line"></div>
+      </div>
+      <div class="phone-glow"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo"><span class="a">A</span>NIMEKU<span class="dot">.</span><span class="id">ID</span></div>
+  <p class="footer-tagline">Tempatnya wibu sejati nonton anime sub indo 🎌</p>
+  <div class="footer-links">
+    <a href="/home">Beranda</a>
+    <a href="/ongoing">Ongoing</a>
+    <a href="/completed">Completed</a>
+    <a href="/movies">Movie</a>
+    <a href="/popular">Populer</a>
+    <a href="/jadwal">Jadwal</a>
+    <a href="/chat">Live Chat</a>
+    <a href="#donasi">Donasi</a>
+  </div>
+  <div class="footer-copy">© 2026 ANIMEKU.ID — Made with ❤️ by Dayynime</div>
+</footer>
+
+<script>
+// ── NAVBAR scroll effect
+window.addEventListener("scroll", () => {
+  document.getElementById("mainNav").classList.toggle("scrolled", window.scrollY > 40);
+});
+
+// ── PARTICLES
+(function() {
+  const container = document.getElementById("particles");
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      animation-duration:${8 + Math.random()*14}s;
+      animation-delay:${-Math.random()*20}s;
+      --dx:${(Math.random()-0.5)*120}px;
+      width:${1+Math.random()*2}px;
+      height:${1+Math.random()*2}px;
+      opacity:${0.3+Math.random()*0.5};
+    `;
+    container.appendChild(p);
+  }
+})();
+
+// ── SCROLL REVEAL
+const revealEls = document.querySelectorAll(".reveal");
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); observer.unobserve(e.target); }});
+}, { threshold: 0.12 });
+revealEls.forEach(el => observer.observe(el));
+
+// ── DONATION DATA
+(function() {
+  const SB_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+  const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+
+  function fmtRp(n) { return "Rp " + Number(n).toLocaleString("id-ID"); }
+  function fmtTime(iso) {
+    if (!iso) return "";
+    const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (diff < 60) return "baru saja";
+    if (diff < 3600) return Math.floor(diff/60) + " mnt lalu";
+    if (diff < 86400) return Math.floor(diff/3600) + " jam lalu";
+    return new Date(iso).toLocaleDateString("id-ID", {day:"2-digit",month:"short"});
+  }
+  function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/donations");
+      if (!res.ok) return;
+      const data = await res.json();
+      renderGoal(data.monthly_total, data.monthly_target);
+      renderLb(data.leaderboard);
+      renderFeed(data.donations.slice(0,10));
+    } catch(e) {}
+  }
+
+  function renderGoal(cur, tgt) {
+    const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    const now = new Date();
+    document.getElementById("goalMonth").textContent = months[now.getMonth()] + " " + now.getFullYear();
+    document.getElementById("goalCurrent").textContent = fmtRp(cur);
+    document.getElementById("goalTarget").textContent  = fmtRp(tgt);
+    const pct = Math.min(100, Math.round((cur/tgt)*100));
+    document.getElementById("goalPct").textContent = pct + "%";
+    setTimeout(() => document.getElementById("goalFill").style.width = pct + "%", 600);
+  }
+
+  function renderLb(lb) {
+    const el = document.getElementById("lbBody");
+    if (!lb || !lb.length) { el.innerHTML = `<div class="donasi-loading">Belum ada supporter 🙏</div>`; return; }
+    const ic = ["🥇","🥈","🥉"];
+    el.innerHTML = lb.slice(0,5).map((item, i) => `
+      <div class="lb-row">
+        <div class="lb-rank">${i<3?ic[i]:(i+1)}</div>
+        <div class="lb-av">${esc((item.name||"?")[0].toUpperCase())}</div>
+        <div class="lb-name">${esc(item.name)}</div>
+        <div class="lb-amt">${fmtRp(item.total)}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderFeed(donations) {
+    const el = document.getElementById("feedList");
+    if (!donations || !donations.length) { el.innerHTML = `<div class="donasi-loading">Belum ada donasi 🙏</div>`; return; }
+    el.innerHTML = donations.map(d => `
+      <div class="feed-row">
+        <div class="feed-icon">💸</div>
+        <div class="feed-info">
+          <div class="feed-name">${esc(d.donor_name||"Anonim")}</div>
+          <div class="feed-amt">${fmtRp(d.amount)}</div>
+          ${d.message?`<div class="feed-msg">"${esc(d.message)}"</div>`:""}
+        </div>
+        <div class="feed-time">${fmtTime(d.created_at)}</div>
+      </div>
+    `).join("");
+  }
+
+  function prependFeed(d) {
+    const el = document.getElementById("feedList");
+    el.querySelectorAll(".donasi-loading").forEach(e => e.remove());
+    const row = document.createElement("div");
+    row.className = "feed-row";
+    row.innerHTML = `
+      <div class="feed-icon">💸</div>
+      <div class="feed-info">
+        <div class="feed-name">${esc(d.donor_name||"Anonim")}</div>
+        <div class="feed-amt">${fmtRp(d.amount)}</div>
+        ${d.message?`<div class="feed-msg">"${esc(d.message)}"</div>`:""}
+      </div>
+      <div class="feed-time">baru saja</div>
+    `;
+    el.insertBefore(row, el.firstChild);
+    const rows = el.querySelectorAll(".feed-row");
+    if (rows.length > 10) rows[rows.length-1].remove();
+    load();
+  }
+
+  // Realtime
+  const s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+  s.onload = () => {
+    window.supabase.createClient(SB_URL, SB_ANON)
+      .channel("landing-donations")
+      .on("postgres_changes", {event:"INSERT",schema:"public",table:"donations"}, p => prependFeed(p.new))
+      .subscribe();
+  };
+  document.head.appendChild(s);
+
+  load();
+})();
+</script>
+</body>
+</html>
