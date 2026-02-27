@@ -8,6 +8,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "animeku-secret-2026")
 API_BASE = "https://www.sankavollerei.com"
 
+# ── Extension Animasu ──────────────────────────────────────────────────────────
+from animasu_extension import animasu_bp
+app.register_blueprint(animasu_bp)
+
 SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
 
