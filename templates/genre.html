@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Genre {{ slug | title }} — Animeku.id{% endblock %}
 {% block content %}
+{% set anime_base = anime_base if anime_base is defined else '/anime' %}
 <div class="page-header">
   <div class="page-header-inner">
     <h1 class="page-header-title">Genre <span>{{ slug | replace('-', ' ') | title }}</span></h1>
@@ -22,7 +23,7 @@
     {% if animes %}
     <div class="anime-grid lg stagger">
       {% for anime in animes %}
-      <a href="/anime/{{ anime.slug }}" class="anime-card">
+      <a href="{{ anime_base }}/{{ anime.slug }}" class="anime-card">
         <div class="card-poster">
           <img src="{{ anime.poster }}" alt="{{ anime.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
           <div class="card-overlay">

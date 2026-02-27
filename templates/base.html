@@ -556,6 +556,23 @@ function closeAnnouncement() {
         <a href="/popular"   class="nav-link">Populer</a>
         <a href="/jadwal"    class="nav-link">Jadwal</a>
         <a href="/genres"    class="nav-link">Genre</a>
+        <!-- Dropdown Sumber -->
+        <div class="nav-more" id="navSumber">
+          <button class="nav-link nav-more-btn" onclick="toggleNavSumber(event)">
+            Sumber
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:3px"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="nav-more-dropdown" id="navSumberDropdown">
+            <a href="/home" class="nav-more-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Samehadaku
+            </a>
+            <a href="/animasu/home" class="nav-more-item" style="color:var(--accent)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Animasu
+            </a>
+          </div>
+        </div>
         <!-- Dropdown Lainnya -->
         <div class="nav-more" id="navMore">
           <button class="nav-link nav-more-btn" onclick="toggleNavMore(event)">
@@ -644,6 +661,18 @@ function closeAnnouncement() {
       <a href="/koleksi">Koleksi</a>
       <a href="/animelist">Anime A-Z</a>
       <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
+
+      <!-- Divider Sumber -->
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <div style="padding:4px 0 6px;font-size:11px;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase">Ganti Sumber</div>
+      <a href="/home" style="display:flex;align-items:center;gap:10px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Samehadaku
+      </a>
+      <a href="/animasu/home" style="display:flex;align-items:center;gap:10px;color:var(--accent);font-weight:600">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Animasu
+      </a>
 
       <!-- Divider -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -762,6 +791,23 @@ function closeAnnouncement() {
   </script>
 
 <script>
+function toggleNavSumber(e) {
+  e.stopPropagation();
+  var dd  = document.getElementById('navSumberDropdown');
+  var btn = document.querySelector('#navSumber .nav-more-btn');
+  var isOpen = dd.classList.contains('show');
+  dd.classList.toggle('show', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#navSumber')) {
+    var dd  = document.getElementById('navSumberDropdown');
+    var btn = document.querySelector('#navSumber .nav-more-btn');
+    if (dd)  dd.classList.remove('show');
+    if (btn) btn.classList.remove('open');
+  }
+});
+
 function toggleNavMore(e) {
   e.stopPropagation();
   var dd  = document.getElementById('navMoreDropdown');

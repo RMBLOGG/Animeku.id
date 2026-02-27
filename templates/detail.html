@@ -2,6 +2,9 @@
 {% block title %}{{ data.detail.title if data and data.detail else 'Detail Anime' }} — Animeku.id{% endblock %}
 
 {% block content %}
+{# episode_base & anime_base di-inject oleh route — default ke samehadaku #}
+{% set episode_base = episode_base if episode_base is defined else '/episode' %}
+{% set anime_base   = anime_base   if anime_base   is defined else '/anime' %}
 {% if data and data.detail %}
 {% set d = data.detail %}
 
@@ -70,7 +73,7 @@
 
       <div class="detail-actions">
         {% if d.episodes and d.episodes | length > 0 %}
-        <a href="/episode/{{ d.episodes[0].slug }}?anime={{ slug }}" class="btn btn-primary">
+        <a href="{{ episode_base }}/{{ d.episodes[0].slug }}?anime={{ slug }}" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           Tonton Sekarang
         </a>
@@ -100,7 +103,7 @@
 
   <div class="episodes-grid" id="episodesGrid">
     {% for ep in d.episodes %}
-    <a href="/episode/{{ ep.slug }}?anime={{ slug }}" class="ep-btn" data-ep="{{ ep.name | lower }}">
+    <a href="{{ episode_base }}/{{ ep.slug }}?anime={{ slug }}" class="ep-btn" data-ep="{{ ep.name | lower }}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
       {{ ep.name }}
     </a>
@@ -134,10 +137,11 @@
   // Continue watching banner
   const prog  = JSON.parse(localStorage.getItem('animeku_progress') || '{}');
   const saved = prog[slug];
+  const epBase = {{ episode_base | tojson }};
   if (saved) {
     const banner = document.getElementById('continueBanner');
     if (banner) banner.innerHTML = `
-      <a href="/episode/${saved.epSlug}?anime=${slug}" class="continue-banner">
+      <a href="${epBase}/${saved.epSlug}?anime=${slug}" class="continue-banner">
         <img src="{{ d.poster }}" alt="{{ d.title }}" onerror="this.src='/static/img/placeholder.svg'">
         <div class="continue-info">
           <div class="continue-label">⏯ LANJUT NONTON</div>

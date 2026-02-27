@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Jadwal Tayang — Animeku.id{% endblock %}
 {% block content %}
+{% set anime_base = anime_base if anime_base is defined else '/anime' %}
 
 <div class="page-header">
   <div class="page-header-inner">
@@ -40,7 +41,7 @@
 
     <div class="schedule-anime-grid">
       {% for item in animes %}
-      <a href="/anime/{{ item.slug }}" class="schedule-anime-card">
+      <a href="{{ anime_base }}/{{ item.slug }}" class="schedule-anime-card">
         <div class="schedule-anime-poster">
           {% if item.poster %}
           <img src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy"
