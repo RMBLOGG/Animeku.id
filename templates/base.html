@@ -449,7 +449,47 @@ async function _loadSiteSettings() {
   // Maintenance mode
   if (settings && settings.maintenance) {
     if (window.location.pathname !== '/admin') {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#090b0f;flex-direction:column;gap:16px;text-align:center;padding:24px"><div style="font-family:Bebas Neue,sans-serif;font-size:48px;color:#e63946;letter-spacing:3px">MAINTENANCE</div><div style="color:#8b92a5;font-size:14px">Website sedang dalam pemeliharaan.<br>Coba lagi beberapa saat.</div></div>';
+      document.head.insertAdjacentHTML('beforeend', '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"><style>body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.035\'/%3E%3C/svg%3E");pointer-events:none;z-index:100;opacity:.6}body::after{content:"";position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:99}@keyframes pulse-glow{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}@keyframes kanji-flicker{0%,100%{opacity:1}48%{opacity:1}50%{opacity:.4}52%{opacity:1}88%{opacity:1}90%{opacity:.3}92%{opacity:1}}@keyframes glitch-1{0%,85%,100%{transform:none;opacity:0}87%{transform:translate(-3px,0);opacity:.7}89%{transform:translate(3px,0);opacity:.7}91%{transform:none;opacity:0}}@keyframes glitch-2{0%,85%,100%{transform:none;opacity:0}88%{transform:translate(4px,0);opacity:.6}90%{transform:translate(-2px,0);opacity:.6}92%{transform:none;opacity:0}}@keyframes fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes progress-anim{0%{width:0%}60%{width:75%}80%{width:82%}100%{width:87%}}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}@keyframes line-flash{0%,100%{opacity:0;width:0}50%{opacity:1;width:400px}}.mn-bg-glow{position:fixed;inset:0;pointer-events:none;overflow:hidden}.mn-bg-glow::before{content:"";position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(230,57,70,.08) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse-glow 4s ease-in-out infinite}.mn-bg-glow::after{content:"";position:absolute;width:300px;height:1px;background:linear-gradient(to right,transparent,rgba(230,57,70,.3),transparent);top:50%;left:50%;transform:translate(-50%,-50%);animation:line-flash 3s ease-in-out infinite}.mn-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}.mn-corner{position:fixed;width:60px;height:60px;pointer-events:none;z-index:10;opacity:.5}.mn-tl{top:24px;left:24px;border-top:1px solid #e63946;border-left:1px solid #e63946}.mn-tr{top:24px;right:24px;border-top:1px solid #e63946;border-right:1px solid #e63946}.mn-bl{bottom:24px;left:24px;border-bottom:1px solid #e63946;border-left:1px solid #e63946}.mn-br{bottom:24px;right:24px;border-bottom:1px solid #e63946;border-right:1px solid #e63946}.mn-kanji{font-family:"Noto Sans JP",sans-serif;font-weight:300;font-size:clamp(80px,20vw,140px);color:transparent;-webkit-text-stroke:1px rgba(230,57,70,.12);letter-spacing:-4px;line-height:1;position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);white-space:nowrap;pointer-events:none;user-select:none;animation:kanji-flicker 6s ease-in-out infinite}.mn-container{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;gap:0;text-align:center}.mn-toplabel{font-family:"DM Mono",monospace;font-size:10px;font-weight:300;letter-spacing:4px;color:#3d4557;text-transform:uppercase;margin-bottom:40px;opacity:0;animation:fade-up .8s ease .2s forwards}.mn-logo{font-family:"Bebas Neue",sans-serif;font-size:clamp(18px,5vw,24px);letter-spacing:6px;color:#8b92a5;margin-bottom:48px;opacity:0;animation:fade-up .8s ease .4s forwards}.mn-logo span{color:#e63946}.mn-title{font-family:"Bebas Neue",sans-serif;font-size:clamp(52px,16vw,96px);letter-spacing:8px;line-height:.9;color:#e8eaf0;position:relative;display:inline-block}.mn-title::before,.mn-title::after{content:"MAINTENANCE";position:absolute;top:0;left:0;font-family:"Bebas Neue",sans-serif;font-size:inherit;letter-spacing:inherit}.mn-title::before{color:#e63946;clip-path:polygon(0 30%,100% 30%,100% 50%,0 50%);animation:glitch-1 4s infinite}.mn-title::after{color:#00f5ff;clip-path:polygon(0 60%,100% 60%,100% 75%,0 75%);animation:glitch-2 4s infinite}.mn-titlewrap{opacity:0;animation:fade-up .8s ease .6s forwards;margin-bottom:8px}.mn-sub{display:block;font-family:"DM Mono",monospace;font-size:clamp(10px,2.5vw,13px);letter-spacing:8px;color:#e63946;margin-top:8px;font-weight:300}.mn-divider{width:100%;max-width:320px;height:1px;background:linear-gradient(to right,transparent,rgba(230,57,70,.4),transparent);margin:32px 0;opacity:0;animation:fade-up .8s ease .8s forwards}.mn-desc{font-size:13px;font-weight:300;color:#8b92a5;line-height:2;letter-spacing:.5px;max-width:280px;opacity:0;animation:fade-up .8s ease 1s forwards}.mn-progwrap{margin-top:40px;width:100%;max-width:260px;opacity:0;animation:fade-up .8s ease 1.2s forwards}.mn-proglabel{display:flex;justify-content:space-between;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:2px;color:#3d4557;margin-bottom:8px}.mn-progtrack{height:2px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}.mn-progfill{height:100%;width:0%;background:linear-gradient(to right,#e63946,#ff6b6b);border-radius:99px;animation:progress-anim 3s cubic-bezier(.4,0,.2,1) 2s forwards;box-shadow:0 0 8px rgba(230,57,70,.8)}.mn-statusrow{display:flex;align-items:center;gap:8px;margin-top:20px;opacity:0;animation:fade-up .8s ease 1.4s forwards}.mn-dot{width:6px;height:6px;border-radius:50%;background:#e63946;animation:blink 1.2s ease-in-out infinite}.mn-statustxt{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:#3d4557;text-transform:uppercase}.mn-bottom{position:fixed;bottom:32px;left:0;right:0;text-align:center;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:#3d4557;z-index:10;opacity:0;animation:fade-up .8s ease 1.6s forwards}</style>');
+      document.body.style.cssText = 'background:#07090d;overflow:hidden;margin:0';
+      document.body.innerHTML = `
+        <div class="mn-bg-glow"></div>
+        <div class="mn-grid"></div>
+        <div class="mn-kanji">メンテナンス</div>
+        <div class="mn-corner mn-tl"></div>
+        <div class="mn-corner mn-tr"></div>
+        <div class="mn-corner mn-bl"></div>
+        <div class="mn-corner mn-br"></div>
+        <div class="mn-container">
+          <div class="mn-toplabel">System Status // Offline</div>
+          <div class="mn-logo"><span>A</span>NIMEKU<span>.</span>ID</div>
+          <div class="mn-titlewrap">
+            <div class="mn-title">MAINTENANCE</div>
+            <span class="mn-sub">// PEMELIHARAAN SISTEM</span>
+          </div>
+          <div class="mn-divider"></div>
+          <p class="mn-desc">Website sedang dalam pemeliharaan.<br>Kami akan kembali dalam waktu dekat.<br><span style="color:#3d4557">Terima kasih atas kesabaranmu 🙏</span></p>
+          <div class="mn-progwrap">
+            <div class="mn-proglabel"><span>PROGRESS</span><span id="mn-pct">0%</span></div>
+            <div class="mn-progtrack"><div class="mn-progfill" id="mn-fill"></div></div>
+          </div>
+          <div class="mn-statusrow">
+            <div class="mn-dot"></div>
+            <div class="mn-statustxt">Server dalam pemeliharaan</div>
+          </div>
+        </div>
+        <div class="mn-bottom">ANIMEKU.ID &nbsp;·&nbsp; 2026</div>
+        <script>
+          var cur=0,tgt=87;
+          setTimeout(function(){
+            var iv=setInterval(function(){
+              var step=Math.ceil((tgt-cur)/8);
+              cur=Math.min(cur+step,tgt);
+              document.getElementById('mn-pct').textContent=cur+'%';
+              if(cur>=tgt)clearInterval(iv);
+            },280);
+          },2000);
+        <\/script>
+      `;
       return;
     }
   }
