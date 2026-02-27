@@ -521,37 +521,79 @@ def delete_comment(comment_id):
                         params={"id": f"eq.{comment_id}", "user_id": f"eq.{user_id}"})
     return jsonify({"ok": r.ok})
 
+
+# ── Sociabuzz Webhook ──────────────────────────────────────────────────────────
+
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
-    WEBHOOK_TOKEN = "sbwhook-6ccpbrs7ai09fzbiluxdtwqn"
-    
     data = request.get_json(silent=True) or {}
 
-    # Cek token dari SEMUA kemungkinan lokasi
-    token = (
-        request.headers.get("X-Webhook-Token") or
-        request.headers.get("X-Sociabuzz-Token") or
-        request.headers.get("X-Token") or
-        request.headers.get("Authorization", "").replace("Bearer ", "").strip() or
-        request.args.get("token") or
-        data.get("token") or
-        data.get("webhook_token") or
-        ""
+    donor_name   = data.get("donatur_name", data.get("name", "Anonymous"))
+    amount       = int(data.get("amount", 0))
+    message      = data.get("message", "")
+    supporter_id = str(data.get("order_id", data.get("id", "")))
+
+    print(f"[Sociabuzz] Donasi dari {donor_name}: Rp{amount} - {message} (ID: {supporter_id})")
+
+    # Simpan ke tabel donations di Supabase
+    try:
+        payload = {
+            "donor_name":   donor_name,
+            "amount":       amount,
+            "message":      message,
+            "supporter_id": supporter_id,
+        }
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/donations",
+            headers={**supabase_headers(), "Prefer": "return=representation"},
+            json=payload,
+        )
+        if not r.ok:
+            print(f"[Sociabuzz] Supabase error: {r.text}")
+        else:
+            print(f"[Sociabuzz] Tersimpan ke Supabase")
+    except Exception as e:
+        print(f"[Sociabuzz] Exception: {e}")
+
+    return jsonify({"ok": True, "received": supporter_id}), 200
+
+
+@app.route("/api/donations")
+def api_donations():
+    from datetime import datetime, timezone
+
+    # Ambil donation goal dari site_config
+    goal = 300000
+    try:
+        cfg = requests.get(
+            f"{SUPABASE_URL}/rest/v1/site_config",
+            headers=supabase_headers(),
+            params={"key": "eq.donation_goal", "select": "value"}
+        )
+        if cfg.ok and cfg.json():
+            goal = cfg.json()[0]["value"].get("monthly_target", 300000)
+    except Exception:
+        pass
+
+    # Ambil 20 donasi terbaru
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/donations",
+        headers=supabase_headers(),
+        params={"order": "created_at.desc", "limit": "20", "select": "*"}
     )
+    donations = r.json() if r.ok else []
 
-    if token != WEBHOOK_TOKEN:
-        print(f"[Webhook] Token gagal: '{token}'")
-        # Tetap return 200 agar Sociabuzz tidak retry terus
-        return jsonify({"ok": True}), 200
+    # Hitung total donasi bulan ini
+    now       = datetime.now(timezone.utc)
+    month_str = now.strftime("%Y-%m")
+    total     = sum(d["amount"] for d in donations if d.get("created_at", "").startswith(month_str))
 
-    donor_name = data.get("donatur_name", data.get("name", "Anonymous"))
-    amount     = data.get("amount", 0)
-    message    = data.get("message", "")
-    order_id   = data.get("order_id", data.get("id", ""))
+    return jsonify({
+        "donations":      donations,
+        "monthly_total":  total,
+        "monthly_target": goal,
+    })
 
-    print(f"[Sociabuzz] ✅ Donasi VALID dari {donor_name}: Rp{amount} - {message}")
-
-    return jsonify({"ok": True, "received": order_id}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
