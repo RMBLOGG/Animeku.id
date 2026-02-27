@@ -555,6 +555,35 @@ def sociabuzz_webhook():
     except Exception as e:
         print(f"[Sociabuzz] Exception: {e}")
 
+    # 2. Kirim notifikasi donasi ke tabel chat_messages (muncul di Live Chat)
+    try:
+        rp_fmt = f"Rp {amount:,}".replace(",", ".")
+        chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
+        if message:
+            chat_content += f' 💬 "{message}"'
+
+        r2 = requests.post(
+            f"{SUPABASE_URL}/rest/v1/chat_messages",
+            headers={**supabase_headers(), "Prefer": "return=representation"},
+            json={
+                "room_id":     "global",
+                "user_id":     "system-donation",
+                "user_name":   "💖 Donasi Alert",
+                "user_avatar": "",
+                "content":     chat_content,
+                "is_donation": True,
+                "donor_name":  donor_name,
+                "amount":      amount,
+                "reactions":   {},
+            },
+        )
+        if not r2.ok:
+            print(f"[Sociabuzz] Chat error: {r2.text}")
+        else:
+            print(f"[Sociabuzz] Notifikasi chat terkirim ✅")
+    except Exception as e:
+        print(f"[Sociabuzz] Exception chat: {e}")
+
     return jsonify({"ok": True, "received": supporter_id}), 200
 
 
@@ -575,11 +604,11 @@ def api_donations():
     except Exception:
         pass
 
-    # Ambil 20 donasi terbaru
+    # Ambil 50 donasi terbaru
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/donations",
         headers=supabase_headers(),
-        params={"order": "created_at.desc", "limit": "20", "select": "*"}
+        params={"order": "created_at.desc", "limit": "50", "select": "*"}
     )
     donations = r.json() if r.ok else []
 
@@ -588,10 +617,21 @@ def api_donations():
     month_str = now.strftime("%Y-%m")
     total     = sum(d["amount"] for d in donations if d.get("created_at", "").startswith(month_str))
 
+    # Leaderboard: top 5 donor berdasarkan total donasi
+    lb_dict = {}
+    for d in donations:
+        name = d.get("donor_name", "Anonymous")
+        lb_dict[name] = lb_dict.get(name, 0) + d["amount"]
+    leaderboard = sorted(
+        [{"name": k, "total": v} for k, v in lb_dict.items()],
+        key=lambda x: x["total"], reverse=True
+    )[:5]
+
     return jsonify({
-        "donations":      donations,
+        "donations":      donations[:20],
         "monthly_total":  total,
         "monthly_target": goal,
+        "leaderboard":    leaderboard,
     })
 
 
