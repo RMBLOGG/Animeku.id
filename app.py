@@ -182,6 +182,10 @@ def manifest():
     return send_from_directory(app.static_folder, "manifest.json", mimetype="application/manifest+json")
 
 @app.route("/")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/home")
 def home():
     raw      = fetch("/anime/samehadaku/home")
     popular  = fetch("/anime/samehadaku/popular")
