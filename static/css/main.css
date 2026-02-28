@@ -764,10 +764,12 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 }
 .player-frame {
   position: relative;
-  width: 100%;
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
   aspect-ratio: 16/9;
   background: #000;
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(0,0,0,0.8);
 }
@@ -1348,10 +1350,15 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 /* ── Utility ── */
 .hidden { display:none !important; }
 
-@media (max-width:480px) {
+@media (max-width: 480px) {
   .player-action-bar { gap:8px; }
   .ep-prev-next { width:100%; }
   .ep-prev-next a, .ep-prev-next button { flex:1; justify-content:center; }
+  .player-frame {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+  }
 }
 
 @keyframes livePulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
