@@ -466,6 +466,102 @@ def api_me():
     return jsonify({"user": session.get("user")})
 
 
+# ── Premium ────────────────────────────────────────────────────────────────────
+
+FREE_EPISODE_COUNT = 2  # Episode 1 & 2 gratis
+
+@app.route("/api/premium/status")
+def premium_status():
+    """Cek apakah user yang sedang login punya akses premium."""
+    user = session.get("user")
+    if not user:
+        return jsonify({"premium": False, "reason": "not_logged_in"})
+    user_id = user.get("id")
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/user_premium",
+        headers=supabase_headers(),
+        params={"user_id": f"eq.{user_id}", "select": "is_active,expires_at"}
+    )
+    if r.ok and r.json():
+        row = r.json()[0]
+        from datetime import datetime, timezone
+        expires_at = row.get("expires_at")
+        if row.get("is_active"):
+            if not expires_at:
+                return jsonify({"premium": True})
+            try:
+                exp = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                if exp > datetime.now(timezone.utc):
+                    return jsonify({"premium": True, "expires_at": expires_at})
+            except Exception:
+                pass
+    return jsonify({"premium": False, "reason": "no_subscription"})
+
+@app.route("/api/premium/grant", methods=["POST"])
+def premium_grant():
+    """Admin grant/revoke premium untuk user tertentu."""
+    user = session.get("user")
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json()
+    target_user_id = data.get("user_id")
+    action = data.get("action", "grant")  # grant / revoke
+    expires_at = data.get("expires_at")  # optional ISO string
+
+    # Cek admin
+    ADMIN_IDS = [
+        "1a2c72de-e85c-4430-8e27-8c1c1fd0b8f1",
+    ]
+    r_user = requests.get(f"{SUPABASE_URL}/auth/v1/user",
+                          headers=supabase_headers(session.get("access_token")))
+    if not r_user.ok:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Cek admin dari site_config
+    cfg = requests.get(f"{SUPABASE_URL}/rest/v1/site_config",
+                       headers=supabase_headers(),
+                       params={"key": "eq.admin_ids", "select": "value"})
+    if cfg.ok and cfg.json():
+        try:
+            val = cfg.json()[0]["value"]
+            ADMIN_IDS = val if isinstance(val, list) else val.get("ids", ADMIN_IDS)
+        except Exception:
+            pass
+    if user.get("id") not in ADMIN_IDS:
+        return jsonify({"error": "Forbidden"}), 403
+
+    if action == "grant":
+        payload = {"user_id": target_user_id, "is_active": True}
+        if expires_at:
+            payload["expires_at"] = expires_at
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers={**supabase_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+            json=payload
+        )
+    else:  # revoke
+        r = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers={**supabase_headers(), "Prefer": "return=representation"},
+            params={"user_id": f"eq.{target_user_id}"},
+            json={"is_active": False}
+        )
+    return jsonify({"ok": r.ok, "detail": r.text})
+
+@app.route("/api/premium/list")
+def premium_list():
+    """Daftar semua user premium (admin only)."""
+    user = session.get("user")
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/user_premium",
+        headers=supabase_headers(),
+        params={"select": "*", "order": "created_at.desc"}
+    )
+    return jsonify(r.json() if r.ok else [])
+
+
 # ── Comments ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/comments/<anime_slug>")
