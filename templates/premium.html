@@ -1,459 +1,389 @@
 {% extends "base.html" %}
 {% block title %}Premium — Animeku.id{% endblock %}
 
-{% block content %}
+{% block head %}
 <style>
-/* ── Premium Page ── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');
+
+.premium-page {
+  min-height: 100vh;
+  padding-bottom: 80px;
+  position: relative;
+  overflow: hidden;
+}
+.premium-page::before {
+  content: '';
+  position: fixed;
+  top: -150px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(244,162,97,0.10) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HERO ── */
 .prem-hero {
   text-align: center;
-  padding: 56px 16px 40px;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(230,57,70,0.13) 0%, transparent 70%);
+  padding: 56px 20px 36px;
+  position: relative;
+  z-index: 1;
 }
 .prem-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.35);
-  color: #e63946; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-  padding: 5px 14px; border-radius: 99px; font-family: var(--font-mono);
-  text-transform: uppercase; margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+  background: linear-gradient(135deg, rgba(244,162,97,0.2), rgba(231,111,27,0.2));
+  border: 1px solid rgba(244,162,97,0.4);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f4a261;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
 }
-.prem-hero h1 {
-  font-size: clamp(26px, 5vw, 44px); font-weight: 900;
-  font-family: var(--font-head); margin: 0 0 12px; color: var(--text);
-  line-height: 1.15;
+.prem-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(26px, 6vw, 44px);
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: 1px;
+  line-height: 1.2;
+  margin-bottom: 14px;
 }
-.prem-hero h1 span { color: #e63946; }
-.prem-hero p {
-  color: var(--text2); font-size: 15px; max-width: 480px;
-  margin: 0 auto 32px; line-height: 1.7;
+.prem-title span {
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-
-/* ── Status banner (jika sudah premium) ── */
-.prem-status {
-  max-width: 500px; margin: 0 auto 40px;
-  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.35);
-  border-radius: 12px; padding: 18px 24px;
-  display: flex; align-items: center; gap: 14px;
-  font-size: 14px; color: #4ade80;
-}
-.prem-status-icon { font-size: 28px; flex-shrink: 0; }
-
-/* ── Plans grid ── */
-.plans-grid {
-  display: flex; flex-wrap: wrap; gap: 20px;
-  justify-content: center; max-width: 900px;
-  margin: 0 auto 64px; padding: 0 16px;
-}
-.plan-card {
-  flex: 1 1 240px; max-width: 290px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 28px 24px;
-  display: flex; flex-direction: column; gap: 14px;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  position: relative; overflow: hidden;
-}
-.plan-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(230,57,70,0.45);
-  box-shadow: 0 12px 40px rgba(230,57,70,0.15);
-}
-.plan-card.featured {
-  border-color: rgba(230,57,70,0.6);
-  box-shadow: 0 4px 30px rgba(230,57,70,0.2);
-}
-.plan-card.featured::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(230,57,70,0.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-.plan-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
-  color: #e63946; font-size: 10px; font-weight: 700;
-  padding: 3px 10px; border-radius: 99px; letter-spacing: 0.5px;
-  font-family: var(--font-mono); align-self: flex-start;
-}
-.plan-name {
-  font-size: 18px; font-weight: 800; color: var(--text);
-  font-family: var(--font-head); margin: 0;
-}
-.plan-price {
-  display: flex; align-items: baseline; gap: 4px;
-}
-.plan-price .amount {
-  font-size: clamp(28px, 5vw, 36px); font-weight: 900;
-  color: #e63946; font-family: var(--font-head); line-height: 1;
-}
-.plan-price .period { color: var(--text3); font-size: 13px; }
-.plan-price .currency { color: var(--text3); font-size: 14px; font-weight: 600; }
-.plan-per-day {
-  font-size: 11px; color: var(--text3); font-family: var(--font-mono);
-  margin-top: -8px;
-}
-.plan-divider {
-  border: none; border-top: 1px solid var(--border); margin: 0;
-}
-.plan-features {
-  list-style: none; padding: 0; margin: 0;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.plan-features li {
-  display: flex; align-items: flex-start; gap: 8px;
-  font-size: 13px; color: var(--text2); line-height: 1.5;
-}
-.plan-features li .check { color: #4ade80; flex-shrink: 0; margin-top: 1px; }
-.plan-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: linear-gradient(135deg, #e63946, #c1121f);
-  color: #fff; font-weight: 700; font-size: 14px;
-  padding: 13px 20px; border-radius: 9px; text-decoration: none;
-  border: none; cursor: pointer; width: 100%;
-  box-shadow: 0 4px 16px rgba(230,57,70,0.35);
-  transition: transform 0.15s, box-shadow 0.15s;
-  margin-top: auto; font-family: var(--font-head); letter-spacing: 0.5px;
-}
-.plan-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(230,57,70,0.5);
-}
-.plan-btn.ghost {
-  background: transparent;
-  border: 1px solid rgba(230,57,70,0.4);
-  color: #e63946; box-shadow: none;
-}
-.plan-btn.ghost:hover {
-  background: rgba(230,57,70,0.08);
-  box-shadow: none;
+.prem-sub {
+  color: var(--text2);
+  font-size: 14px;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.7;
 }
 
-/* ── Features section ── */
-.features-section {
-  max-width: 760px; margin: 0 auto 64px; padding: 0 16px;
+/* ── PRICE CARD ── */
+.prem-card-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 0 16px 40px;
+  position: relative;
+  z-index: 1;
 }
-.features-section h2 {
-  text-align: center; font-size: clamp(18px,3vw,26px); font-weight: 800;
-  font-family: var(--font-head); margin: 0 0 32px; color: var(--text);
-}
-.features-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-}
-.feature-item {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px 18px;
-  transition: border-color 0.2s;
-}
-.feature-item:hover { border-color: rgba(230,57,70,0.35); }
-.feature-item .icon { font-size: 26px; margin-bottom: 10px; }
-.feature-item h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
-.feature-item p { font-size: 12px; color: var(--text3); margin: 0; line-height: 1.6; }
-
-/* ── Comparison table ── */
-.compare-section {
-  max-width: 700px; margin: 0 auto 64px; padding: 0 16px;
-}
-.compare-section h2 {
-  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
-  font-family: var(--font-head); margin: 0 0 24px; color: var(--text);
-}
-.compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.compare-table th, .compare-table td {
-  padding: 13px 16px; text-align: center;
-  border-bottom: 1px solid var(--border);
-}
-.compare-table th {
-  font-weight: 700; color: var(--text); font-family: var(--font-head);
+.prem-card {
   background: var(--card);
+  border: 1px solid rgba(244,162,97,0.25);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+  position: relative;
+  overflow: hidden;
 }
-.compare-table th:first-child, .compare-table td:first-child {
-  text-align: left; color: var(--text2);
+.prem-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #f4a261 40%, #ffd166 60%, transparent 100%);
 }
-.compare-table th.prem-col { color: #e63946; }
-.compare-table td .yes { color: #4ade80; font-size: 16px; }
-.compare-table td .no  { color: var(--text3); font-size: 16px; }
-.compare-table tr:last-child td { border-bottom: none; }
 
-/* ── How to pay ── */
+.prem-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.prem-price-amt {
+  font-family: 'Cinzel', serif;
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
+.prem-price-period { font-size: 13px; color: var(--text3); }
+.prem-price-note { font-size: 11px; color: var(--text3); margin-bottom: 20px; }
+
+.prem-features {
+  list-style: none;
+  padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.prem-features li {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text2);
+}
+.feat-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #f4a261; flex-shrink: 0;
+}
+
+.prem-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 20px; }
+
+/* User section */
+#premUserSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Skeleton loader */
+.skel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skel 1.5s infinite;
+}
+@keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* UID Box */
+.uid-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.uid-label {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+}
+.uid-row { display: flex; align-items: center; gap: 8px; }
+.uid-val {
+  font-family: var(--font-mono, monospace); font-size: 11px;
+  color: var(--text2); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.uid-copy {
+  flex-shrink: 0; padding: 4px 10px;
+  background: rgba(244,162,97,0.1); border: 1px solid rgba(244,162,97,0.3);
+  border-radius: 6px; color: #f4a261; font-size: 11px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: background 0.2s;
+}
+.uid-copy:hover { background: rgba(244,162,97,0.2); }
+.uid-hint { font-size: 11px; color: var(--text3); line-height: 1.5; margin-top: 6px; }
+
+/* Buttons */
+.btn-pay {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px; background: linear-gradient(135deg, #f4a261, #e76f1b);
+  color: #000; font-weight: 700; font-size: 14px; border-radius: 12px;
+  text-decoration: none; cursor: pointer; border: none; width: 100%;
+  box-shadow: 0 4px 20px rgba(244,162,97,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(244,162,97,0.4); }
+.btn-login-g {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px; background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text); font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: background 0.2s;
+}
+.btn-login-g:hover { background: rgba(255,255,255,0.1); }
+.btn-pay-note { text-align: center; font-size: 11px; color: var(--text3); }
+
+/* Active banner */
+.prem-active {
+  background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3);
+  border-radius: 12px; padding: 20px; text-align: center;
+}
+.prem-active .icon { font-size: 30px; margin-bottom: 6px; }
+.prem-active h3 { color: #4caf7d; font-size: 16px; margin: 0 0 4px; }
+.prem-active p { color: var(--text2); font-size: 12px; margin: 0; }
+
+/* ── HOW IT WORKS ── */
 .how-section {
-  max-width: 700px; margin: 0 auto 64px; padding: 0 16px;
+  max-width: 400px; margin: 0 auto;
+  padding: 0 16px; position: relative; z-index: 1;
 }
-.how-section h2 {
-  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
-  font-family: var(--font-head); margin: 0 0 28px; color: var(--text);
+.how-title {
+  text-align: center; font-size: 11px; font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;
 }
-.how-steps {
-  display: flex; flex-direction: column; gap: 16px;
+.steps { display: flex; flex-direction: column; }
+.step {
+  display: flex; gap: 14px; align-items: flex-start;
+  position: relative; padding-bottom: 20px;
 }
-.how-step {
-  display: flex; align-items: flex-start; gap: 16px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px;
+.step:last-child { padding-bottom: 0; }
+.step:not(:last-child)::after {
+  content: ''; position: absolute; left: 13px; top: 28px; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, rgba(244,162,97,0.25), transparent);
 }
-.how-step .step-num {
-  min-width: 32px; height: 32px;
-  background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; color: #e63946;
-  font-family: var(--font-mono); flex-shrink: 0;
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(244,162,97,0.12); border: 1px solid rgba(244,162,97,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #f4a261; flex-shrink: 0;
 }
-.how-step h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
-.how-step p  { font-size: 13px; color: var(--text3); margin: 0; line-height: 1.6; }
-.how-step p a { color: #e63946; }
-
-/* ── FAQ ── */
-.faq-section {
-  max-width: 680px; margin: 0 auto 80px; padding: 0 16px;
-}
-.faq-section h2 {
-  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
-  font-family: var(--font-head); margin: 0 0 28px; color: var(--text);
-}
-.faq-item {
-  border-bottom: 1px solid var(--border); padding: 16px 0;
-}
-.faq-item:last-child { border-bottom: none; }
-.faq-q {
-  font-size: 14px; font-weight: 700; color: var(--text); cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  user-select: none;
-}
-.faq-q .arrow {
-  flex-shrink: 0; color: var(--text3); transition: transform 0.25s;
-  font-size: 18px; line-height: 1;
-}
-.faq-item.open .faq-q .arrow { transform: rotate(180deg); }
-.faq-a {
-  font-size: 13px; color: var(--text3); line-height: 1.7;
-  max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s;
-}
-.faq-item.open .faq-a { max-height: 200px; padding-top: 10px; }
+.step-text strong { display: block; font-size: 13px; color: var(--text); margin-bottom: 2px; }
+.step-text span { font-size: 12px; color: var(--text3); line-height: 1.5; }
 </style>
+{% endblock %}
 
-<div class="prem-hero">
-  <div class="prem-badge">⭐ ANIMEKU PREMIUM</div>
-  <h1>Nonton Tanpa Batas,<br><span>Tanpa Iklan</span></h1>
-  <p>Akses semua episode anime favorit kamu — tanpa batasan, tanpa gangguan.</p>
+{% block content %}
+<div class="premium-page">
 
-  {% if premium_info %}
-  <div class="prem-status">
-    <div class="prem-status-icon">✅</div>
-    <div>
-      <strong>Kamu sudah Premium!</strong><br>
-      <span style="font-size:12px;opacity:0.8">
-        Aktif hingga <strong>{{ premium_info.expired_at[:10] }}</strong>.
-        Terima kasih sudah mendukung Animeku.id 💖
-      </span>
+  <!-- HERO — statis, langsung tampil -->
+  <div class="prem-hero">
+    <div class="prem-badge">✦ &nbsp;Animeku Premium</div>
+    <h1 class="prem-title">Nonton Tanpa Batas,<br><span>Tanpa Iklan</span></h1>
+    <p class="prem-sub">Akses semua episode anime favorit kamu — tanpa batasan, tanpa gangguan.</p>
+  </div>
+
+  <!-- PRICE CARD — statis, langsung tampil -->
+  <div class="prem-card-wrap">
+    <div class="prem-card">
+
+      <div class="prem-price-row">
+        <span class="prem-price-amt">15K</span>
+        <span class="prem-price-period">/ bulan</span>
+      </div>
+      <p class="prem-price-note">Rp 15.000 — Transfer Bank, QRIS, E-Wallet</p>
+
+      <ul class="prem-features">
+        <li><span class="feat-dot"></span> Semua episode tanpa kunci (ep 3 ke atas)</li>
+        <li><span class="feat-dot"></span> Akses penuh selama 30 hari</li>
+        <li><span class="feat-dot"></span> Aktif otomatis setelah bayar</li>
+        <li><span class="feat-dot"></span> Dukung operasional Animeku.id</li>
+      </ul>
+
+      <hr class="prem-divider">
+
+      <!-- Bagian dinamis: skeleton dulu, lalu diisi JS -->
+      <div id="premUserSection">
+        <div class="skel" style="height:12px;width:55%;margin-bottom:10px"></div>
+        <div class="skel" style="height:48px;width:100%;border-radius:12px"></div>
+      </div>
+
     </div>
   </div>
-  {% endif %}
+
+  <!-- HOW IT WORKS — statis, langsung tampil -->
+  <div class="how-section">
+    <div class="how-title">Cara Berlangganan</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>Login dengan Google</strong>
+          <span>Kamu butuh akun untuk mengaktifkan premium.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Copy User ID kamu</strong>
+          <span>User ID otomatis muncul setelah login. Paste di kolom pesan Sociabuzz.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Donasi Rp 15.000 via Sociabuzz</strong>
+          <span>Klik "Bayar Sekarang" dan selesaikan pembayaran.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>Premium aktif otomatis ✓</strong>
+          <span>Dalam detik setelah bayar, akun langsung upgrade 1 bulan.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
 
-<!-- PLANS -->
-<div class="plans-grid">
-  {% for plan in plans %}
-  <div class="plan-card {% if plan.badge == '🔥 Populer' %}featured{% endif %}">
-    {% if plan.badge %}
-    <div class="plan-badge">{{ plan.badge }}</div>
-    {% endif %}
-    <h3 class="plan-name">{{ plan.name }}</h3>
-    <div class="plan-price">
-      <span class="currency">Rp</span>
-      <span class="amount">{{ "{:,.0f}".format(plan.price).replace(",", ".") }}</span>
-    </div>
-    <p class="plan-per-day">≈ Rp {{ "{:,.0f}".format(plan.price / plan.days) | int }}/hari</p>
-    <hr class="plan-divider">
-    <ul class="plan-features">
-      <li><span class="check">✓</span> Semua episode tanpa batas</li>
-      <li><span class="check">✓</span> Kualitas terbaik tersedia</li>
-      <li><span class="check">✓</span> Tanpa iklan mengganggu</li>
-      <li><span class="check">✓</span> Akses {{ plan.days }} hari penuh</li>
-      {% if plan.days >= 90 %}
-      <li><span class="check">✓</span> Badge premium di profil</li>
-      {% endif %}
-      {% if plan.days >= 365 %}
-      <li><span class="check">✓</span> Prioritas request fitur baru</li>
-      {% endif %}
-    </ul>
-    <a href="https://sociabuzz.com/animekuid/tribe" target="_blank" rel="noopener"
-       class="plan-btn {% if plan.badge != '🔥 Populer' %}ghost{% endif %}"
-       onclick="trackPlanClick('{{ plan.id }}')">
-      {% if premium_info %}Perpanjang{% else %}Pilih Paket{% endif %}
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </a>
-  </div>
-  {% endfor %}
-</div>
-
-<!-- FITUR PREMIUM -->
-<section class="features-section">
-  <h2>Kenapa Harus Premium?</h2>
-  <div class="features-grid">
-    <div class="feature-item">
-      <div class="icon">🎬</div>
-      <h3>Semua Episode</h3>
-      <p>Akses seluruh episode tanpa terkunci, dari episode 1 sampai terbaru.</p>
-    </div>
-    <div class="feature-item">
-      <div class="icon">⚡</div>
-      <h3>Server Cepat</h3>
-      <p>Prioritas ke server streaming berkecepatan tinggi tanpa buffering.</p>
-    </div>
-    <div class="feature-item">
-      <div class="icon">🚫</div>
-      <h3>Tanpa Iklan</h3>
-      <p>Pengalaman nonton bersih tanpa pop-up atau iklan yang mengganggu.</p>
-    </div>
-    <div class="feature-item">
-      <div class="icon">💖</div>
-      <h3>Dukung Kami</h3>
-      <p>Premium kamu membantu server tetap berjalan & konten terus diupdate.</p>
-    </div>
-  </div>
-</section>
-
-<!-- PERBANDINGAN -->
-<section class="compare-section">
-  <h2>Gratis vs Premium</h2>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Fitur</th>
-        <th>Gratis</th>
-        <th class="prem-col">⭐ Premium</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Akses episode</td>
-        <td>{{ free_limit }} ep/anime</td>
-        <td><span class="yes">✓</span> Semua</td>
-      </tr>
-      <tr>
-        <td>Kualitas video</td>
-        <td><span class="yes">✓</span></td>
-        <td><span class="yes">✓</span></td>
-      </tr>
-      <tr>
-        <td>Iklan</td>
-        <td>Ada</td>
-        <td><span class="yes">✓</span> Bebas iklan</td>
-      </tr>
-      <tr>
-        <td>Koleksi pribadi</td>
-        <td><span class="yes">✓</span></td>
-        <td><span class="yes">✓</span></td>
-      </tr>
-      <tr>
-        <td>Komentar</td>
-        <td><span class="yes">✓</span></td>
-        <td><span class="yes">✓</span></td>
-      </tr>
-      <tr>
-        <td>Badge premium</td>
-        <td><span class="no">✗</span></td>
-        <td><span class="yes">✓</span></td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- CARA BAYAR -->
-<section class="how-section">
-  <h2>Cara Berlangganan</h2>
-  <div class="how-steps">
-    <div class="how-step">
-      <div class="step-num">1</div>
-      <div>
-        <h4>Pilih Paket</h4>
-        <p>Pilih paket yang sesuai budget kamu di atas lalu klik tombol "Pilih Paket".</p>
-      </div>
-    </div>
-    <div class="how-step">
-      <div class="step-num">2</div>
-      <div>
-        <h4>Donasi via Sociabuzz</h4>
-        <p>Kamu akan diarahkan ke halaman Sociabuzz kami. Bayar sesuai nominal paket yang dipilih. Di kolom pesan, tulis <strong>email akun Animeku kamu</strong>.</p>
-      </div>
-    </div>
-    <div class="how-step">
-      <div class="step-num">3</div>
-      <div>
-        <h4>Konfirmasi</h4>
-        <p>Setelah pembayaran diterima (maks 1×24 jam), akun kamu akan langsung diaktifkan premium. Hubungi kami via <a href="mailto:admin@animeku.id">email</a> jika ada kendala.</p>
-      </div>
-    </div>
-    <div class="how-step">
-      <div class="step-num">4</div>
-      <div>
-        <h4>Nikmati Streaming!</h4>
-        <p>Login ke akun kamu dan mulai nonton semua episode tanpa batas 🎉</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="faq-section">
-  <h2>FAQ</h2>
-
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggleFaq(this)">
-      Apakah pembayaran otomatis diproses?
-      <span class="arrow">⌄</span>
-    </div>
-    <div class="faq-a">
-      Saat ini kami masih memproses aktivasi premium secara manual (maks 1×24 jam) setelah konfirmasi donasi diterima via Sociabuzz.
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggleFaq(this)">
-      Metode pembayaran apa yang tersedia?
-      <span class="arrow">⌄</span>
-    </div>
-    <div class="faq-a">
-      Semua metode yang tersedia di Sociabuzz: transfer bank, GoPay, OVO, DANA, QRIS, dan kartu kredit/debit.
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggleFaq(this)">
-      Apakah ada masa percobaan gratis?
-      <span class="arrow">⌄</span>
-    </div>
-    <div class="faq-a">
-      Kamu bisa nonton {{ free_limit }} episode pertama setiap anime secara gratis tanpa login. Untuk lebih dari itu, dibutuhkan akun Premium.
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggleFaq(this)">
-      Apakah premium bisa digunakan di banyak perangkat?
-      <span class="arrow">⌄</span>
-    </div>
-    <div class="faq-a">
-      Ya, premium terikat ke akun Google kamu dan bisa digunakan di semua perangkat yang login dengan akun yang sama.
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggleFaq(this)">
-      Bagaimana cara cek status premium saya?
-      <span class="arrow">⌄</span>
-    </div>
-    <div class="faq-a">
-      Status premium dan tanggal kedaluwarsa akan ditampilkan di halaman ini dan di profil kamu setelah login.
-    </div>
-  </div>
-</section>
-
+{% block scripts %}
 <script>
-function toggleFaq(el) {
-  el.closest('.faq-item').classList.toggle('open');
+const SOCIABUZZ_URL = 'https://sociabuzz.com/dayynime/tribe';
+
+async function initPremiumPage() {
+  const section = document.getElementById('premUserSection');
+  try {
+    const [meRes, premRes] = await Promise.all([
+      fetch('/api/me'),
+      fetch('/api/premium/status')
+    ]);
+    const me   = await meRes.json();
+    const prem = await premRes.json();
+    const user = me.user;
+
+    // Sudah premium
+    if (prem.premium) {
+      const exp = prem.expires_at
+        ? new Date(prem.expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})
+        : 'Selamanya';
+      section.innerHTML = `
+        <div class="prem-active">
+          <div class="icon">✦</div>
+          <h3>Kamu Sudah Premium!</h3>
+          <p>Aktif hingga ${exp}</p>
+        </div>
+        <a href="/home" class="btn-pay" style="text-decoration:none;margin-top:4px">&#9654; &nbsp;Mulai Nonton</a>
+      `;
+      return;
+    }
+
+    // Belum login
+    if (!user) {
+      section.innerHTML = `
+        <p style="font-size:12px;color:var(--text3);margin:0 0 4px">Login dulu untuk mendapatkan User ID kamu.</p>
+        <a href="/auth/login" class="btn-login-g">
+          <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.9 6.1C12.7 13.1 17.9 9.5 24 9.5z"/><path fill="#4A90D9" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4C43 36.8 46.1 31.1 46.1 24.5z"/><path fill="#34A853" d="M10.8 28.6c-.3-1-.5-2-.5-2.6 0-1.6.3-3.1.8-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.3-6.2z"/><path fill="#FBBC05" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.1 0-11.3-3.6-13.2-8.7l-8.3 6.2C6.8 42.6 14.7 48 24 48z"/></svg>
+          Login dengan Google
+        </a>
+      `;
+      return;
+    }
+
+    // Login, belum premium
+    const uid = user.id || '';
+    section.innerHTML = `
+      <div class="uid-box">
+        <div class="uid-label">User ID kamu — paste ke kolom pesan Sociabuzz</div>
+        <div class="uid-row">
+          <span class="uid-val" id="uidVal">${uid}</span>
+          <button class="uid-copy" onclick="copyUID()">Copy</button>
+        </div>
+        <p class="uid-hint">&#9888; Jangan hapus User ID ini saat isi pesan di Sociabuzz agar premium aktif otomatis.</p>
+      </div>
+      <button class="btn-pay" onclick="handlePay()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        Bayar Sekarang — Rp 15.000
+      </button>
+      <p class="btn-pay-note">Diarahkan ke Sociabuzz &bull; Transfer Bank, QRIS, E-Wallet</p>
+    `;
+  } catch(e) {
+    section.innerHTML = `<p style="color:var(--text3);font-size:12px;text-align:center">Gagal memuat. Coba refresh halaman.</p>`;
+  }
 }
-function trackPlanClick(planId) {
-  console.log('[Premium] Plan clicked:', planId);
-  // Bisa disambungkan ke analytics
+
+function copyUID() {
+  const val = document.getElementById('uidVal')?.textContent || '';
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.querySelector('.uid-copy');
+    if (!btn) return;
+    btn.textContent = '✓ Copied!';
+    btn.style.color = '#4caf7d';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
+  });
 }
+
+function handlePay() {
+  const uid = document.getElementById('uidVal')?.textContent || '';
+  window.open(`${SOCIABUZZ_URL}?message=${encodeURIComponent('PREMIUM:' + uid)}`, '_blank');
+}
+
+initPremiumPage();
 </script>
 {% endblock %}
