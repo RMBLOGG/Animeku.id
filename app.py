@@ -325,7 +325,10 @@ def detail(slug):
                 }
             }
         }
-    return render_template("detail.html", data=data, slug=slug)
+    user = session.get("user")
+    user_is_premium = is_premium(user.get("id")) if user else False
+    return render_template("detail.html", data=data, slug=slug,
+                           free_limit=FREE_EPISODE_LIMIT, user_is_premium=user_is_premium)
 
 
 @app.route("/episode/<slug>")
