@@ -5,10 +5,15 @@
 {% if data %}
 
 {% set episodes = anime_data.detail.episodes if anime_data and anime_data.detail and anime_data.detail.episodes else [] %}
+{% set ep_count = episodes | length %}
 {% set current_idx = namespace(val=-1) %}
 {% for ep in episodes %}
   {% if ep.slug == slug %}{% set current_idx.val = loop.index0 %}{% endif %}
 {% endfor %}
+{# Hitung nomor episode dari belakang: 0 = ep terlama (ep 1), 1 = ep 2, dst #}
+{% set ep_num_from_end = ep_count - current_idx.val - 1 %}
+{# Episode terkunci jika index dari belakang >= 2 (artinya bukan ep1 atau ep2) #}
+{% set is_locked = (current_idx.val >= 0 and ep_num_from_end >= 2) %}
 {# API mengurutkan episode dari terbaru ke terlama (index 0 = episode terbaru) #}
 {# Prev = episode lebih lama = index+1, Next = episode lebih baru = index-1 #}
 {% set prev_ep = episodes[current_idx.val + 1] if current_idx.val >= 0 and current_idx.val < episodes|length - 1 else None %}
@@ -66,6 +71,22 @@
 
   <!-- VIDEO PLAYER -->
   <div class="player-frame" style="position:relative">
+
+    {% if is_locked %}
+    <!-- PREMIUM LOCK OVERLAY -->
+    <div id="premiumOverlay" style="
+      position:absolute;inset:0;background:rgba(10,10,10,0.96);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:16px;z-index:10;border-radius:0;text-align:center;padding:24px;
+    ">
+      <div style="font-size:52px;line-height:1">&#10022;</div>
+      <h2 style="font-family:var(--font-head);font-size:22px;background:linear-gradient(135deg,#f4a261,#e76f1b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0">Konten Premium</h2>
+      <p style="color:var(--text2);font-size:13px;max-width:280px;margin:0">Episode ini memerlukan akses <strong style="-webkit-text-fill-color:unset;color:#f4a261">Premium</strong>. Episode 1 &amp; 2 gratis untuk semua.</p>
+      <div id="premiumOverlayAction" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px">
+        <div style="color:var(--text3);font-size:13px">Memuat status...</div>
+      </div>
+    </div>
+    {% endif %}
 
     <!-- PLACEHOLDER: tampil sebelum server dipilih -->
     <div id="playerPlaceholder" style="
@@ -597,6 +618,55 @@ function timeAgo(iso) {
 
 initComments();
 </script>
+
+{% if is_locked %}
+<script>
+// ── Premium check untuk episode terkunci ──────────────────────────
+(async function() {
+  const overlay = document.getElementById('premiumOverlay');
+  const actionDiv = document.getElementById('premiumOverlayAction');
+  if (!overlay) return;
+
+  try {
+    const [premRes, meRes] = await Promise.all([
+      fetch('/api/premium/status'),
+      fetch('/api/me')
+    ]);
+    const prem = await premRes.json();
+    const me   = await meRes.json();
+
+    if (prem.premium) {
+      // User premium → sembunyikan overlay, biarkan player jalan normal
+      overlay.style.display = 'none';
+      return;
+    }
+
+    // Bukan premium — tampilkan aksi sesuai status login
+    if (me.user) {
+      actionDiv.innerHTML = `
+        <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2)">
+          Akun kamu belum Premium.<br>Hubungi admin untuk upgrade akses.
+        </div>
+        <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
+          ← Kembali
+        </a>
+      `;
+    } else {
+      actionDiv.innerHTML = `
+        <a href="/auth/login" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
+          Login dengan Google
+        </a>
+        <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
+          ← Kembali
+        </a>
+      `;
+    }
+  } catch(e) {
+    actionDiv.innerHTML = `<span style="color:var(--text3);font-size:12px">Gagal memuat status premium.</span>`;
+  }
+})();
+</script>
+{% endif %}
 
 {% else %}
 <div class="container empty-state" style="padding-top:80px">

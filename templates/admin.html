@@ -444,6 +444,9 @@
     <button class="admin-tab" onclick="switchTab('settings')" id="tab-settings">
       ⚙️ Pengaturan
     </button>
+    <button class="admin-tab" onclick="switchTab('premium')" id="tab-premium">
+      ✦ Premium
+    </button>
   </div>
 
   <!-- ── STATISTIK ─────────────────────────────── -->
@@ -681,6 +684,57 @@
     </div>
   </div>
 
+  <!-- ── PREMIUM MANAGEMENT ────────────────────── -->
+  <div class="admin-pane" id="pane-premium">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">✦ Manajemen Premium</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="refresh-btn" onclick="loadPremiumUsers()">↻ Refresh</button>
+        </div>
+      </div>
+      <!-- Grant premium form -->
+      <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">User ID</label>
+          <input type="text" id="premiumUserId" placeholder="UUID user Supabase..." class="search-input" style="min-width:240px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Kedaluwarsa (opsional)</label>
+          <input type="date" id="premiumExpiry" class="search-input">
+        </div>
+        <button class="btn btn-sm" style="background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700" onclick="grantPremium()">✦ Grant Premium</button>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Status</th>
+              <th>Kedaluwarsa</th>
+              <th>Dibuat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="premiumTableBody">
+            <tr class="loading-row"><td colspan="5">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-section" style="margin-top:16px">
+      <div class="admin-section-header">
+        <div class="admin-section-title">ℹ️ Cara Kerja Sistem Premium</div>
+      </div>
+      <div style="padding:16px;font-size:13px;color:var(--text2);line-height:1.7">
+        <p>• <strong>Episode 1 &amp; 2</strong> gratis untuk semua pengguna.</p>
+        <p>• <strong>Episode 3 ke atas</strong> dikunci — hanya bisa ditonton oleh user Premium.</p>
+        <p>• Grant premium dengan memasukkan <strong>User ID</strong> dari Supabase Auth.</p>
+        <p>• Tabel yang dibutuhkan di Supabase: <code style="background:var(--bg2);padding:2px 6px;border-radius:4px">user_premium</code> dengan kolom: <code style="background:var(--bg2);padding:2px 6px;border-radius:4px">user_id, is_active, expires_at, created_at</code></p>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Access Denied -->
@@ -767,6 +821,7 @@ function switchTab(tab) {
   document.getElementById("tab-" + tab).classList.add("active");
   document.getElementById("pane-" + tab).classList.add("active");
   currentTab = tab;
+  if (tab === "premium") loadPremiumUsers();
 }
 
 // ── STATISTIK ──────────────────────────────────────────────────
@@ -1114,6 +1169,77 @@ async function clearAllChat() {
     toast("✓ Semua pesan chat dihapus", "success");
     loadStats();
   } catch { toast("Gagal hapus semua pesan", "error"); }
+}
+
+// ── PREMIUM MANAGEMENT ───────────────────────────────────────────
+
+async function loadPremiumUsers() {
+  const tbody = document.getElementById("premiumTableBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Memuat...</td></tr>`;
+  try {
+    const res = await fetch("/api/premium/list");
+    const data = await res.json();
+    if (!data.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada user premium</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(u => {
+      const active = u.is_active;
+      const exp = u.expires_at ? new Date(u.expires_at).toLocaleDateString("id-ID") : "Selamanya";
+      const created = u.created_at ? new Date(u.created_at).toLocaleDateString("id-ID") : "-";
+      return `<tr>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${escH(u.user_id)}</td>
+        <td>${active ? '<span class="badge" style="background:rgba(76,175,125,0.2);color:#4caf7d">✓ Aktif</span>' : '<span class="badge badge-banned">✗ Nonaktif</span>'}</td>
+        <td style="font-size:12px;color:var(--text2)">${escH(exp)}</td>
+        <td style="font-size:12px;color:var(--text3)">${escH(created)}</td>
+        <td>
+          ${active
+            ? `<button class="btn btn-sm btn-danger" onclick="revokePremium('${escH(u.user_id)}')">Cabut</button>`
+            : `<button class="btn btn-sm btn-success" onclick="grantPremiumById('${escH(u.user_id)}')">Aktifkan</button>`}
+        </td>
+      </tr>`;
+    }).join("");
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat data</td></tr>`;
+  }
+}
+
+async function grantPremium() {
+  const uid = (document.getElementById("premiumUserId").value || "").trim();
+  const exp = document.getElementById("premiumExpiry").value;
+  if (!uid) { toast("Masukkan User ID terlebih dahulu", "error"); return; }
+  await grantPremiumById(uid, exp || null);
+  document.getElementById("premiumUserId").value = "";
+  document.getElementById("premiumExpiry").value = "";
+}
+
+async function grantPremiumById(uid, expires_at = null) {
+  try {
+    const body = { user_id: uid, action: "grant" };
+    if (expires_at) body.expires_at = new Date(expires_at).toISOString();
+    const res = await fetch("/api/premium/grant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const d = await res.json();
+    if (d.ok) { toast("✓ Premium berhasil diberikan", "success"); loadPremiumUsers(); }
+    else toast("Gagal: " + (d.error || d.detail || "unknown"), "error");
+  } catch { toast("Gagal menghubungi server", "error"); }
+}
+
+async function revokePremium(uid) {
+  if (!confirm("Cabut premium user ini?")) return;
+  try {
+    const res = await fetch("/api/premium/grant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: uid, action: "revoke" })
+    });
+    const d = await res.json();
+    if (d.ok) { toast("✓ Premium dicabut", "success"); loadPremiumUsers(); }
+    else toast("Gagal: " + (d.error || "unknown"), "error");
+  } catch { toast("Gagal menghubungi server", "error"); }
 }
 </script>
 {% endblock %}

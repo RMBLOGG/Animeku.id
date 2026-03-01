@@ -99,12 +99,35 @@
     style="width:100%;max-width:300px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;display:block">
 
   <div class="episodes-grid" id="episodesGrid">
+    {% set ep_count = d.episodes | length %}
     {% for ep in d.episodes %}
-    <a href="/episode/{{ ep.slug }}?anime={{ slug }}" class="ep-btn" data-ep="{{ ep.name | lower }}">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-      {{ ep.name }}
-    </a>
+      {# Episode diurutkan terbaru → terlama, jadi ep1 ada di index terakhir #}
+      {% set ep_num_from_end = ep_count - loop.index %}
+      {% if ep_num_from_end >= 2 %}
+        <button class="ep-btn ep-locked" data-ep="{{ ep.name | lower }}" data-slug="{{ ep.slug }}" data-anime="{{ slug }}" onclick="handlePremiumEp(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>
+          {{ ep.name }}
+          <span class="ep-premium-badge">&#10022; Premium</span>
+        </button>
+      {% else %}
+        <a href="/episode/{{ ep.slug }}?anime={{ slug }}" class="ep-btn ep-free" data-ep="{{ ep.name | lower }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          {{ ep.name }}
+          <span class="ep-free-badge">Gratis</span>
+        </a>
+      {% endif %}
     {% endfor %}
+  </div>
+</div>
+
+<!-- Modal Premium -->
+<div id="premiumModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;max-width:420px;width:90%;text-align:center;position:relative">
+    <button onclick="document.getElementById('premiumModal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer">&#x2715;</button>
+    <div style="font-size:48px;margin-bottom:12px">&#10022;</div>
+    <h2 style="font-family:var(--font-head);font-size:22px;margin-bottom:8px;background:linear-gradient(135deg,#f4a261,#e76f1b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Konten Premium</h2>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:20px">Episode ini hanya untuk member <strong>Premium</strong>.<br>Episode 1 &amp; 2 tersedia <strong>gratis</strong> untuk semua.</p>
+    <div id="premiumModalAction"></div>
   </div>
 </div>
 
@@ -181,5 +204,118 @@
     }
   });
 })();
+</script>
+
+<style>
+/* ── Episode Premium Styles ── */
+.ep-locked {
+  position: relative;
+  opacity: 0.7;
+  cursor: pointer;
+  background: none;
+  font-family: var(--font-body);
+  font-size: inherit;
+  text-align: left;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  padding: inherit;
+}
+.ep-locked:hover { opacity: 1; color: var(--text); border-color: #f4a261; }
+.ep-premium-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  color: #000;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.ep-free-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(76,175,125,0.2);
+  color: #4caf7d;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+#premiumModal { display: none; }
+#premiumModal.open { display: flex !important; }
+.premium-modal-btn {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  margin: 4px;
+  cursor: pointer;
+  border: none;
+}
+.premium-modal-btn.secondary {
+  background: var(--card2, rgba(255,255,255,0.08));
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+</style>
+
+<script>
+// ── Premium Gate ──────────────────────────────────────────────────
+let _premiumStatus = null;
+
+async function getPremiumStatus() {
+  if (_premiumStatus !== null) return _premiumStatus;
+  try {
+    const r = await fetch('/api/premium/status');
+    const d = await r.json();
+    _premiumStatus = d.premium === true;
+  } catch { _premiumStatus = false; }
+  return _premiumStatus;
+}
+
+async function handlePremiumEp(btn) {
+  const slug  = btn.dataset.slug;
+  const anime = btn.dataset.anime;
+  const isPremium = await getPremiumStatus();
+
+  if (isPremium) {
+    // User premium → langsung tonton
+    window.location.href = `/episode/${slug}?anime=${anime}`;
+    return;
+  }
+
+  // Tampilkan modal
+  const modal = document.getElementById('premiumModal');
+  const actionDiv = document.getElementById('premiumModalAction');
+  const meRes = await fetch('/api/me');
+  const meData = await meRes.json();
+  const isLoggedIn = !!meData.user;
+
+  if (isLoggedIn) {
+    actionDiv.innerHTML = `
+      <p style="color:var(--text3);font-size:12px;margin-bottom:16px">Akun kamu belum Premium. Hubungi admin untuk upgrade.</p>
+      <button class="premium-modal-btn secondary" onclick="document.getElementById('premiumModal').classList.remove('open')">Tutup</button>
+    `;
+  } else {
+    actionDiv.innerHTML = `
+      <p style="color:var(--text3);font-size:12px;margin-bottom:16px">Login terlebih dahulu, lalu minta admin untuk upgrade ke Premium.</p>
+      <a href="/auth/login" class="premium-modal-btn">Login dengan Google</a>
+      <button class="premium-modal-btn secondary" onclick="document.getElementById('premiumModal').classList.remove('open')">Batal</button>
+    `;
+  }
+
+  modal.classList.add('open');
+}
+
+// Close modal on backdrop click
+document.getElementById('premiumModal')?.addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
 </script>
 {% endblock %}
