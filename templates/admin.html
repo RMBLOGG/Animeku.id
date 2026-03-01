@@ -441,6 +441,9 @@
     <button class="admin-tab" onclick="switchTab('popup')" id="tab-popup">
       📢 Popup
     </button>
+    <button class="admin-tab" onclick="switchTab('pending')" id="tab-pending">
+      ⏳ Premium Pending <span id="pendingBadge" style="display:none;background:#e63946;color:#fff;border-radius:99px;padding:1px 7px;font-size:10px;margin-left:4px">0</span>
+    </button>
     <button class="admin-tab" onclick="switchTab('settings')" id="tab-settings">
       ⚙️ Pengaturan
     </button>
@@ -622,6 +625,80 @@
     </div>
   </div>
 
+  <!-- ── PREMIUM PENDING ───────────────────────────── -->
+  <div class="admin-pane" id="pane-pending">
+
+    <!-- Stats row -->
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:16px">
+      <div class="stat-card">
+        <div class="stat-value accent" id="stat-pending">—</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green" id="stat-granted">—</div>
+        <div class="stat-label">Granted</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value gold" id="stat-pendingAmount">—</div>
+        <div class="stat-label">Total Nominal</div>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">⏳ Donasi Tanpa Email — Perlu Approve Manual</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="refresh-btn" onclick="loadPending()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Donatur</th>
+              <th>Nominal</th>
+              <th>Pesan</th>
+              <th>Waktu</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <tr class="loading-row"><td colspan="6">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grant Manual Form -->
+    <div class="admin-section" style="margin-top:16px">
+      <div class="admin-section-header">
+        <div class="admin-section-title">🎁 Grant Premium Manual</div>
+      </div>
+      <div class="popup-editor">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email User</label>
+            <input type="email" class="form-input" id="grantEmail" placeholder="user@gmail.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Durasi</label>
+            <select class="form-input" id="grantDays">
+              <option value="30">1 Bulan (30 hari)</option>
+              <option value="90">3 Bulan (90 hari)</option>
+              <option value="365">1 Tahun (365 hari)</option>
+              <option value="7">7 Hari (trial)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-success" onclick="grantManual()">✅ Grant Premium</button>
+          <span id="grantMsg" style="font-size:12px;display:none"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── PENGATURAN ─────────────────────────────── -->
   <div class="admin-pane" id="pane-settings">
     <div class="admin-section">
@@ -726,6 +803,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadUsers();
   loadPopupConfig();
   loadSiteSettings();
+  loadPending();
+  loadPendingCount();
 });
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -1103,7 +1182,150 @@ async function toggleChatSetting(on) {
   } catch { toast("Gagal update chat setting", "error"); }
 }
 
-async function clearAllChat() {
+
+// ── PREMIUM PENDING ────────────────────────────────────────────
+let allPending = [];
+
+async function loadPending() {
+  const tbody = document.getElementById("pendingTableBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="6">Memuat...</td></tr>`;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pending_premium?order=created_at.desc&limit=100&select=*`, { headers: sbH() });
+    if (!res.ok) throw new Error();
+    allPending = await res.json();
+    renderPendingTable(allPending);
+
+    // Update stats
+    const pending  = allPending.filter(p => p.status === "pending").length;
+    const granted  = allPending.filter(p => p.status === "granted").length;
+    const totalAmt = allPending.filter(p => p.status === "pending").reduce((s,p) => s + (p.amount||0), 0);
+    document.getElementById("stat-pending").textContent = pending;
+    document.getElementById("stat-granted").textContent = granted;
+    document.getElementById("stat-pendingAmount").textContent = "Rp" + totalAmt.toLocaleString("id-ID");
+
+    // Badge di tab
+    const badge = document.getElementById("pendingBadge");
+    if (pending > 0) { badge.style.display = "inline"; badge.textContent = pending; }
+    else badge.style.display = "none";
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat data. Pastikan tabel pending_premium sudah dibuat.</td></tr>`;
+  }
+}
+
+function renderPendingTable(rows) {
+  const tbody = document.getElementById("pendingTableBody");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">🎉 Tidak ada donasi pending!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(p => {
+    const isPending = p.status === "pending";
+    const statusHtml = isPending
+      ? `<span class="badge" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">⏳ Pending</span>`
+      : `<span class="badge badge-user" style="color:#4caf7d;border-color:rgba(76,175,125,0.3)">✅ Granted</span>`;
+    const aksi = isPending ? `
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-success" onclick="openGrantFromPending('${p.id}', ${p.amount})">
+          ✅ Grant
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="rejectPending('${p.id}')">
+          ✗ Tolak
+        </button>
+      </div>` : "—";
+    const rp = "Rp" + (p.amount||0).toLocaleString("id-ID");
+    return `
+      <tr id="prow-${p.id}">
+        <td><div class="user-name">${escH(p.donor_name||"—")}</div></td>
+        <td style="font-weight:700;color:var(--gold);font-family:var(--font-mono)">${rp}</td>
+        <td><div class="msg-preview" title="${escH(p.message||"")}">${escH(p.message||"(kosong)")}</div></td>
+        <td style="color:var(--text3);font-size:12px;font-family:var(--font-mono);white-space:nowrap">${fmtTime(p.created_at)}</td>
+        <td>${statusHtml}</td>
+        <td>${aksi}</td>
+      </tr>`;
+  }).join("");
+}
+
+function openGrantFromPending(pendingId, amount) {
+  // Isi otomatis durasi sesuai nominal
+  const paket = { 15000: "30", 35000: "90", 100000: "365" };
+  const days = paket[amount] || "30";
+  document.getElementById("grantDays").value = days;
+  document.getElementById("grantEmail").focus();
+  // Simpan pending ID untuk di-update setelah grant
+  document.getElementById("grantEmail").dataset.pendingId = pendingId;
+  toast("Isi email user lalu klik Grant Premium ↓", "");
+  // Scroll ke form grant
+  document.querySelector("#pane-pending .popup-editor").scrollIntoView({ behavior: "smooth" });
+}
+
+async function grantManual() {
+  const email     = document.getElementById("grantEmail").value.trim();
+  const days      = parseInt(document.getElementById("grantDays").value);
+  const pendingId = document.getElementById("grantEmail").dataset.pendingId || null;
+  const msgEl     = document.getElementById("grantMsg");
+
+  if (!email) { toast("Isi email dulu!", "error"); return; }
+
+  msgEl.style.display = "inline";
+  msgEl.style.color   = "var(--text3)";
+  msgEl.textContent   = "⏳ Memproses...";
+
+  try {
+    const adminSecret = prompt("Masukkan ADMIN_SECRET kamu:");
+    if (!adminSecret) { msgEl.style.display = "none"; return; }
+
+    // Cari user by email via endpoint backend
+    const res = await fetch("/api/premium/grant-by-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Admin-Secret": adminSecret },
+      body: JSON.stringify({ email, days, pending_id: pendingId })
+    });
+    const json = await res.json();
+
+    if (res.ok && json.ok) {
+      msgEl.style.color   = "#4caf7d";
+      msgEl.textContent   = `✅ Premium aktif s/d ${json.expired_at?.slice(0,10)}`;
+      toast(`✅ Premium granted ke ${email}!`, "success");
+      document.getElementById("grantEmail").value = "";
+      document.getElementById("grantEmail").dataset.pendingId = "";
+      loadPending();
+    } else {
+      msgEl.style.color   = "var(--accent)";
+      msgEl.textContent   = "❌ " + (json.error || "Gagal");
+      toast("❌ " + (json.error || "Gagal grant premium"), "error");
+    }
+  } catch(e) {
+    msgEl.style.color = "var(--accent)";
+    msgEl.textContent = "❌ Error jaringan";
+    toast("Error: " + e.message, "error");
+  }
+}
+
+async function rejectPending(id) {
+  if (!confirm("Tolak donasi ini? Status akan diubah ke 'rejected'.")) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pending_premium?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...sbH(), "Prefer": "return=representation" },
+      body: JSON.stringify({ status: "rejected" })
+    });
+    if (!res.ok) throw new Error();
+    toast("✓ Donasi ditolak", "success");
+    loadPending();
+  } catch { toast("Gagal update status", "error"); }
+}
+
+// Load pending count on init
+async function loadPendingCount() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pending_premium?status=eq.pending&select=id`, { headers: sbH() });
+    if (!res.ok) return;
+    const data = await res.json();
+    const badge = document.getElementById("pendingBadge");
+    if (data.length > 0) { badge.style.display = "inline"; badge.textContent = data.length; }
+  } catch {}
+}
+
   if (!confirm("⚠️ Hapus SEMUA pesan chat? Tindakan ini tidak bisa dibatalkan!")) return;
   if (!confirm("Yakin? Semua pesan akan hilang permanen!")) return;
   try {

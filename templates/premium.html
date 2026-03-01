@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block title %}Premium — Animeku.id{% endblock %}
+
+{% block content %}
+<style>
+/* ── Premium Page ── */
+.prem-hero {
+  text-align: center;
+  padding: 56px 16px 40px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(230,57,70,0.13) 0%, transparent 70%);
+}
+.prem-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.35);
+  color: #e63946; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  padding: 5px 14px; border-radius: 99px; font-family: var(--font-mono);
+  text-transform: uppercase; margin-bottom: 20px;
+}
+.prem-hero h1 {
+  font-size: clamp(26px, 5vw, 44px); font-weight: 900;
+  font-family: var(--font-head); margin: 0 0 12px; color: var(--text);
+  line-height: 1.15;
+}
+.prem-hero h1 span { color: #e63946; }
+.prem-hero p {
+  color: var(--text2); font-size: 15px; max-width: 480px;
+  margin: 0 auto 32px; line-height: 1.7;
+}
+
+/* ── Status banner (jika sudah premium) ── */
+.prem-status {
+  max-width: 500px; margin: 0 auto 40px;
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.35);
+  border-radius: 12px; padding: 18px 24px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 14px; color: #4ade80;
+}
+.prem-status-icon { font-size: 28px; flex-shrink: 0; }
+
+/* ── Plans grid ── */
+.plans-grid {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  justify-content: center; max-width: 900px;
+  margin: 0 auto 64px; padding: 0 16px;
+}
+.plan-card {
+  flex: 1 1 240px; max-width: 290px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.plan-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(230,57,70,0.45);
+  box-shadow: 0 12px 40px rgba(230,57,70,0.15);
+}
+.plan-card.featured {
+  border-color: rgba(230,57,70,0.6);
+  box-shadow: 0 4px 30px rgba(230,57,70,0.2);
+}
+.plan-card.featured::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(230,57,70,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.plan-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+  color: #e63946; font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 99px; letter-spacing: 0.5px;
+  font-family: var(--font-mono); align-self: flex-start;
+}
+.plan-name {
+  font-size: 18px; font-weight: 800; color: var(--text);
+  font-family: var(--font-head); margin: 0;
+}
+.plan-price {
+  display: flex; align-items: baseline; gap: 4px;
+}
+.plan-price .amount {
+  font-size: clamp(28px, 5vw, 36px); font-weight: 900;
+  color: #e63946; font-family: var(--font-head); line-height: 1;
+}
+.plan-price .period { color: var(--text3); font-size: 13px; }
+.plan-price .currency { color: var(--text3); font-size: 14px; font-weight: 600; }
+.plan-per-day {
+  font-size: 11px; color: var(--text3); font-family: var(--font-mono);
+  margin-top: -8px;
+}
+.plan-divider {
+  border: none; border-top: 1px solid var(--border); margin: 0;
+}
+.plan-features {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.plan-features li {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; color: var(--text2); line-height: 1.5;
+}
+.plan-features li .check { color: #4ade80; flex-shrink: 0; margin-top: 1px; }
+.plan-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #e63946, #c1121f);
+  color: #fff; font-weight: 700; font-size: 14px;
+  padding: 13px 20px; border-radius: 9px; text-decoration: none;
+  border: none; cursor: pointer; width: 100%;
+  box-shadow: 0 4px 16px rgba(230,57,70,0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-top: auto; font-family: var(--font-head); letter-spacing: 0.5px;
+}
+.plan-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(230,57,70,0.5);
+}
+.plan-btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(230,57,70,0.4);
+  color: #e63946; box-shadow: none;
+}
+.plan-btn.ghost:hover {
+  background: rgba(230,57,70,0.08);
+  box-shadow: none;
+}
+
+/* ── Features section ── */
+.features-section {
+  max-width: 760px; margin: 0 auto 64px; padding: 0 16px;
+}
+.features-section h2 {
+  text-align: center; font-size: clamp(18px,3vw,26px); font-weight: 800;
+  font-family: var(--font-head); margin: 0 0 32px; color: var(--text);
+}
+.features-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+.feature-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 18px;
+  transition: border-color 0.2s;
+}
+.feature-item:hover { border-color: rgba(230,57,70,0.35); }
+.feature-item .icon { font-size: 26px; margin-bottom: 10px; }
+.feature-item h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
+.feature-item p { font-size: 12px; color: var(--text3); margin: 0; line-height: 1.6; }
+
+/* ── Comparison table ── */
+.compare-section {
+  max-width: 700px; margin: 0 auto 64px; padding: 0 16px;
+}
+.compare-section h2 {
+  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
+  font-family: var(--font-head); margin: 0 0 24px; color: var(--text);
+}
+.compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.compare-table th, .compare-table td {
+  padding: 13px 16px; text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.compare-table th {
+  font-weight: 700; color: var(--text); font-family: var(--font-head);
+  background: var(--card);
+}
+.compare-table th:first-child, .compare-table td:first-child {
+  text-align: left; color: var(--text2);
+}
+.compare-table th.prem-col { color: #e63946; }
+.compare-table td .yes { color: #4ade80; font-size: 16px; }
+.compare-table td .no  { color: var(--text3); font-size: 16px; }
+.compare-table tr:last-child td { border-bottom: none; }
+
+/* ── How to pay ── */
+.how-section {
+  max-width: 700px; margin: 0 auto 64px; padding: 0 16px;
+}
+.how-section h2 {
+  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
+  font-family: var(--font-head); margin: 0 0 28px; color: var(--text);
+}
+.how-steps {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.how-step {
+  display: flex; align-items: flex-start; gap: 16px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px;
+}
+.how-step .step-num {
+  min-width: 32px; height: 32px;
+  background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #e63946;
+  font-family: var(--font-mono); flex-shrink: 0;
+}
+.how-step h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.how-step p  { font-size: 13px; color: var(--text3); margin: 0; line-height: 1.6; }
+.how-step p a { color: #e63946; }
+
+/* ── FAQ ── */
+.faq-section {
+  max-width: 680px; margin: 0 auto 80px; padding: 0 16px;
+}
+.faq-section h2 {
+  text-align: center; font-size: clamp(18px,3vw,24px); font-weight: 800;
+  font-family: var(--font-head); margin: 0 0 28px; color: var(--text);
+}
+.faq-item {
+  border-bottom: 1px solid var(--border); padding: 16px 0;
+}
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  font-size: 14px; font-weight: 700; color: var(--text); cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  user-select: none;
+}
+.faq-q .arrow {
+  flex-shrink: 0; color: var(--text3); transition: transform 0.25s;
+  font-size: 18px; line-height: 1;
+}
+.faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+.faq-a {
+  font-size: 13px; color: var(--text3); line-height: 1.7;
+  max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s;
+}
+.faq-item.open .faq-a { max-height: 200px; padding-top: 10px; }
+</style>
+
+<div class="prem-hero">
+  <div class="prem-badge">⭐ ANIMEKU PREMIUM</div>
+  <h1>Nonton Tanpa Batas,<br><span>Tanpa Iklan</span></h1>
+  <p>Akses semua episode anime favorit kamu — tanpa batasan, tanpa gangguan.</p>
+
+  {% if premium_info %}
+  <div class="prem-status">
+    <div class="prem-status-icon">✅</div>
+    <div>
+      <strong>Kamu sudah Premium!</strong><br>
+      <span style="font-size:12px;opacity:0.8">
+        Aktif hingga <strong>{{ premium_info.expired_at[:10] }}</strong>.
+        Terima kasih sudah mendukung Animeku.id 💖
+      </span>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- PLANS -->
+<div class="plans-grid">
+  {% for plan in plans %}
+  <div class="plan-card {% if plan.badge == '🔥 Populer' %}featured{% endif %}">
+    {% if plan.badge %}
+    <div class="plan-badge">{{ plan.badge }}</div>
+    {% endif %}
+    <h3 class="plan-name">{{ plan.name }}</h3>
+    <div class="plan-price">
+      <span class="currency">Rp</span>
+      <span class="amount">{{ "{:,.0f}".format(plan.price).replace(",", ".") }}</span>
+    </div>
+    <p class="plan-per-day">≈ Rp {{ "{:,.0f}".format(plan.price / plan.days) | int }}/hari</p>
+    <hr class="plan-divider">
+    <ul class="plan-features">
+      <li><span class="check">✓</span> Semua episode tanpa batas</li>
+      <li><span class="check">✓</span> Kualitas terbaik tersedia</li>
+      <li><span class="check">✓</span> Tanpa iklan mengganggu</li>
+      <li><span class="check">✓</span> Akses {{ plan.days }} hari penuh</li>
+      {% if plan.days >= 90 %}
+      <li><span class="check">✓</span> Badge premium di profil</li>
+      {% endif %}
+      {% if plan.days >= 365 %}
+      <li><span class="check">✓</span> Prioritas request fitur baru</li>
+      {% endif %}
+    </ul>
+    <a href="https://sociabuzz.com/animekuid/tribe" target="_blank" rel="noopener"
+       class="plan-btn {% if plan.badge != '🔥 Populer' %}ghost{% endif %}"
+       onclick="trackPlanClick('{{ plan.id }}')">
+      {% if premium_info %}Perpanjang{% else %}Pilih Paket{% endif %}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- FITUR PREMIUM -->
+<section class="features-section">
+  <h2>Kenapa Harus Premium?</h2>
+  <div class="features-grid">
+    <div class="feature-item">
+      <div class="icon">🎬</div>
+      <h3>Semua Episode</h3>
+      <p>Akses seluruh episode tanpa terkunci, dari episode 1 sampai terbaru.</p>
+    </div>
+    <div class="feature-item">
+      <div class="icon">⚡</div>
+      <h3>Server Cepat</h3>
+      <p>Prioritas ke server streaming berkecepatan tinggi tanpa buffering.</p>
+    </div>
+    <div class="feature-item">
+      <div class="icon">🚫</div>
+      <h3>Tanpa Iklan</h3>
+      <p>Pengalaman nonton bersih tanpa pop-up atau iklan yang mengganggu.</p>
+    </div>
+    <div class="feature-item">
+      <div class="icon">💖</div>
+      <h3>Dukung Kami</h3>
+      <p>Premium kamu membantu server tetap berjalan & konten terus diupdate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PERBANDINGAN -->
+<section class="compare-section">
+  <h2>Gratis vs Premium</h2>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Fitur</th>
+        <th>Gratis</th>
+        <th class="prem-col">⭐ Premium</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Akses episode</td>
+        <td>{{ free_limit }} ep/anime</td>
+        <td><span class="yes">✓</span> Semua</td>
+      </tr>
+      <tr>
+        <td>Kualitas video</td>
+        <td><span class="yes">✓</span></td>
+        <td><span class="yes">✓</span></td>
+      </tr>
+      <tr>
+        <td>Iklan</td>
+        <td>Ada</td>
+        <td><span class="yes">✓</span> Bebas iklan</td>
+      </tr>
+      <tr>
+        <td>Koleksi pribadi</td>
+        <td><span class="yes">✓</span></td>
+        <td><span class="yes">✓</span></td>
+      </tr>
+      <tr>
+        <td>Komentar</td>
+        <td><span class="yes">✓</span></td>
+        <td><span class="yes">✓</span></td>
+      </tr>
+      <tr>
+        <td>Badge premium</td>
+        <td><span class="no">✗</span></td>
+        <td><span class="yes">✓</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- CARA BAYAR -->
+<section class="how-section">
+  <h2>Cara Berlangganan</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Pilih Paket</h4>
+        <p>Pilih paket yang sesuai budget kamu di atas lalu klik tombol "Pilih Paket".</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Donasi via Sociabuzz</h4>
+        <p>Kamu akan diarahkan ke halaman Sociabuzz kami. Bayar sesuai nominal paket yang dipilih. Di kolom pesan, tulis <strong>email akun Animeku kamu</strong>.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Konfirmasi</h4>
+        <p>Setelah pembayaran diterima (maks 1×24 jam), akun kamu akan langsung diaktifkan premium. Hubungi kami via <a href="mailto:admin@animeku.id">email</a> jika ada kendala.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>Nikmati Streaming!</h4>
+        <p>Login ke akun kamu dan mulai nonton semua episode tanpa batas 🎉</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <h2>FAQ</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Apakah pembayaran otomatis diproses?
+      <span class="arrow">⌄</span>
+    </div>
+    <div class="faq-a">
+      Saat ini kami masih memproses aktivasi premium secara manual (maks 1×24 jam) setelah konfirmasi donasi diterima via Sociabuzz.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Metode pembayaran apa yang tersedia?
+      <span class="arrow">⌄</span>
+    </div>
+    <div class="faq-a">
+      Semua metode yang tersedia di Sociabuzz: transfer bank, GoPay, OVO, DANA, QRIS, dan kartu kredit/debit.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Apakah ada masa percobaan gratis?
+      <span class="arrow">⌄</span>
+    </div>
+    <div class="faq-a">
+      Kamu bisa nonton {{ free_limit }} episode pertama setiap anime secara gratis tanpa login. Untuk lebih dari itu, dibutuhkan akun Premium.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Apakah premium bisa digunakan di banyak perangkat?
+      <span class="arrow">⌄</span>
+    </div>
+    <div class="faq-a">
+      Ya, premium terikat ke akun Google kamu dan bisa digunakan di semua perangkat yang login dengan akun yang sama.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Bagaimana cara cek status premium saya?
+      <span class="arrow">⌄</span>
+    </div>
+    <div class="faq-a">
+      Status premium dan tanggal kedaluwarsa akan ditampilkan di halaman ini dan di profil kamu setelah login.
+    </div>
+  </div>
+</section>
+
+<script>
+function toggleFaq(el) {
+  el.closest('.faq-item').classList.toggle('open');
+}
+function trackPlanClick(planId) {
+  console.log('[Premium] Plan clicked:', planId);
+  // Bisa disambungkan ke analytics
+}
+</script>
+{% endblock %}
