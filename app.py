@@ -384,11 +384,14 @@ def episode(slug):
         }
 
     # ── Cek premium ───────────────────────────────────────────────────────────
+    # Episode diurutkan terbaru dulu → ep 1 & 2 ada di AKHIR list
+    # Yang gratis = FREE_EPISODE_LIMIT episode terakhir (index terbesar)
     locked = False
     if anime_data and anime_data.get("detail") and anime_data["detail"].get("episodes"):
         episodes = anime_data["detail"]["episodes"]
+        total = len(episodes)
         ep_index = next((i for i, e in enumerate(episodes) if e["slug"] == slug), None)
-        if ep_index is not None and ep_index >= FREE_EPISODE_LIMIT:
+        if ep_index is not None and ep_index < (total - FREE_EPISODE_LIMIT):
             user = session.get("user")
             if not user or not is_premium(user.get("id")):
                 locked = True
