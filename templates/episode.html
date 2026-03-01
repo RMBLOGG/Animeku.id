@@ -86,6 +86,33 @@
         <div style="color:var(--text3);font-size:13px">Memuat status...</div>
       </div>
     </div>
+    <script>
+    (async function checkPremium() {
+      const overlay = document.getElementById('premiumOverlay');
+      if (!overlay) return;
+      const action = document.getElementById('premiumOverlayAction');
+      try {
+        const token = localStorage.getItem('sb_access_token') || '';
+        const res = await fetch('/api/premium/status', {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        const data = await res.json();
+        if (data.premium) {
+          // User premium → sembunyikan overlay, biarkan video jalan
+          overlay.style.display = 'none';
+        } else if (data.reason === 'not_logged_in') {
+          action.innerHTML = `
+            <a href="/auth/login" class="btn btn-primary">🔑 Login</a>
+            <a href="/premium" class="btn btn-ghost" style="border-color:#f4a261;color:#f4a261">✦ Langganan Premium</a>`;
+        } else {
+          action.innerHTML = `
+            <a href="/premium" class="btn btn-primary" style="background:linear-gradient(135deg,#f4a261,#e76f1b);border:none;color:#000">✦ Langganan Premium</a>`;
+        }
+      } catch(e) {
+        action.innerHTML = `<a href="/premium" class="btn btn-primary">✦ Langganan Premium</a>`;
+      }
+    })();
+    </script>
     {% endif %}
 
     <!-- PLACEHOLDER: tampil sebelum server dipilih -->

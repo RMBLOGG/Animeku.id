@@ -19,6 +19,10 @@ if (access_token) {
   localStorage.setItem('sb_access_token', access_token);
   localStorage.setItem('sb_user', JSON.stringify(user));
 
+  // Simpan refresh_token juga kalau ada
+  const refresh_token = params.get('refresh_token');
+  if (refresh_token) localStorage.setItem('sb_refresh_token', refresh_token);
+
   const returnTo = localStorage.getItem('auth_return_to') || '/';
   localStorage.removeItem('auth_return_to');
   window.location.href = returnTo;

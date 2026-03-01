@@ -9,18 +9,22 @@ function goPremiumEp(btn) {
   btn.style.pointerEvents = 'none';
   var slug = btn.dataset.slug;
   var anime = btn.dataset.anime;
-  var user = null;
-  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
-  if (!user || !user.id) { window.location.href = '/premium'; return; }
-  var token = localStorage.getItem('sb_access_token') || _ANON;
-  fetch(_SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
-    headers: { 'apikey': _ANON, 'Authorization': 'Bearer ' + token }
-  }).then(function(r){ return r.json(); })
-    .then(function(rows){
-      var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
-      window.location.href = ok ? '/episode/' + slug + '?anime=' + anime : '/premium';
+  fetch('/api/premium/status')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.premium) {
+        window.location.href = '/episode/' + slug + '?anime=' + anime;
+      } else if (data.reason === 'not_logged_in') {
+        window.location.href = '/auth/login';
+      } else {
+        window.location.href = '/premium';
+      }
     })
-    .catch(function(){ window.location.href = '/premium'; });
+    .catch(function(){
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+      window.location.href = '/premium';
+    });
 }
 </script>
 {% endblock %}
