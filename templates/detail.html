@@ -9,7 +9,10 @@ function goPremiumEp(btn) {
   btn.style.pointerEvents = 'none';
   var slug = btn.dataset.slug;
   var anime = btn.dataset.anime;
-  fetch('/api/premium/status')
+  var token = localStorage.getItem('sb_access_token') || '';
+  fetch('/api/premium/status', {
+    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+  })
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (data.premium) {
@@ -148,8 +151,38 @@ function goPremiumEp(btn) {
   </div>
 </div>
 
-<!-- Modal Premium -->
-<!-- Modal premium dihapus - langsung redirect ke /premium -->
+<!-- Auto-unlock episode kalau user premium -->
+<script>
+(async function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  if (!token) return;
+  try {
+    var res = await fetch('/api/premium/status', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var d = await res.json();
+    if (!d.premium) return;
+
+    // User premium → ganti semua tombol locked jadi link langsung
+    document.querySelectorAll('.ep-locked').forEach(function(btn) {
+      var a = document.createElement('a');
+      a.href = '/episode/' + btn.dataset.slug + '?anime=' + btn.dataset.anime;
+      a.className = 'ep-btn ep-free';
+      a.dataset.ep = btn.dataset.ep;
+      // Ambil nama episode dari teks btn (node ke-2)
+      var epText = '';
+      btn.childNodes.forEach(function(n) {
+        if (n.nodeType === 3) epText += n.textContent.trim();
+      });
+      a.innerHTML =
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg> ' +
+        epText +
+        '<span class="ep-free-badge">✦ Unlocked</span>';
+      btn.parentNode.replaceChild(a, btn);
+    });
+  } catch(e) {}
+})();
+</script>
 
 {% endif %}
 
