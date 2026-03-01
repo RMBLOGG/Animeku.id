@@ -650,6 +650,13 @@ function closeAnnouncement() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           Login
         </a>
+        <!-- Upgrade Premium untuk belum login -->
+        <a href="/premium" id="desktopBtnUpgradePremium" class="desktop-auth-item"
+          style="display:none;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;
+          background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-size:13px;font-weight:700;transition:var(--trans);text-decoration:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Upgrade Premium
+        </a>
 
         <div id="desktopUserMenu" class="desktop-auth-item" style="display:none;position:relative">
           <button id="desktopAvatarBtn" onclick="toggleDesktopDropdown()"
@@ -713,6 +720,11 @@ function closeAnnouncement() {
       <a href="/auth/login" id="menuBtnLogin" style="display:none;align-items:center;gap:10px;color:var(--accent);font-weight:600">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
         Login
+      </a>
+      <!-- Upgrade Premium (tampil saat belum login) -->
+      <a href="/premium" id="menuBtnUpgradePremium" style="display:none;align-items:center;gap:8px;padding:9px 14px;background:rgba(244,162,97,0.1);border:1px solid rgba(244,162,97,0.3);border-radius:8px;color:#f4a261;font-size:13px;font-weight:600;text-decoration:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Upgrade Premium
       </a>
 
       <!-- User info (tampil saat sudah login) -->
@@ -873,6 +885,8 @@ function closeAnnouncement() {
     if (user) {
       // Mobile
       if (loginBtn) loginBtn.style.display = 'none';
+      const mUpgrade = document.getElementById('menuBtnUpgradePremium');
+      if (mUpgrade) mUpgrade.style.display = 'none';
       if (userInfo) {
         userInfo.style.display = 'block';
         const avatar = document.getElementById('menuAvatar');
@@ -882,6 +896,8 @@ function closeAnnouncement() {
       }
       // Desktop
       if (desktopLogin) desktopLogin.style.display = 'none';
+      const dUpgrade = document.getElementById('desktopBtnUpgradePremium');
+      if (dUpgrade) dUpgrade.style.display = 'none';
       if (desktopUserMenu) {
         desktopUserMenu.style.display = 'block';
         const da = document.getElementById('desktopAvatar');
@@ -901,9 +917,13 @@ function closeAnnouncement() {
     } else {
       // Mobile
       if (loginBtn) loginBtn.style.display = 'flex';
+      const mUpgrade = document.getElementById('menuBtnUpgradePremium');
+      if (mUpgrade) mUpgrade.style.display = 'flex';
       if (userInfo) userInfo.style.display = 'none';
       // Desktop
       if (desktopLogin) desktopLogin.style.display = 'flex';
+      const dUpgrade = document.getElementById('desktopBtnUpgradePremium');
+      if (dUpgrade) dUpgrade.style.display = 'flex';
       if (desktopUserMenu) desktopUserMenu.style.display = 'none';
     }
   }
