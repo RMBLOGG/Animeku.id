@@ -420,6 +420,10 @@ def chat():
 def admin():
     return render_template("admin.html")
 
+@app.route("/premium")
+def premium():
+    return render_template("premium.html")
+
 
 # ── API Proxy ──────────────────────────────────────────────────────────────────
 
@@ -651,11 +655,51 @@ def sociabuzz_webhook():
     except Exception as e:
         print(f"[Sociabuzz] Exception: {e}")
 
-    # 2. Kirim notifikasi donasi ke tabel chat_messages (muncul di Live Chat)
+    # ── AUTO GRANT PREMIUM ─────────────────────────────────────────
+    # Syarat: amount >= 15000 DAN pesan mengandung "PREMIUM:<user_id>"
+    PREMIUM_PRICE = 15000
+    premium_granted = False
+    premium_user_id = None
+
+    if amount >= PREMIUM_PRICE:
+        import re
+        # Cari pola PREMIUM:<uuid> di pesan
+        match = re.search(r'PREMIUM:([a-f0-9\-]{36})', message, re.IGNORECASE)
+        if match:
+            premium_user_id = match.group(1)
+            try:
+                from datetime import datetime, timezone, timedelta
+                expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+
+                # Upsert ke tabel user_premium
+                prem_payload = {
+                    "user_id":    premium_user_id,
+                    "is_active":  True,
+                    "expires_at": expires_at,
+                }
+                rp = requests.post(
+                    f"{SUPABASE_URL}/rest/v1/user_premium",
+                    headers={**supabase_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+                    json=prem_payload,
+                )
+                if rp.ok:
+                    premium_granted = True
+                    print(f"[Sociabuzz] ✅ Premium granted untuk user {premium_user_id} hingga {expires_at}")
+                else:
+                    print(f"[Sociabuzz] ❌ Gagal grant premium: {rp.text}")
+            except Exception as e:
+                print(f"[Sociabuzz] Exception grant premium: {e}")
+        else:
+            print(f"[Sociabuzz] ⚠️ Amount cukup tapi User ID tidak ditemukan di pesan: '{message}'")
+
+    # ── Kirim notifikasi ke Live Chat ──────────────────────────────
     try:
         rp_fmt = f"Rp {amount:,}".replace(",", ".")
-        chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
-        if message:
+        if premium_granted:
+            chat_content = f"✦ PREMIUM AKTIF! {donor_name} baru saja berlangganan Premium dengan donasi {rp_fmt}! 🎉"
+        else:
+            chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
+        if message and not premium_granted:
             chat_content += f' 💬 "{message}"'
 
         r2 = requests.post(
@@ -680,7 +724,12 @@ def sociabuzz_webhook():
     except Exception as e:
         print(f"[Sociabuzz] Exception chat: {e}")
 
-    return jsonify({"ok": True, "received": supporter_id}), 200
+    return jsonify({
+        "ok": True,
+        "received": supporter_id,
+        "premium_granted": premium_granted,
+        "premium_user_id": premium_user_id,
+    }), 200
 
 
 @app.route("/api/donations")
