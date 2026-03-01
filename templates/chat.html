@@ -137,7 +137,36 @@
   to   { opacity: 1; transform: none; }
 }
 .msg:hover { background: rgba(255,255,255,0.03); }
-.msg.own .msg-bubble { background: rgba(230,57,70,0.12); border-color: rgba(230,57,70,0.2); }
+/* Pesan sendiri di kanan */
+.msg.own {
+  flex-direction: row-reverse;
+}
+.msg.own .msg-body {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+}
+.msg.own .msg-meta {
+  flex-direction: row-reverse;
+}
+.msg.own .msg-bubble {
+  background: rgba(230,57,70,0.18);
+  border-radius: 14px 14px 2px 14px;
+  padding: 5px 10px;
+}
+.msg:not(.own) .msg-bubble {
+  border-radius: 14px 14px 14px 2px;
+  padding: 5px 10px;
+}
+.msg.own .msg-reactions {
+  justify-content: flex-end;
+}
+.msg.own .msg-reply-ref {
+  border-left: none;
+  border-right: 2px solid var(--accent);
+  border-radius: 4px 0 0 4px;
+  text-align: right;
+}
 
 .msg-avatar {
   width: 22px; height: 22px;
