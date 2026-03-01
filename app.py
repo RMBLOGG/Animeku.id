@@ -476,11 +476,31 @@ FREE_EPISODE_COUNT = 2  # Episode 1 & 2 gratis
 
 @app.route("/api/premium/status")
 def premium_status():
-    """Cek apakah user yang sedang login punya akses premium."""
-    user = session.get("user")
-    if not user:
+    """Cek apakah user yang sedang login punya akses premium.
+    Baca user_id dari Supabase JWT (Authorization header) — kompatibel dengan Vercel serverless.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+
+    # Fallback: cek Flask session (untuk backward compatibility)
+    if not access_token:
+        user = session.get("user")
+        if user:
+            access_token = session.get("access_token", "")
+
+    if not access_token:
         return jsonify({"premium": False, "reason": "not_logged_in"})
-    user_id = user.get("id")
+
+    # Verifikasi token ke Supabase dan ambil user_id
+    user_resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
+    if not user_resp.ok:
+        return jsonify({"premium": False, "reason": "not_logged_in"})
+
+    user_id = user_resp.json().get("id")
+    if not user_id:
+        return jsonify({"premium": False, "reason": "not_logged_in"})
+
+    # Cek tabel user_premium
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/user_premium",
         headers=supabase_headers(),
