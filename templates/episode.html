@@ -644,17 +644,24 @@ initComments();
     // Bukan premium — tampilkan aksi sesuai status login
     if (me.user) {
       actionDiv.innerHTML = `
-        <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2)">
-          Akun kamu belum Premium.<br>Hubungi admin untuk upgrade akses.
-        </div>
+        <p style="color:var(--text2);font-size:13px;margin:0 0 12px">
+          Akun kamu belum Premium.<br>
+          Berlangganan mulai <strong style="color:#f4a261">Rp 15.000/bulan</strong>.
+        </p>
+        <a href="/premium" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
+          ✦ Lihat Paket Premium
+        </a>
         <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
           ← Kembali
         </a>
       `;
     } else {
       actionDiv.innerHTML = `
-        <a href="/auth/login" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
-          Login dengan Google
+        <p style="color:var(--text2);font-size:13px;margin:0 0 12px">
+          Login dulu, lalu berlangganan Premium untuk nonton episode ini.
+        </p>
+        <a href="/premium" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
+          ✦ Lihat Paket Premium
         </a>
         <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
           ← Kembali

@@ -293,22 +293,15 @@ async function handlePremiumEp(btn) {
   // Tampilkan modal
   const modal = document.getElementById('premiumModal');
   const actionDiv = document.getElementById('premiumModalAction');
-  const meRes = await fetch('/api/me');
-  const meData = await meRes.json();
-  const isLoggedIn = !!meData.user;
 
-  if (isLoggedIn) {
-    actionDiv.innerHTML = `
-      <p style="color:var(--text3);font-size:12px;margin-bottom:16px">Akun kamu belum Premium. Hubungi admin untuk upgrade.</p>
-      <button class="premium-modal-btn secondary" onclick="document.getElementById('premiumModal').classList.remove('open')">Tutup</button>
-    `;
-  } else {
-    actionDiv.innerHTML = `
-      <p style="color:var(--text3);font-size:12px;margin-bottom:16px">Login terlebih dahulu, lalu minta admin untuk upgrade ke Premium.</p>
-      <a href="/auth/login" class="premium-modal-btn">Login dengan Google</a>
-      <button class="premium-modal-btn secondary" onclick="document.getElementById('premiumModal').classList.remove('open')">Batal</button>
-    `;
-  }
+  actionDiv.innerHTML = `
+    <p style="color:var(--text3);font-size:12px;margin-bottom:16px">
+      Episode ini hanya untuk member Premium.<br>
+      Berlangganan mulai <strong style="color:#f4a261">Rp 15.000/bulan</strong>.
+    </p>
+    <a href="/premium" class="premium-modal-btn">✦ Lihat Paket Premium</a>
+    <button class="premium-modal-btn secondary" onclick="document.getElementById('premiumModal').classList.remove('open')">Nanti Saja</button>
+  `;
 
   modal.classList.add('open');
 }
