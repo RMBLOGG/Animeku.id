@@ -294,38 +294,34 @@ async function getPremiumStatus() {
 async function handlePremiumEp(btn) {
   const slug  = btn.dataset.slug;
   const anime = btn.dataset.anime;
-  const isPremium = await getPremiumStatus();
+
+  // Cek premium langsung dari localStorage — cepat, tanpa tunggu network
+  let isPremium = false;
+  try {
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+    const token = localStorage.getItem('sb_access_token') || null;
+    if (user && user.id) {
+      const r = await fetch(
+        `${_SB_URL}/rest/v1/user_premium?user_id=eq.${user.id}&select=is_active,expires_at`,
+        { headers: { 'apikey': _SB_ANON, 'Authorization': token ? `Bearer ${token}` : `Bearer ${_SB_ANON}` }}
+      );
+      if (r.ok) {
+        const rows = await r.json();
+        if (rows.length && rows[0].is_active) {
+          const exp = rows[0].expires_at;
+          isPremium = !exp || new Date(exp) > new Date();
+        }
+      }
+    }
+  } catch {}
 
   if (isPremium) {
-    // User premium → langsung tonton
     window.location.href = `/episode/${slug}?anime=${anime}`;
-    return;
+  } else {
+    // Langsung ke halaman premium
+    window.location.href = '/premium';
   }
-
-  // Tampilkan modal
-  const modal = document.getElementById('premiumModal');
-  const actionDiv = document.getElementById('premiumModalAction');
-
-  actionDiv.innerHTML = `
-    <p style="color:var(--text3);font-size:12px;margin-bottom:16px">
-      Episode ini hanya untuk member Premium.<br>
-      Berlangganan mulai <strong style="color:#f4a261">Rp 15.000/bulan</strong>.
-    </p>
-    <a href="/premium" class="premium-modal-btn">✦ Lihat Paket Premium</a>
-    <button class="premium-modal-btn secondary" onclick="closePremiumModal()">Nanti Saja</button>
-  `;
-
-  modal.classList.add('open');
 }
-
-function closePremiumModal() {
-  const modal = document.getElementById('premiumModal');
-  if (modal) modal.classList.remove('open');
-}
-
-// Close modal on backdrop click
-document.getElementById('premiumModal')?.addEventListener('click', function(e) {
-  if (e.target === this) closePremiumModal();
-});
 </script>
 {% endblock %}
