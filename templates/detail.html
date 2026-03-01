@@ -267,14 +267,26 @@
 
 <script>
 // ── Premium Gate ──────────────────────────────────────────────────
+const _SB_URL  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
 let _premiumStatus = null;
 
 async function getPremiumStatus() {
   if (_premiumStatus !== null) return _premiumStatus;
   try {
-    const r = await fetch('/api/premium/status');
-    const d = await r.json();
-    _premiumStatus = d.premium === true;
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+    const token = localStorage.getItem('sb_access_token') || null;
+    if (!user || !user.id) { _premiumStatus = false; return false; }
+    const r = await fetch(
+      `${_SB_URL}/rest/v1/user_premium?user_id=eq.${user.id}&select=is_active,expires_at`,
+      { headers: { 'apikey': _SB_ANON, 'Authorization': token ? `Bearer ${token}` : `Bearer ${_SB_ANON}` }}
+    );
+    if (!r.ok) { _premiumStatus = false; return false; }
+    const rows = await r.json();
+    if (!rows.length || !rows[0].is_active) { _premiumStatus = false; return false; }
+    const exp = rows[0].expires_at;
+    _premiumStatus = !exp || new Date(exp) > new Date();
   } catch { _premiumStatus = false; }
   return _premiumStatus;
 }

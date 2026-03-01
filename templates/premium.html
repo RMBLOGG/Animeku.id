@@ -306,62 +306,89 @@
 {% block scripts %}
 <script>
 const SOCIABUZZ_URL = 'https://sociabuzz.com/dayynime/tribe';
+const SUPABASE_URL  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+
+// Baca user & token langsung dari localStorage (sama seperti admin.html)
+function getLocalUser() {
+  try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
+}
+function getLocalToken() {
+  return localStorage.getItem('sb_access_token') || null;
+}
+
+async function checkPremium(userId) {
+  try {
+    const token = getLocalToken();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_premium?user_id=eq.${userId}&select=is_active,expires_at`,
+      { headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': token ? `Bearer ${token}` : `Bearer ${SUPABASE_ANON}`
+      }}
+    );
+    if (!res.ok) return false;
+    const rows = await res.json();
+    if (!rows.length) return false;
+    const row = rows[0];
+    if (!row.is_active) return false;
+    if (!row.expires_at) return { active: true };
+    const exp = new Date(row.expires_at);
+    return exp > new Date() ? { active: true, expires_at: row.expires_at } : false;
+  } catch { return false; }
+}
 
 async function initPremiumPage() {
   const section = document.getElementById('premUserSection');
   try {
-    const [meRes, premRes] = await Promise.all([
-      fetch('/api/me'),
-      fetch('/api/premium/status')
-    ]);
-    const me   = await meRes.json();
-    const prem = await premRes.json();
-    const user = me.user;
+    const user  = getLocalUser();
+    const token = getLocalToken();
 
-    // Sudah premium
-    if (prem.premium) {
-      const exp = prem.expires_at
-        ? new Date(prem.expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})
-        : 'Selamanya';
+    // Sudah premium — cek langsung ke Supabase
+    if (user && user.id) {
+      const prem = await checkPremium(user.id);
+      if (prem) {
+        const exp = prem.expires_at
+          ? new Date(prem.expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})
+          : 'Selamanya';
+        section.innerHTML = `
+          <div class="prem-active">
+            <div class="icon">✦</div>
+            <h3>Kamu Sudah Premium!</h3>
+            <p>Aktif hingga ${exp}</p>
+          </div>
+          <a href="/home" class="btn-pay" style="text-decoration:none;margin-top:4px">&#9654; &nbsp;Mulai Nonton</a>
+        `;
+        return;
+      }
+
+      // Login tapi belum premium → tampilkan UID + tombol bayar
+      const uid = user.id || '';
       section.innerHTML = `
-        <div class="prem-active">
-          <div class="icon">✦</div>
-          <h3>Kamu Sudah Premium!</h3>
-          <p>Aktif hingga ${exp}</p>
+        <div class="uid-box">
+          <div class="uid-label">User ID kamu — paste ke kolom pesan Sociabuzz</div>
+          <div class="uid-row">
+            <span class="uid-val" id="uidVal">${uid}</span>
+            <button class="uid-copy" onclick="copyUID()">Copy</button>
+          </div>
+          <p class="uid-hint">&#9888; Jangan hapus User ID ini saat isi pesan di Sociabuzz agar premium aktif otomatis.</p>
         </div>
-        <a href="/home" class="btn-pay" style="text-decoration:none;margin-top:4px">&#9654; &nbsp;Mulai Nonton</a>
+        <button class="btn-pay" onclick="handlePay()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          Bayar Sekarang — Rp 15.000
+        </button>
+        <p class="btn-pay-note">Diarahkan ke Sociabuzz &bull; Transfer Bank, QRIS, E-Wallet</p>
       `;
       return;
     }
 
-    // Belum login
-    if (!user) {
-      section.innerHTML = `
-        <p style="font-size:12px;color:var(--text3);margin:0 0 4px">Login dulu untuk mendapatkan User ID kamu.</p>
-        <a href="/auth/login" class="btn-login-g">
-          <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.9 6.1C12.7 13.1 17.9 9.5 24 9.5z"/><path fill="#4A90D9" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4C43 36.8 46.1 31.1 46.1 24.5z"/><path fill="#34A853" d="M10.8 28.6c-.3-1-.5-2-.5-2.6 0-1.6.3-3.1.8-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.3-6.2z"/><path fill="#FBBC05" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.1 0-11.3-3.6-13.2-8.7l-8.3 6.2C6.8 42.6 14.7 48 24 48z"/></svg>
-          Login dengan Google
-        </a>
-      `;
-      return;
-    }
-
-    // Login, belum premium
-    const uid = user.id || '';
+    // Belum login sama sekali
     section.innerHTML = `
-      <div class="uid-box">
-        <div class="uid-label">User ID kamu — paste ke kolom pesan Sociabuzz</div>
-        <div class="uid-row">
-          <span class="uid-val" id="uidVal">${uid}</span>
-          <button class="uid-copy" onclick="copyUID()">Copy</button>
-        </div>
-        <p class="uid-hint">&#9888; Jangan hapus User ID ini saat isi pesan di Sociabuzz agar premium aktif otomatis.</p>
-      </div>
-      <button class="btn-pay" onclick="handlePay()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-        Bayar Sekarang — Rp 15.000
-      </button>
-      <p class="btn-pay-note">Diarahkan ke Sociabuzz &bull; Transfer Bank, QRIS, E-Wallet</p>
+      <p style="font-size:12px;color:var(--text3);margin:0 0 4px">Login dulu untuk mendapatkan User ID kamu.</p>
+      <a href="/auth/login" class="btn-login-g">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.9 6.1C12.7 13.1 17.9 9.5 24 9.5z"/><path fill="#4A90D9" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4C43 36.8 46.1 31.1 46.1 24.5z"/><path fill="#34A853" d="M10.8 28.6c-.3-1-.5-2-.5-2.6 0-1.6.3-3.1.8-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.3-6.2z"/><path fill="#FBBC05" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.1 0-11.3-3.6-13.2-8.7l-8.3 6.2C6.8 42.6 14.7 48 24 48z"/></svg>
+        Login dengan Google
+      </a>
     `;
   } catch(e) {
     section.innerHTML = `<p style="color:var(--text3);font-size:12px;text-align:center">Gagal memuat. Coba refresh halaman.</p>`;

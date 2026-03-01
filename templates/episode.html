@@ -628,12 +628,34 @@ initComments();
   if (!overlay) return;
 
   try {
-    const [premRes, meRes] = await Promise.all([
-      fetch('/api/premium/status'),
-      fetch('/api/me')
-    ]);
-    const prem = await premRes.json();
-    const me   = await meRes.json();
+    const SUPABASE_URL_P  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+    const SUPABASE_ANON_P = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+
+    // Baca user & token dari localStorage (sama seperti halaman lain)
+    let localUser = null;
+    try { localUser = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+    const localToken = localStorage.getItem('sb_access_token') || null;
+
+    // Cek premium langsung ke Supabase
+    let isPremium = false;
+    if (localUser && localUser.id) {
+      try {
+        const pr = await fetch(
+          `${SUPABASE_URL_P}/rest/v1/user_premium?user_id=eq.${localUser.id}&select=is_active,expires_at`,
+          { headers: { 'apikey': SUPABASE_ANON_P, 'Authorization': localToken ? `Bearer ${localToken}` : `Bearer ${SUPABASE_ANON_P}` }}
+        );
+        if (pr.ok) {
+          const rows = await pr.json();
+          if (rows.length && rows[0].is_active) {
+            const exp = rows[0].expires_at;
+            isPremium = !exp || new Date(exp) > new Date();
+          }
+        }
+      } catch {}
+    }
+
+    const me = { user: localUser };
+    const prem = { premium: isPremium };
 
     if (prem.premium) {
       // User premium → sembunyikan overlay, biarkan player jalan normal
@@ -644,24 +666,17 @@ initComments();
     // Bukan premium — tampilkan aksi sesuai status login
     if (me.user) {
       actionDiv.innerHTML = `
-        <p style="color:var(--text2);font-size:13px;margin:0 0 12px">
-          Akun kamu belum Premium.<br>
-          Berlangganan mulai <strong style="color:#f4a261">Rp 15.000/bulan</strong>.
-        </p>
-        <a href="/premium" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
-          ✦ Lihat Paket Premium
-        </a>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2)">
+          Akun kamu belum Premium.<br>Hubungi admin untuk upgrade akses.
+        </div>
         <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
           ← Kembali
         </a>
       `;
     } else {
       actionDiv.innerHTML = `
-        <p style="color:var(--text2);font-size:13px;margin:0 0 12px">
-          Login dulu, lalu berlangganan Premium untuk nonton episode ini.
-        </p>
-        <a href="/premium" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
-          ✦ Lihat Paket Premium
+        <a href="/auth/login" style="display:inline-block;padding:12px 28px;border-radius:var(--radius);background:linear-gradient(135deg,#f4a261,#e76f1b);color:#000;font-weight:700;font-size:14px;text-decoration:none">
+          Login dengan Google
         </a>
         <a href="/anime/{{ anime_slug }}" style="display:inline-block;padding:10px 22px;border-radius:var(--radius);background:rgba(255,255,255,0.08);color:var(--text);font-size:13px;text-decoration:none;border:1px solid var(--border)">
           ← Kembali
