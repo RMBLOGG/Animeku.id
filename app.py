@@ -574,55 +574,6 @@ def api_premium_check(user_id):
     return jsonify({"premium": is_premium(user_id), "user_id": user_id})
 
 
-@app.route("/api/premium/grant-by-email", methods=["POST"])
-def api_premium_grant_by_email():
-    """Grant premium by email — dipanggil dari panel admin."""
-    from datetime import datetime, timezone, timedelta
-
-    admin_secret = request.headers.get("X-Admin-Secret", "")
-    expected     = os.environ.get("ADMIN_SECRET", "")
-    if not expected or admin_secret != expected:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    data       = request.get_json(silent=True) or {}
-    email      = (data.get("email") or "").strip().lower()
-    days       = int(data.get("days", 30))
-    pending_id = data.get("pending_id")
-
-    if not email:
-        return jsonify({"error": "Email wajib diisi"}), 400
-
-    # Cari user by email
-    user = find_user_by_email(email)
-    if not user:
-        return jsonify({"error": f"User dengan email '{email}' tidak ditemukan di Supabase"}), 404
-
-    user_id   = user.get("id")
-    plan_map  = {30: "monthly", 90: "quarterly", 365: "yearly"}
-    plan_id   = plan_map.get(days, "manual")
-
-    ok, expired_at = grant_premium_by_user_id(user_id, plan_id, days)
-    if not ok:
-        return jsonify({"error": "Gagal insert ke premium_users"}), 500
-
-    print(f"[Premium] ✅ Manual grant oleh admin → {email} | {days} hari | s/d {expired_at[:10]}")
-
-    # Update status pending jika ada pending_id
-    if pending_id:
-        try:
-            requests.patch(
-                f"{SUPABASE_URL}/rest/v1/pending_premium",
-                headers={**supabase_headers(), "Prefer": "return=representation"},
-                params={"id": f"eq.{pending_id}"},
-                json={"status": "granted", "granted_to_email": email, "granted_at": datetime.now(timezone.utc).isoformat()},
-                timeout=8,
-            )
-        except Exception as e:
-            print(f"[Premium] Gagal update pending status: {e}")
-
-    return jsonify({"ok": True, "expired_at": expired_at, "email": email})
-
-
 @app.route("/api/premium/pending")
 def api_premium_pending():
     """Ambil daftar donasi pending (untuk admin)."""
@@ -743,55 +694,6 @@ def delete_comment(comment_id):
 # ── Sociabuzz Webhook ──────────────────────────────────────────────────────────
 
 # Mapping nominal → paket premium
-PREMIUM_PAKET = {
-    15000:  {"plan_id": "monthly",   "days": 30,  "label": "1 Bulan"},
-    35000:  {"plan_id": "quarterly", "days": 90,  "label": "3 Bulan"},
-    100000: {"plan_id": "yearly",    "days": 365, "label": "1 Tahun"},
-}
-
-def extract_email(text):
-    """Ekstrak alamat email dari string pesan."""
-    import re
-    text = (text or "").strip()
-    match = re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", text)
-    return match.group(0).lower() if match else None
-
-def find_user_by_email(email):
-    """Cari user di Supabase Auth berdasarkan email (butuh service role key)."""
-    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
-    if not service_key:
-        print("[Premium] SUPABASE_SERVICE_ROLE_KEY tidak di-set, tidak bisa cari user by email")
-        return None
-    try:
-        r = requests.get(
-            f"{SUPABASE_URL}/auth/v1/admin/users",
-            headers={
-                "apikey":        service_key,
-                "Authorization": f"Bearer {service_key}",
-            },
-            params={"filter": f"email.eq.{email}"},
-            timeout=8,
-        )
-        if r.ok:
-            users = r.json().get("users", [])
-            return users[0] if users else None
-    except Exception as e:
-        print(f"[Premium] find_user_by_email error: {e}")
-    return None
-
-def grant_premium_by_user_id(user_id, plan_id, days):
-    """Insert row premium_users ke Supabase."""
-    from datetime import datetime, timezone, timedelta
-    expired_at = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
-    payload = {"user_id": user_id, "plan_id": plan_id, "expired_at": expired_at}
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/premium_users",
-        headers={**supabase_headers(), "Prefer": "return=representation"},
-        json=payload,
-        timeout=8,
-    )
-    return r.ok, expired_at
-
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
     from datetime import datetime, timezone, timedelta
