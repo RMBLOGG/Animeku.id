@@ -10,6 +10,7 @@ API_BASE = "https://www.sankavollerei.com"
 
 SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 def supabase_headers(access_token=None):
     h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
@@ -18,6 +19,14 @@ def supabase_headers(access_token=None):
     else:
         h["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
     return h
+
+def supabase_service_headers():
+    """Headers pakai service role key - bypass RLS, hanya untuk admin."""
+    return {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    }
 
 # ── Upstash Redis Cache ────────────────────────────────────────────────────────
 redis = Redis(
@@ -476,31 +485,11 @@ FREE_EPISODE_COUNT = 2  # Episode 1 & 2 gratis
 
 @app.route("/api/premium/status")
 def premium_status():
-    """Cek apakah user yang sedang login punya akses premium.
-    Baca user_id dari Supabase JWT (Authorization header) — kompatibel dengan Vercel serverless.
-    """
-    auth_header = request.headers.get("Authorization", "")
-    access_token = auth_header.replace("Bearer ", "").strip()
-
-    # Fallback: cek Flask session (untuk backward compatibility)
-    if not access_token:
-        user = session.get("user")
-        if user:
-            access_token = session.get("access_token", "")
-
-    if not access_token:
+    """Cek apakah user yang sedang login punya akses premium."""
+    user = session.get("user")
+    if not user:
         return jsonify({"premium": False, "reason": "not_logged_in"})
-
-    # Verifikasi token ke Supabase dan ambil user_id
-    user_resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
-    if not user_resp.ok:
-        return jsonify({"premium": False, "reason": "not_logged_in"})
-
-    user_id = user_resp.json().get("id")
-    if not user_id:
-        return jsonify({"premium": False, "reason": "not_logged_in"})
-
-    # Cek tabel user_premium
+    user_id = user.get("id")
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/user_premium",
         headers=supabase_headers(),
@@ -799,6 +788,139 @@ def api_donations():
         "leaderboard":    leaderboard,
     })
 
+
+
+# ── Admin: User Monitoring ─────────────────────────────────────────────────────
+
+def _is_admin(access_token):
+    """Cek apakah token milik admin."""
+    if not access_token:
+        return False
+    ADMIN_IDS = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"]
+    # Cek dari site_config dulu
+    try:
+        cfg = requests.get(f"{SUPABASE_URL}/rest/v1/site_config",
+                           headers=supabase_headers(),
+                           params={"key": "eq.admin_ids", "select": "value"})
+        if cfg.ok and cfg.json():
+            val = cfg.json()[0]["value"]
+            ADMIN_IDS = val if isinstance(val, list) else val.get("ids", ADMIN_IDS)
+    except Exception:
+        pass
+    user_resp = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
+    if not user_resp.ok:
+        return False
+    return user_resp.json().get("id") in ADMIN_IDS
+
+@app.route("/api/admin/users")
+def admin_users():
+    """Daftar semua user Google + status premium. Admin only."""
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    if not SUPABASE_SERVICE_KEY:
+        return jsonify({"error": "Service key tidak dikonfigurasi"}), 500
+
+    # Ambil semua user dari Supabase Auth
+    users_resp = requests.get(
+        f"{SUPABASE_URL}/auth/v1/admin/users",
+        headers=supabase_service_headers(),
+        params={"per_page": 200}
+    )
+    if not users_resp.ok:
+        return jsonify({"error": "Gagal ambil data user", "detail": users_resp.text}), 500
+
+    users_data = users_resp.json().get("users", [])
+
+    # Ambil semua data premium
+    prem_resp = requests.get(
+        f"{SUPABASE_URL}/rest/v1/user_premium",
+        headers=supabase_service_headers(),
+        params={"select": "user_id,is_active,expires_at"}
+    )
+    prem_map = {}
+    if prem_resp.ok:
+        for row in prem_resp.json():
+            prem_map[row["user_id"]] = row
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+
+    result = []
+    for u in users_data:
+        uid = u.get("id")
+        meta = u.get("user_metadata", {})
+        prem = prem_map.get(uid)
+
+        premium_status = "none"
+        expires_at = None
+        if prem and prem.get("is_active"):
+            exp = prem.get("expires_at")
+            if not exp:
+                premium_status = "lifetime"
+            else:
+                try:
+                    exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00"))
+                    if exp_dt > now:
+                        premium_status = "active"
+                        expires_at = exp
+                    else:
+                        premium_status = "expired"
+                        expires_at = exp
+                except Exception:
+                    premium_status = "active"
+                    expires_at = exp
+
+        result.append({
+            "id":            uid,
+            "name":          meta.get("full_name", u.get("email", "")),
+            "email":         u.get("email", ""),
+            "avatar":        meta.get("avatar_url", ""),
+            "provider":      (u.get("app_metadata", {}).get("provider", "email")),
+            "created_at":    u.get("created_at", ""),
+            "last_sign_in":  u.get("last_sign_in_at", ""),
+            "premium":       premium_status,
+            "expires_at":    expires_at,
+        })
+
+    # Urutkan: premium aktif dulu, lalu by last_sign_in
+    result.sort(key=lambda x: (x["premium"] != "active", x["last_sign_in"] or ""), reverse=False)
+    return jsonify({"users": result, "total": len(result)})
+
+
+@app.route("/api/admin/premium", methods=["POST"])
+def admin_toggle_premium():
+    """Grant/revoke premium langsung dari admin panel."""
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    data = request.get_json()
+    target_id = data.get("user_id")
+    action = data.get("action", "grant")  # grant / revoke
+
+    from datetime import datetime, timezone, timedelta
+
+    if action == "grant":
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        payload = {"user_id": target_id, "is_active": True, "expires_at": expires_at}
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+            json=payload
+        )
+    else:
+        r = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers={**supabase_service_headers(), "Prefer": "return=representation"},
+            params={"user_id": f"eq.{target_id}"},
+            json={"is_active": False}
+        )
+
+    return jsonify({"ok": r.ok, "detail": r.text})
 
 if __name__ == "__main__":
     app.run(debug=True)
