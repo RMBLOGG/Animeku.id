@@ -11,6 +11,15 @@ API_BASE = "https://www.sankavollerei.com"
 SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
 
+# ── Premium Config ─────────────────────────────────────────────────────────────
+FREE_EPISODE_LIMIT = 2  # 2 episode pertama gratis (index 0 & 1, diurutkan terbaru)
+
+PREMIUM_PAKET = {
+    15000:  {"plan_id": "monthly",   "days": 30,  "label": "1 Bulan"},
+    35000:  {"plan_id": "quarterly", "days": 90,  "label": "3 Bulan"},
+    100000: {"plan_id": "yearly",    "days": 365, "label": "1 Tahun"},
+}
+
 def supabase_headers(access_token=None):
     h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
     if access_token:
@@ -18,6 +27,79 @@ def supabase_headers(access_token=None):
     else:
         h["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
     return h
+
+# ── Premium Helpers ────────────────────────────────────────────────────────────
+
+def is_premium(user_id):
+    from datetime import datetime, timezone
+    if not user_id:
+        return False
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/premium_users",
+            headers=supabase_headers(),
+            params={"user_id": f"eq.{user_id}", "expired_at": f"gt.{now_iso}", "select": "id", "limit": "1"},
+            timeout=5,
+        )
+        return r.ok and len(r.json()) > 0
+    except Exception as e:
+        print(f"[Premium] is_premium error: {e}")
+        return False
+
+def get_premium_info(user_id):
+    from datetime import datetime, timezone
+    if not user_id:
+        return None
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/premium_users",
+            headers=supabase_headers(),
+            params={"user_id": f"eq.{user_id}", "expired_at": f"gt.{now_iso}", "select": "*", "order": "expired_at.desc", "limit": "1"},
+            timeout=5,
+        )
+        rows = r.json() if r.ok else []
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"[Premium] get_premium_info error: {e}")
+        return None
+
+def extract_email(text):
+    import re
+    text = (text or "").strip()
+    match = re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", text)
+    return match.group(0).lower() if match else None
+
+def find_user_by_email(email):
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    if not service_key:
+        print("[Premium] SUPABASE_SERVICE_ROLE_KEY tidak di-set")
+        return None
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/auth/v1/admin/users",
+            headers={"apikey": service_key, "Authorization": f"Bearer {service_key}"},
+            params={"filter": f"email.eq.{email}"},
+            timeout=8,
+        )
+        if r.ok:
+            users = r.json().get("users", [])
+            return users[0] if users else None
+    except Exception as e:
+        print(f"[Premium] find_user_by_email error: {e}")
+    return None
+
+def grant_premium_by_user_id(user_id, plan_id, days):
+    from datetime import datetime, timezone, timedelta
+    expired_at = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/premium_users",
+        headers={**supabase_headers(), "Prefer": "return=representation"},
+        json={"user_id": user_id, "plan_id": plan_id, "expired_at": expired_at},
+        timeout=8,
+    )
+    return r.ok, expired_at
 
 # ── Upstash Redis Cache ────────────────────────────────────────────────────────
 redis = Redis(
@@ -298,8 +380,21 @@ def episode(slug):
             }
         }
 
+    # ── Cek premium ───────────────────────────────────────────────────────────
+    locked = False
+    if anime_data and anime_data.get("detail") and anime_data["detail"].get("episodes"):
+        episodes = anime_data["detail"]["episodes"]
+        ep_index = next((i for i, e in enumerate(episodes) if e["slug"] == slug), None)
+        if ep_index is not None and ep_index >= FREE_EPISODE_LIMIT:
+            user = session.get("user")
+            if not user or not is_premium(user.get("id")):
+                locked = True
+                if data:
+                    data["streams"] = []
+
     return render_template("episode.html", data=data, slug=slug,
-                           anime_slug=anime_slug, anime_data=anime_data)
+                           anime_slug=anime_slug, anime_data=anime_data,
+                           locked=locked, free_limit=FREE_EPISODE_LIMIT)
 
 
 @app.route("/api/server/<server_id>")
@@ -419,6 +514,64 @@ def chat():
 @app.route("/admin")
 def admin():
     return render_template("admin.html")
+
+@app.route("/premium")
+def premium_page():
+    user = session.get("user")
+    premium_info = get_premium_info(user["id"]) if user else None
+    plans = [
+        {"id": "monthly",   "name": "1 Bulan",  "price": 15000,  "days": 30,  "badge": "🔥 Populer"},
+        {"id": "quarterly", "name": "3 Bulan",  "price": 35000,  "days": 90,  "badge": "💎 Hemat"},
+        {"id": "yearly",    "name": "1 Tahun",  "price": 100000, "days": 365, "badge": "👑 Terbaik"},
+    ]
+    return render_template("premium.html", plans=plans, user=user, premium_info=premium_info)
+
+# ── Premium API ────────────────────────────────────────────────────────────────
+
+@app.route("/api/premium/status")
+def api_premium_status():
+    user = session.get("user")
+    if not user:
+        return jsonify({"premium": False, "user": None})
+    info = get_premium_info(user["id"])
+    return jsonify({"premium": info is not None, "expired_at": info["expired_at"] if info else None, "user": user})
+
+@app.route("/api/premium/grant-by-email", methods=["POST"])
+def api_premium_grant_by_email():
+    from datetime import datetime, timezone, timedelta
+    admin_secret = request.headers.get("X-Admin-Secret", "")
+    expected     = os.environ.get("ADMIN_SECRET", "")
+    if not expected or admin_secret != expected:
+        return jsonify({"error": "Unauthorized"}), 401
+    data       = request.get_json(silent=True) or {}
+    email      = (data.get("email") or "").strip().lower()
+    days       = int(data.get("days", 30))
+    pending_id = data.get("pending_id")
+    if not email:
+        return jsonify({"error": "Email wajib diisi"}), 400
+    user = find_user_by_email(email)
+    if not user:
+        return jsonify({"error": f"User '{email}' tidak ditemukan"}), 404
+    plan_map = {30: "monthly", 90: "quarterly", 365: "yearly"}
+    ok, expired_at = grant_premium_by_user_id(user["id"], plan_map.get(days, "manual"), days)
+    if not ok:
+        return jsonify({"error": "Gagal insert ke premium_users"}), 500
+    if pending_id:
+        try:
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/pending_premium",
+                headers={**supabase_headers(), "Prefer": "return=representation"},
+                params={"id": f"eq.{pending_id}"},
+                json={"status": "granted", "granted_to_email": email, "granted_at": datetime.now(timezone.utc).isoformat()},
+                timeout=8,
+            )
+        except Exception as e:
+            print(f"[Premium] Gagal update pending: {e}")
+    return jsonify({"ok": True, "expired_at": expired_at, "email": email})
+
+@app.route("/api/premium/check/<user_id>")
+def api_premium_check(user_id):
+    return jsonify({"premium": is_premium(user_id), "user_id": user_id})
 
 
 @app.route("/api/premium/grant-by-email", methods=["POST"])
