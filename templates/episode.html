@@ -84,56 +84,6 @@
       </p>
     </div>
 
-    {% if locked %}
-    <!-- PREMIUM LOCKED OVERLAY -->
-    <div id="premiumOverlay" style="
-      position:absolute;inset:0;z-index:20;
-      background:linear-gradient(135deg,#0d0d0d 0%,#1a0a0a 100%);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:18px;padding:32px;text-align:center;
-    ">
-      <div style="font-size:52px;line-height:1;filter:drop-shadow(0 0 20px rgba(230,57,70,0.5))">🔒</div>
-      <div>
-        <h2 style="color:#fff;font-size:clamp(16px,3vw,22px);font-weight:800;margin:0 0 8px;font-family:var(--font-head)">
-          Episode Premium
-        </h2>
-        <p style="color:rgba(255,255,255,0.55);font-size:13px;margin:0;line-height:1.6;max-width:280px">
-          {{ free_limit }} episode pertama gratis.<br>
-          Episode ini hanya untuk member <span style="color:#e63946;font-weight:700">Premium</span>.
-        </p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px">
-        <a href="/premium" style="
-          display:flex;align-items:center;justify-content:center;gap:8px;
-          background:linear-gradient(135deg,#e63946,#c1121f);
-          color:#fff;font-weight:700;font-size:14px;
-          padding:12px 20px;border-radius:8px;text-decoration:none;
-          box-shadow:0 4px 20px rgba(230,57,70,0.4);
-          transition:transform 0.15s,box-shadow 0.15s;
-          letter-spacing:0.5px;
-        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(230,57,70,0.5)'"
-           onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(230,57,70,0.4)'">
-          🚀 Upgrade Premium
-        </a>
-        {% if not session.get('user') %}
-        <a href="/auth/login" style="
-          display:flex;align-items:center;justify-content:center;gap:8px;
-          background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-          color:rgba(255,255,255,0.75);font-weight:600;font-size:13px;
-          padding:10px 20px;border-radius:8px;text-decoration:none;
-          transition:background 0.15s;
-        " onmouseover="this.style.background='rgba(255,255,255,0.13)'"
-           onmouseout="this.style.background='rgba(255,255,255,0.08)'">
-          🔑 Login Dulu
-        </a>
-        {% endif %}
-      </div>
-      <p style="color:rgba(255,255,255,0.25);font-size:11px;margin:0;font-family:var(--font-mono)">
-        ANIMEKU.ID PREMIUM
-      </p>
-    </div>
-    {% endif %}
-
     <style>
     .ph-logo {
       display:flex;align-items:baseline;gap:2px;
@@ -319,18 +269,11 @@
       Daftar Episode ({{ episodes | length }})
     </button>
     <div class="hidden" id="epListGrid">
-      {% set total_eps = episodes | length %}
       <div class="episodes-grid" style="margin-top:12px">
         {% for ep in episodes %}
-        {% set is_locked = loop.index0 < (total_eps - free_limit) %}
         <a href="/episode/{{ ep.slug }}?anime={{ anime_slug }}"
-           class="ep-btn {% if ep.slug == slug %}active{% endif %}"
-           {% if is_locked %}style="opacity:0.7"{% endif %}>
-          {% if is_locked %}
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:#e63946"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-          {% else %}
+           class="ep-btn {% if ep.slug == slug %}active{% endif %}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-          {% endif %}
           {{ ep.name }}
         </a>
         {% endfor %}
