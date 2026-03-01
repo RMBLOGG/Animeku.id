@@ -659,6 +659,14 @@ def delete_comment(comment_id):
 
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
+    # Validasi webhook secret dari Sociabuzz (opsional tapi disarankan)
+    webhook_secret = os.environ.get("SOCIABUZZ_WEBHOOK_SECRET", "")
+    if webhook_secret:
+        req_secret = request.headers.get("X-Webhook-Secret", "") or request.args.get("secret", "")
+        if req_secret != webhook_secret:
+            print(f"[Sociabuzz] ❌ Invalid webhook secret")
+            return jsonify({"error": "Unauthorized"}), 401
+
     data = request.get_json(silent=True) or {}
 
     donor_name   = data.get("donatur_name", data.get("name", "Anonymous"))
@@ -712,7 +720,7 @@ def sociabuzz_webhook():
                 }
                 rp = requests.post(
                     f"{SUPABASE_URL}/rest/v1/user_premium",
-                    headers={**supabase_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+                    headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
                     json=prem_payload,
                 )
                 if rp.ok:
