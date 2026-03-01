@@ -486,18 +486,40 @@ FREE_EPISODE_COUNT = 2  # Episode 1 & 2 gratis
 @app.route("/api/premium/status")
 def premium_status():
     """Cek apakah user yang sedang login punya akses premium."""
-    user = session.get("user")
-    if not user:
+    from datetime import datetime, timezone
+
+    # Ambil user_id: coba dari Authorization header dulu, fallback ke session
+    user_id = None
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip() if auth_header else ""
+
+    if access_token:
+        # Verifikasi token ke Supabase untuk dapat user_id
+        r_user = requests.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers=supabase_headers(access_token)
+        )
+        if r_user.ok:
+            user_id = r_user.json().get("id")
+
+    # Fallback ke session (untuk login server-side)
+    if not user_id:
+        user = session.get("user")
+        if not user:
+            return jsonify({"premium": False, "reason": "not_logged_in"})
+        user_id = user.get("id")
+
+    if not user_id:
         return jsonify({"premium": False, "reason": "not_logged_in"})
-    user_id = user.get("id")
+
+    # Pakai service key agar tidak kena RLS
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/user_premium",
-        headers=supabase_headers(),
+        headers=supabase_service_headers(),
         params={"user_id": f"eq.{user_id}", "select": "is_active,expires_at"}
     )
     if r.ok and r.json():
         row = r.json()[0]
-        from datetime import datetime, timezone
         expires_at = row.get("expires_at")
         if row.get("is_active"):
             if not expires_at:
@@ -506,8 +528,10 @@ def premium_status():
                 exp = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
                 if exp > datetime.now(timezone.utc):
                     return jsonify({"premium": True, "expires_at": expires_at})
+                else:
+                    return jsonify({"premium": False, "reason": "expired"})
             except Exception:
-                pass
+                return jsonify({"premium": True})
     return jsonify({"premium": False, "reason": "no_subscription"})
 
 @app.route("/api/premium/grant", methods=["POST"])
