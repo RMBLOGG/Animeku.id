@@ -1,129 +1,27 @@
 {% extends "base.html" %}
 {% block title %}{{ data.detail.title if data and data.detail else 'Detail Anime' }} — Animeku.id
 <script>
-// Cek premium dari localStorage — instant tanpa fetch
-function isPremium() {
-  try {
-    var p = JSON.parse(localStorage.getItem('animeku_premium') || 'null');
-    if (!p || !p.active) return false;
-    if (!p.exp) return true;
-    return new Date(p.exp) > new Date();
-  } catch { return false; }
-}
+var _SB  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+var _ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
 
 function goPremiumEp(btn) {
   btn.style.opacity = '0.5';
   btn.style.pointerEvents = 'none';
   var slug = btn.dataset.slug;
   var anime = btn.dataset.anime;
-
-  // Kalau cache sudah ada dan premium → langsung tonton
-  if (isPremium()) {
-    window.location.href = '/episode/' + slug + '?anime=' + anime;
-    return;
-  }
-
-  // Cache belum ada / bukan premium → cek Supabase sekali lagi
-  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
   var user = null;
   try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
   if (!user || !user.id) { window.location.href = '/premium'; return; }
-  var token = localStorage.getItem('sb_access_token') || ANON;
-  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
-    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
-  }).then(function(r){ return r.json(); }).then(function(rows){
-    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
-    if (ok) {
-      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
-      window.location.href = '/episode/' + slug + '?anime=' + anime;
-    } else {
-      window.location.href = '/premium';
-    }
-  }).catch(function(){ window.location.href = '/premium'; });
+  var token = localStorage.getItem('sb_access_token') || _ANON;
+  fetch(_SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
+    headers: { 'apikey': _ANON, 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); })
+    .then(function(rows){
+      var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
+      window.location.href = ok ? '/episode/' + slug + '?anime=' + anime : '/premium';
+    })
+    .catch(function(){ window.location.href = '/premium'; });
 }
-
-// Fetch status premium di background saat halaman load, simpan ke localStorage
-(function() {
-  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
-  var user = null;
-  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
-  if (!user || !user.id) { localStorage.removeItem('animeku_premium'); return; }
-  var token = localStorage.getItem('sb_access_token') || ANON;
-  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
-    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
-  }).then(function(r){ return r.json(); }).then(function(rows){
-    if (rows.length && rows[0].is_active) {
-      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
-    } else {
-      localStorage.removeItem('animeku_premium');
-    }
-  }).catch(function(){});
-})();
-</script>
-
-<script>
-// Cek premium dari localStorage — instant tanpa fetch
-function isPremium() {
-  try {
-    var p = JSON.parse(localStorage.getItem('animeku_premium') || 'null');
-    if (!p || !p.active) return false;
-    if (!p.exp) return true;
-    return new Date(p.exp) > new Date();
-  } catch { return false; }
-}
-
-function goPremiumEp(btn) {
-  btn.style.opacity = '0.5';
-  btn.style.pointerEvents = 'none';
-  var slug = btn.dataset.slug;
-  var anime = btn.dataset.anime;
-
-  // Kalau cache sudah ada dan premium → langsung tonton
-  if (isPremium()) {
-    window.location.href = '/episode/' + slug + '?anime=' + anime;
-    return;
-  }
-
-  // Cache belum ada / bukan premium → cek Supabase sekali lagi
-  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
-  var user = null;
-  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
-  if (!user || !user.id) { window.location.href = '/premium'; return; }
-  var token = localStorage.getItem('sb_access_token') || ANON;
-  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
-    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
-  }).then(function(r){ return r.json(); }).then(function(rows){
-    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
-    if (ok) {
-      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
-      window.location.href = '/episode/' + slug + '?anime=' + anime;
-    } else {
-      window.location.href = '/premium';
-    }
-  }).catch(function(){ window.location.href = '/premium'; });
-}
-
-// Fetch status premium di background saat halaman load, simpan ke localStorage
-(function() {
-  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
-  var user = null;
-  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
-  if (!user || !user.id) { localStorage.removeItem('animeku_premium'); return; }
-  var token = localStorage.getItem('sb_access_token') || ANON;
-  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
-    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
-  }).then(function(r){ return r.json(); }).then(function(rows){
-    if (rows.length && rows[0].is_active) {
-      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
-    } else {
-      localStorage.removeItem('animeku_premium');
-    }
-  }).catch(function(){});
-})();
 </script>
 {% endblock %}
 
