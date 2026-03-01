@@ -421,6 +421,71 @@ def admin():
     return render_template("admin.html")
 
 
+@app.route("/api/premium/grant-by-email", methods=["POST"])
+def api_premium_grant_by_email():
+    """Grant premium by email — dipanggil dari panel admin."""
+    from datetime import datetime, timezone, timedelta
+
+    admin_secret = request.headers.get("X-Admin-Secret", "")
+    expected     = os.environ.get("ADMIN_SECRET", "")
+    if not expected or admin_secret != expected:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data       = request.get_json(silent=True) or {}
+    email      = (data.get("email") or "").strip().lower()
+    days       = int(data.get("days", 30))
+    pending_id = data.get("pending_id")
+
+    if not email:
+        return jsonify({"error": "Email wajib diisi"}), 400
+
+    # Cari user by email
+    user = find_user_by_email(email)
+    if not user:
+        return jsonify({"error": f"User dengan email '{email}' tidak ditemukan di Supabase"}), 404
+
+    user_id   = user.get("id")
+    plan_map  = {30: "monthly", 90: "quarterly", 365: "yearly"}
+    plan_id   = plan_map.get(days, "manual")
+
+    ok, expired_at = grant_premium_by_user_id(user_id, plan_id, days)
+    if not ok:
+        return jsonify({"error": "Gagal insert ke premium_users"}), 500
+
+    print(f"[Premium] ✅ Manual grant oleh admin → {email} | {days} hari | s/d {expired_at[:10]}")
+
+    # Update status pending jika ada pending_id
+    if pending_id:
+        try:
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/pending_premium",
+                headers={**supabase_headers(), "Prefer": "return=representation"},
+                params={"id": f"eq.{pending_id}"},
+                json={"status": "granted", "granted_to_email": email, "granted_at": datetime.now(timezone.utc).isoformat()},
+                timeout=8,
+            )
+        except Exception as e:
+            print(f"[Premium] Gagal update pending status: {e}")
+
+    return jsonify({"ok": True, "expired_at": expired_at, "email": email})
+
+
+@app.route("/api/premium/pending")
+def api_premium_pending():
+    """Ambil daftar donasi pending (untuk admin)."""
+    admin_secret = request.headers.get("X-Admin-Secret", "")
+    expected     = os.environ.get("ADMIN_SECRET", "")
+    if not expected or admin_secret != expected:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/pending_premium",
+        headers=supabase_headers(),
+        params={"order": "created_at.desc", "limit": "100", "select": "*"},
+    )
+    return jsonify(r.json() if r.ok else [])
+
+
 # ── API Proxy ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/search/<keyword>")
@@ -524,8 +589,60 @@ def delete_comment(comment_id):
 
 # ── Sociabuzz Webhook ──────────────────────────────────────────────────────────
 
+# Mapping nominal → paket premium
+PREMIUM_PAKET = {
+    15000:  {"plan_id": "monthly",   "days": 30,  "label": "1 Bulan"},
+    35000:  {"plan_id": "quarterly", "days": 90,  "label": "3 Bulan"},
+    100000: {"plan_id": "yearly",    "days": 365, "label": "1 Tahun"},
+}
+
+def extract_email(text):
+    """Ekstrak alamat email dari string pesan."""
+    import re
+    text = (text or "").strip()
+    match = re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", text)
+    return match.group(0).lower() if match else None
+
+def find_user_by_email(email):
+    """Cari user di Supabase Auth berdasarkan email (butuh service role key)."""
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    if not service_key:
+        print("[Premium] SUPABASE_SERVICE_ROLE_KEY tidak di-set, tidak bisa cari user by email")
+        return None
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/auth/v1/admin/users",
+            headers={
+                "apikey":        service_key,
+                "Authorization": f"Bearer {service_key}",
+            },
+            params={"filter": f"email.eq.{email}"},
+            timeout=8,
+        )
+        if r.ok:
+            users = r.json().get("users", [])
+            return users[0] if users else None
+    except Exception as e:
+        print(f"[Premium] find_user_by_email error: {e}")
+    return None
+
+def grant_premium_by_user_id(user_id, plan_id, days):
+    """Insert row premium_users ke Supabase."""
+    from datetime import datetime, timezone, timedelta
+    expired_at = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    payload = {"user_id": user_id, "plan_id": plan_id, "expired_at": expired_at}
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/premium_users",
+        headers={**supabase_headers(), "Prefer": "return=representation"},
+        json=payload,
+        timeout=8,
+    )
+    return r.ok, expired_at
+
 @app.route("/api/sociabuzz/webhook", methods=["POST"])
 def sociabuzz_webhook():
+    from datetime import datetime, timezone, timedelta
+
     data = request.get_json(silent=True) or {}
 
     donor_name   = data.get("donatur_name", data.get("name", "Anonymous"))
@@ -533,36 +650,110 @@ def sociabuzz_webhook():
     message      = data.get("message", "")
     supporter_id = str(data.get("order_id", data.get("id", "")))
 
-    print(f"[Sociabuzz] Donasi dari {donor_name}: Rp{amount} - {message} (ID: {supporter_id})")
+    print(f"[Sociabuzz] Donasi dari {donor_name}: Rp{amount} - '{message}' (ID: {supporter_id})")
 
-    # Simpan ke tabel donations di Supabase
+    # ── 1. Simpan ke tabel donations ─────────────────────────────────────────
+    premium_granted  = False
+    premium_email    = None
+    premium_plan     = None
+    premium_note     = ""
+
     try:
-        payload = {
-            "donor_name":   donor_name,
-            "amount":       amount,
-            "message":      message,
-            "supporter_id": supporter_id,
-        }
         r = requests.post(
             f"{SUPABASE_URL}/rest/v1/donations",
             headers={**supabase_headers(), "Prefer": "return=representation"},
-            json=payload,
+            json={
+                "donor_name":   donor_name,
+                "amount":       amount,
+                "message":      message,
+                "supporter_id": supporter_id,
+            },
         )
-        if not r.ok:
-            print(f"[Sociabuzz] Supabase error: {r.text}")
-        else:
-            print(f"[Sociabuzz] Tersimpan ke Supabase")
+        print(f"[Sociabuzz] Donasi tersimpan: {r.ok}")
     except Exception as e:
-        print(f"[Sociabuzz] Exception: {e}")
+        print(f"[Sociabuzz] Simpan donasi error: {e}")
 
-    # 2. Kirim notifikasi donasi ke tabel chat_messages (muncul di Live Chat)
+    # ── 2. Auto-grant premium berdasarkan nominal & email di pesan ───────────
+    paket = PREMIUM_PAKET.get(amount)
+    if paket:
+        premium_plan = paket
+        email = extract_email(message)
+
+        if email:
+            premium_email = email
+            print(f"[Premium] Email ditemukan: {email} | Paket: {paket['label']}")
+
+            user = find_user_by_email(email)
+            if user:
+                user_id = user.get("id")
+                ok, expired_at = grant_premium_by_user_id(user_id, paket["plan_id"], paket["days"])
+                if ok:
+                    premium_granted = True
+                    premium_note = f"Premium {paket['label']} granted ke {email} s/d {expired_at[:10]}"
+                    print(f"[Premium] ✅ {premium_note}")
+                else:
+                    premium_note = f"Gagal insert premium_users untuk {email}"
+                    print(f"[Premium] ❌ {premium_note}")
+            else:
+                premium_note = f"User dengan email '{email}' tidak ditemukan di Supabase"
+                print(f"[Premium] ⚠️ {premium_note}")
+        else:
+            # ── Tidak ada email → masuk antrian pending ──────────────────
+            premium_note = "Tidak ada email di pesan — masuk antrian pending"
+            print(f"[Premium] ⚠️ {premium_note}")
+            try:
+                requests.post(
+                    f"{SUPABASE_URL}/rest/v1/pending_premium",
+                    headers={**supabase_headers(), "Prefer": "return=representation"},
+                    json={
+                        "donor_name":   donor_name,
+                        "amount":       amount,
+                        "message":      message,
+                        "supporter_id": supporter_id,
+                        "plan_id":      paket["plan_id"],
+                        "status":       "pending",
+                    },
+                    timeout=8,
+                )
+                print(f"[Premium] Tersimpan ke pending_premium ✅")
+            except Exception as e:
+                print(f"[Premium] Gagal simpan pending: {e}")
+    else:
+        premium_note = f"Nominal Rp{amount} tidak cocok dengan paket manapun"
+        print(f"[Premium] ℹ️ {premium_note}")
+
+    # ── 3. Simpan log premium ke tabel premium_logs ───────────────────────────
+    try:
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/premium_logs",
+            headers={**supabase_headers(), "Prefer": "return=representation"},
+            json={
+                "supporter_id":    supporter_id,
+                "donor_name":      donor_name,
+                "amount":          amount,
+                "email_dari_pesan": premium_email,
+                "plan_id":         paket["plan_id"] if paket else None,
+                "granted":         premium_granted,
+                "note":            premium_note,
+            },
+        )
+    except Exception as e:
+        print(f"[Premium] Log error: {e}")
+
+    # ── 4. Notifikasi Live Chat ───────────────────────────────────────────────
     try:
         rp_fmt = f"Rp {amount:,}".replace(",", ".")
-        chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
-        if message:
-            chat_content += f' 💬 "{message}"'
+        if premium_granted:
+            chat_content = (
+                f"🎉 SPECIAL THANKS kepada {donor_name} yang berlangganan Premium {paket['label']} ({rp_fmt})!"
+                f" Selamat menikmati streaming tanpa batas! 🚀"
+            )
+        else:
+            chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
+            if message:
+                chat_content += f' 💬 "{message}"'
 
-        r2 = requests.post(
+        requests.post(
             f"{SUPABASE_URL}/rest/v1/chat_messages",
             headers={**supabase_headers(), "Prefer": "return=representation"},
             json={
@@ -577,14 +768,16 @@ def sociabuzz_webhook():
                 "reactions":   {},
             },
         )
-        if not r2.ok:
-            print(f"[Sociabuzz] Chat error: {r2.text}")
-        else:
-            print(f"[Sociabuzz] Notifikasi chat terkirim ✅")
+        print(f"[Sociabuzz] Notifikasi chat terkirim ✅")
     except Exception as e:
-        print(f"[Sociabuzz] Exception chat: {e}")
+        print(f"[Sociabuzz] Chat error: {e}")
 
-    return jsonify({"ok": True, "received": supporter_id}), 200
+    return jsonify({
+        "ok":              True,
+        "received":        supporter_id,
+        "premium_granted": premium_granted,
+        "note":            premium_note,
+    }), 200
 
 
 @app.route("/api/donations")
