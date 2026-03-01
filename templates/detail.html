@@ -1,5 +1,43 @@
 {% extends "base.html" %}
-{% block title %}{{ data.detail.title if data and data.detail else 'Detail Anime' }} — Animeku.id{% endblock %}
+{% block title %}{{ data.detail.title if data and data.detail else 'Detail Anime' }} — Animeku.id
+<script>
+function goPremiumEp(btn) {
+  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+  var slug = btn.dataset.slug;
+  var anime = btn.dataset.anime;
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+  var token = localStorage.getItem('sb_access_token') || ANON;
+  if (!user || !user.id) { window.location.href = '/premium'; return; }
+  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
+    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); }).then(function(rows){
+    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
+    window.location.href = ok ? '/episode/' + slug + '?anime=' + anime : '/premium';
+  }).catch(function(){ window.location.href = '/premium'; });
+}
+</script>
+
+<script>
+function goPremiumEp(btn) {
+  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+  var slug = btn.dataset.slug;
+  var anime = btn.dataset.anime;
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+  var token = localStorage.getItem('sb_access_token') || ANON;
+  if (!user || !user.id) { window.location.href = '/premium'; return; }
+  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
+    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); }).then(function(rows){
+    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
+    window.location.href = ok ? '/episode/' + slug + '?anime=' + anime : '/premium';
+  }).catch(function(){ window.location.href = '/premium'; });
+}
+</script>
+{% endblock %}
 
 {% block content %}
 {% if data and data.detail %}
@@ -104,7 +142,7 @@
       {# Episode diurutkan terbaru → terlama, jadi ep1 ada di index terakhir #}
       {% set ep_num_from_end = ep_count - loop.index %}
       {% if ep_num_from_end >= 2 %}
-        <button class="ep-btn ep-locked" data-ep="{{ ep.name | lower }}" onclick="window.location.href='/premium'">
+        <button class="ep-btn ep-locked" data-ep="{{ ep.name | lower }}" data-slug="{{ ep.slug }}" data-anime="{{ slug }}" onclick="goPremiumEp(this)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>
           {{ ep.name }}
           <span class="ep-premium-badge">&#10022; Premium</span>
@@ -256,7 +294,5 @@
 }
 </style>
 
-<script>
 
-</script>
 {% endblock %}
