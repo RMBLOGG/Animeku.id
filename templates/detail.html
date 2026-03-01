@@ -12,15 +12,35 @@ function isPremium() {
 }
 
 function goPremiumEp(btn) {
-  // Feedback visual langsung
   btn.style.opacity = '0.5';
   btn.style.pointerEvents = 'none';
-  // Instant — langsung cek cache, tidak nunggu network
+  var slug = btn.dataset.slug;
+  var anime = btn.dataset.anime;
+
+  // Kalau cache sudah ada dan premium → langsung tonton
   if (isPremium()) {
-    window.location.href = '/episode/' + btn.dataset.slug + '?anime=' + btn.dataset.anime;
-  } else {
-    window.location.href = '/premium';
+    window.location.href = '/episode/' + slug + '?anime=' + anime;
+    return;
   }
+
+  // Cache belum ada / bukan premium → cek Supabase sekali lagi
+  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+  if (!user || !user.id) { window.location.href = '/premium'; return; }
+  var token = localStorage.getItem('sb_access_token') || ANON;
+  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
+    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); }).then(function(rows){
+    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
+    if (ok) {
+      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
+      window.location.href = '/episode/' + slug + '?anime=' + anime;
+    } else {
+      window.location.href = '/premium';
+    }
+  }).catch(function(){ window.location.href = '/premium'; });
 }
 
 // Fetch status premium di background saat halaman load, simpan ke localStorage
@@ -55,15 +75,35 @@ function isPremium() {
 }
 
 function goPremiumEp(btn) {
-  // Feedback visual langsung
   btn.style.opacity = '0.5';
   btn.style.pointerEvents = 'none';
-  // Instant — langsung cek cache, tidak nunggu network
+  var slug = btn.dataset.slug;
+  var anime = btn.dataset.anime;
+
+  // Kalau cache sudah ada dan premium → langsung tonton
   if (isPremium()) {
-    window.location.href = '/episode/' + btn.dataset.slug + '?anime=' + btn.dataset.anime;
-  } else {
-    window.location.href = '/premium';
+    window.location.href = '/episode/' + slug + '?anime=' + anime;
+    return;
   }
+
+  // Cache belum ada / bukan premium → cek Supabase sekali lagi
+  var SB = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
+  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+  if (!user || !user.id) { window.location.href = '/premium'; return; }
+  var token = localStorage.getItem('sb_access_token') || ANON;
+  fetch(SB + '/rest/v1/user_premium?user_id=eq.' + user.id + '&select=is_active,expires_at', {
+    headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); }).then(function(rows){
+    var ok = rows.length && rows[0].is_active && (!rows[0].expires_at || new Date(rows[0].expires_at) > new Date());
+    if (ok) {
+      localStorage.setItem('animeku_premium', JSON.stringify({ active: true, exp: rows[0].expires_at || null }));
+      window.location.href = '/episode/' + slug + '?anime=' + anime;
+    } else {
+      window.location.href = '/premium';
+    }
+  }).catch(function(){ window.location.href = '/premium'; });
 }
 
 // Fetch status premium di background saat halaman load, simpan ke localStorage
