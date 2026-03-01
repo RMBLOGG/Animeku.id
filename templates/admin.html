@@ -539,11 +539,40 @@
 
   <!-- ── USER ──────────────────────────────────── -->
   <div class="admin-pane" id="pane-users">
+
+    <!-- Stats mini -->
+    <div class="stats-grid" style="margin-bottom:16px">
+      <div class="stat-card">
+        <div class="stat-value accent" id="u-stat-total">—</div>
+        <div class="stat-label">Total User</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value gold" id="u-stat-premium">—</div>
+        <div class="stat-label">Premium Aktif</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:#e76f1b" id="u-stat-expired">—</div>
+        <div class="stat-label">Expired</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green" id="u-stat-free">—</div>
+        <div class="stat-label">Free</div>
+      </div>
+    </div>
+
     <div class="admin-section">
       <div class="admin-section-header">
         <div class="admin-section-title">👥 User Google Login</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="text" class="search-input" placeholder="Cari user..." oninput="filterUsers(this.value)" id="userSearch">
+          <input type="text" class="search-input" placeholder="Cari user/email..." oninput="filterUsers(this.value)" id="userSearch">
+          <!-- Filter dropdown -->
+          <select id="userFilter" onchange="filterUsers(document.getElementById('userSearch').value)"
+            style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none">
+            <option value="all">Semua</option>
+            <option value="active">✦ Premium Aktif</option>
+            <option value="expired">⚠ Expired</option>
+            <option value="none">Free</option>
+          </select>
           <button class="refresh-btn" onclick="loadUsers()">↻ Refresh</button>
         </div>
       </div>
@@ -554,7 +583,7 @@
               <th>User</th>
               <th>Login Terakhir</th>
               <th>Premium</th>
-              <th>Expired</th>
+              <th>Sisa Waktu</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -562,6 +591,36 @@
             <tr class="loading-row"><td colspan="5">Memuat...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Custom Durasi -->
+  <div id="premModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:340px;width:90%;margin:auto">
+      <h3 style="font-family:var(--font-head);font-size:16px;margin:0 0 4px">✦ Kelola Premium</h3>
+      <p id="premModalName" style="color:var(--text3);font-size:12px;margin:0 0 20px"></p>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label class="form-label">Durasi (hari)</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <button class="btn btn-sm" onclick="setDays(7)" style="border:1px solid var(--border);color:var(--text2)">7 hari</button>
+            <button class="btn btn-sm" onclick="setDays(14)" style="border:1px solid var(--border);color:var(--text2)">14 hari</button>
+            <button class="btn btn-sm" onclick="setDays(30)" style="border:1px solid var(--border);color:var(--text2)">30 hari</button>
+            <button class="btn btn-sm" onclick="setDays(90)" style="border:1px solid var(--border);color:var(--text2)">90 hari</button>
+          </div>
+          <input type="number" id="premDays" value="30" min="1" max="365"
+            style="margin-top:8px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none;box-sizing:border-box"
+            placeholder="Atau ketik manual...">
+        </div>
+
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-gold" style="flex:1" onclick="doGrant()">✦ Grant</button>
+          <button class="btn btn-success" style="flex:1" onclick="doExtend()">+ Extend</button>
+          <button class="btn btn-danger" style="flex:1" onclick="doRevoke()">✕ Revoke</button>
+        </div>
+        <button class="btn" style="border:1px solid var(--border);color:var(--text2)" onclick="closeModal()">Batal</button>
       </div>
     </div>
   </div>
@@ -922,6 +981,9 @@ async function deleteComment(id) {
 }
 
 // ── USERS ──────────────────────────────────────────────────────
+let modalUserId = "";
+let modalUserName = "";
+
 async function loadUsers() {
   const tbody = document.getElementById("userTableBody");
   tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Memuat data user...</td></tr>`;
@@ -936,7 +998,18 @@ async function loadUsers() {
     }
     const data = await res.json();
     allUsers = data.users || [];
-    renderUserTable(allUsers);
+
+    // Update mini stats
+    const total   = allUsers.length;
+    const premium = allUsers.filter(u => u.premium === "active" || u.premium === "lifetime").length;
+    const expired = allUsers.filter(u => u.premium === "expired").length;
+    const free    = allUsers.filter(u => u.premium === "none").length;
+    document.getElementById("u-stat-total").textContent   = total;
+    document.getElementById("u-stat-premium").textContent = premium;
+    document.getElementById("u-stat-expired").textContent = expired;
+    document.getElementById("u-stat-free").textContent    = free;
+
+    filterUsers(document.getElementById("userSearch").value);
   } catch(e) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${e.message}</td></tr>`;
   }
@@ -947,11 +1020,12 @@ function countdown(expiresAt) {
   const now = new Date();
   const exp = new Date(expiresAt);
   const diff = exp - now;
-  if (diff <= 0) return '<span style="color:var(--accent)">Expired</span>';
+  if (diff <= 0) return '<span style="color:var(--accent);font-size:11px">Expired</span>';
   const days  = Math.floor(diff / (1000*60*60*24));
   const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-  if (days > 0) return `<span style="color:#f4a261">${days}h ${hours}j lagi</span>`;
-  return `<span style="color:var(--accent)">${hours}j lagi</span>`;
+  if (days >= 7)  return `<span style="color:#4caf7d;font-size:11px">${days}h lagi</span>`;
+  if (days > 0)   return `<span style="color:#f4a261;font-size:11px">${days}h ${hours}j lagi</span>`;
+  return `<span style="color:var(--accent);font-size:11px">${hours}j lagi</span>`;
 }
 
 function renderUserTable(users) {
@@ -981,46 +1055,81 @@ function renderUserTable(users) {
           ${u.avatar ? `<img src="${escH(u.avatar)}" alt="">` : `<div class="user-avatar-ph">${escH((u.name||"?")[0].toUpperCase())}</div>`}
           <div>
             <div class="user-name">${escH(u.name||"—")} ${isAdmin ? "⭐" : ""}</div>
-            <div class="user-sub">${escH(u.email||"")} · ${escH(u.id?.slice(0,8)+"...")}</div>
+            <div class="user-sub" style="font-size:10px">${escH(u.email||"")} · ${escH(u.id?.slice(0,8)+"...")}</div>
           </div>
         </div>
       </td>
       <td style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${lastSign}</td>
       <td>${premBadge}</td>
-      <td style="font-size:12px">${u.premium === "active" || u.premium === "expired" ? countdown(u.expires_at) : "—"}</td>
+      <td>${u.premium === "active" || u.premium === "expired" ? countdown(u.expires_at) : "—"}</td>
       <td>
-        ${!isAdmin ? `
-          ${u.premium === "active" || u.premium === "lifetime"
-            ? `<button class="btn btn-sm btn-danger" onclick="togglePremium('${escH(u.id)}','revoke','${escH(u.name)}')">✕ Revoke</button>`
-            : `<button class="btn btn-sm btn-gold" onclick="togglePremium('${escH(u.id)}','grant','${escH(u.name)}')">✦ Grant</button>`
-          }
-        ` : "—"}
+        ${!isAdmin
+          ? `<button class="btn btn-sm btn-gold" onclick="openModal('${escH(u.id)}','${escH(u.name)}')">⚙ Kelola</button>`
+          : "—"}
       </td>
     </tr>`;
   }).join("");
 }
 
 function filterUsers(q) {
-  const filtered = allUsers.filter(u =>
+  const filter = document.getElementById("userFilter")?.value || "all";
+  let filtered = allUsers.filter(u =>
     (u.name||"").toLowerCase().includes(q.toLowerCase()) ||
     (u.email||"").toLowerCase().includes(q.toLowerCase()) ||
     (u.id||"").toLowerCase().includes(q.toLowerCase())
   );
+  if (filter !== "all") {
+    filtered = filtered.filter(u => u.premium === filter);
+  }
   renderUserTable(filtered);
 }
 
-async function togglePremium(uid, action, name) {
-  const label = action === "grant" ? `Grant premium 30 hari untuk "${name}"?` : `Revoke premium "${name}"?`;
-  if (!confirm(label)) return;
+// ── MODAL ──
+function openModal(uid, name) {
+  modalUserId   = uid;
+  modalUserName = name;
+  document.getElementById("premModalName").textContent = name;
+  document.getElementById("premDays").value = 30;
+  document.getElementById("premModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("premModal").style.display = "none";
+  modalUserId = ""; modalUserName = "";
+}
+
+function setDays(n) {
+  document.getElementById("premDays").value = n;
+}
+
+async function doGrant() {
+  const days = parseInt(document.getElementById("premDays").value) || 30;
+  if (!confirm(`Grant premium ${days} hari untuk "${modalUserName}"?`)) return;
+  await _premiumAction("/api/admin/premium", { user_id: modalUserId, action: "grant", days });
+}
+
+async function doExtend() {
+  const days = parseInt(document.getElementById("premDays").value) || 30;
+  if (!confirm(`Extend premium +${days} hari untuk "${modalUserName}"?`)) return;
+  await _premiumAction("/api/admin/premium/extend", { user_id: modalUserId, days });
+}
+
+async function doRevoke() {
+  if (!confirm(`Revoke premium "${modalUserName}"?`)) return;
+  await _premiumAction("/api/admin/premium", { user_id: modalUserId, action: "revoke" });
+}
+
+async function _premiumAction(url, body) {
   try {
     const token = localStorage.getItem("sb_access_token") || "";
-    const res = await fetch("/api/admin/premium", {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: uid, action })
+      body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error();
-    toast(action === "grant" ? `✦ Premium granted untuk ${name}` : `✕ Premium direvoke dari ${name}`, "success");
+    toast("✓ Premium berhasil diupdate!", "success");
+    closeModal();
     loadUsers();
   } catch { toast("Gagal update premium", "error"); }
 }
