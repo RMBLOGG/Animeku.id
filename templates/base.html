@@ -1049,13 +1049,10 @@ async function loadEndpointState() {
 }
 
 async function setEndpoint(source) {
-  // Tutup dropdown
+  // Tutup dropdown & mobile menu
   var dd = document.getElementById('endpointDropdown');
   if (dd) dd.style.display = 'none';
 
-  // Cek apakah user adalah admin (hanya admin bisa ganti)
-  // Kalau bukan admin, cukup ganti tampilan lokal saja (simulasi preview)
-  // tapi yang benar-benar tersimpan global hanya admin
   try {
     const r = await fetch('/api/source/switch', {
       method: 'POST',
@@ -1064,12 +1061,7 @@ async function setEndpoint(source) {
     });
     const d = await r.json();
     if (r.ok) {
-      _updateEndpointUI(source);
-      // Reload halaman supaya data ikut berubah
       window.location.reload();
-    } else if (r.status === 403) {
-      // Bukan admin → tampilkan notif
-      _showEndpointToast('Hanya admin yang bisa ganti endpoint global', 'error');
     } else {
       _showEndpointToast(d.error || 'Gagal ganti endpoint', 'error');
     }
