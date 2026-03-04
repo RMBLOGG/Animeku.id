@@ -731,14 +731,14 @@ function closeAnnouncement() {
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
       <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:2px 0 8px">🔀 Ganti Endpoint</div>
       <div style="display:flex;gap:8px;padding-bottom:4px">
-        <button onclick="setEndpoint('samehadaku')" id="ep-mob-samehadaku"
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all .2s;min-height:48px">
+        <a href="#" onclick="event.preventDefault();setEndpoint('samehadaku')" id="ep-mob-samehadaku"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;min-height:48px">
           <span style="width:8px;height:8px;border-radius:50%;background:#4caf7d;flex-shrink:0;display:inline-block"></span>Samehadaku
-        </button>
-        <button onclick="setEndpoint('animasu')" id="ep-mob-animasu"
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all .2s;min-height:48px">
+        </a>
+        <a href="#" onclick="event.preventDefault();setEndpoint('animasu')" id="ep-mob-animasu"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;min-height:48px">
           <span style="width:8px;height:8px;border-radius:50%;background:#f4a261;flex-shrink:0;display:inline-block"></span>Animasu
-        </button>
+        </a>
       </div>
 
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -1049,10 +1049,13 @@ async function loadEndpointState() {
 }
 
 async function setEndpoint(source) {
-  // Tutup dropdown & mobile menu
+  // Tutup dropdown
   var dd = document.getElementById('endpointDropdown');
   if (dd) dd.style.display = 'none';
 
+  // Cek apakah user adalah admin (hanya admin bisa ganti)
+  // Kalau bukan admin, cukup ganti tampilan lokal saja (simulasi preview)
+  // tapi yang benar-benar tersimpan global hanya admin
   try {
     const r = await fetch('/api/source/switch', {
       method: 'POST',
@@ -1061,7 +1064,12 @@ async function setEndpoint(source) {
     });
     const d = await r.json();
     if (r.ok) {
+      _updateEndpointUI(source);
+      // Reload halaman supaya data ikut berubah
       window.location.reload();
+    } else if (r.status === 403) {
+      // Bukan admin → tampilkan notif
+      _showEndpointToast('Hanya admin yang bisa ganti endpoint global', 'error');
     } else {
       _showEndpointToast(d.error || 'Gagal ganti endpoint', 'error');
     }
@@ -1125,7 +1133,7 @@ loadEndpointState();
     const link = e.target.closest('a');
     if (!link) return;
     const href = link.getAttribute('href') || '';
-    if (href.startsWith('/anime/') || href.startsWith('/episode/')) {
+    if ((href.startsWith('/anime/') || href.startsWith('/episode/')) && href !== '#') {
       e.preventDefault();
       e.stopImmediatePropagation();
       modal.style.display = 'flex';
