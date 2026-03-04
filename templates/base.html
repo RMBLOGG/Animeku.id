@@ -729,18 +729,12 @@ function closeAnnouncement() {
 
       <!-- Endpoint Switcher Mobile -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:2px 0 8px">🔀 Ganti Endpoint</div>
-      <div style="display:flex;gap:8px;padding-bottom:4px">
-        <a href="#" onclick="event.preventDefault();setEndpoint('samehadaku')" id="ep-mob-samehadaku"
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;min-height:48px">
-          <span style="width:8px;height:8px;border-radius:50%;background:#4caf7d;flex-shrink:0;display:inline-block"></span>Samehadaku
-        </a>
-        <a href="#" onclick="event.preventDefault();setEndpoint('animasu')" id="ep-mob-animasu"
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 8px;background:var(--card);border:2px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;min-height:48px">
-          <span style="width:8px;height:8px;border-radius:50%;background:#f4a261;flex-shrink:0;display:inline-block"></span>Animasu
-        </a>
-      </div>
-
+      <a href="#" onclick="event.preventDefault();setEndpoint('samehadaku')" id="ep-mob-samehadaku">
+        <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;display:inline-block;margin-right:6px;vertical-align:middle"></span>Samehadaku
+      </a>
+      <a href="#" onclick="event.preventDefault();setEndpoint('animasu')" id="ep-mob-animasu">
+        <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;display:inline-block;margin-right:6px;vertical-align:middle"></span>Animasu
+      </a>
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
 
       <!-- Login (tampil saat belum login) -->
@@ -1133,7 +1127,7 @@ loadEndpointState();
     const link = e.target.closest('a');
     if (!link) return;
     const href = link.getAttribute('href') || '';
-    if ((href.startsWith('/anime/') || href.startsWith('/episode/')) && href !== '#') {
+    if (href.startsWith('/anime/') || href.startsWith('/episode/')) {
       e.preventDefault();
       e.stopImmediatePropagation();
       modal.style.display = 'flex';
