@@ -631,6 +631,30 @@ function closeAnnouncement() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
 
+        <!-- Endpoint Switcher -->
+        <div id="endpointSwitcher" style="position:relative">
+          <button id="endpointBtn" onclick="toggleEndpointDropdown(event)"
+            title="Ganti Endpoint"
+            style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text);transition:border-color .2s;white-space:nowrap">
+            <span id="endpointDot" style="width:7px;height:7px;border-radius:50%;background:#4caf7d;display:inline-block;flex-shrink:0"></span>
+            <span id="endpointLabel">...</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="endpointDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:170px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden">
+            <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase">Endpoint</div>
+            <button onclick="setEndpoint('samehadaku')" id="ep-opt-samehadaku"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font-body);text-align:left;transition:background .15s">
+              <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;flex-shrink:0"></span>
+              Samehadaku
+            </button>
+            <button onclick="setEndpoint('animasu')" id="ep-opt-animasu"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font-body);text-align:left;transition:background .15s">
+              <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;flex-shrink:0"></span>
+              Animasu <span style="font-size:10px;background:rgba(244,162,97,0.15);color:#f4a261;border-radius:4px;padding:1px 5px;margin-left:2px">Premium</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Icon Koleksi: tampil di mobile, sembunyi di desktop (karena sudah ada di dropdown Lainnya) -->
         <a href="/koleksi" class="nav-icon-btn mobile-only-item" aria-label="Koleksi" title="Koleksi" style="display:none">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -703,7 +727,19 @@ function closeAnnouncement() {
       <a href="/animelist">Anime A-Z</a>
       <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
 
-      <!-- Divider -->
+      <!-- Endpoint Switcher Mobile -->
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <div style="padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase">Endpoint Aktif</div>
+      <div style="display:flex;gap:8px;padding:4px 0 6px">
+        <button onclick="setEndpoint('samehadaku');document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')" id="ep-mob-samehadaku"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;flex-shrink:0"></span>Samehadaku
+        </button>
+        <button onclick="setEndpoint('animasu');document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')" id="ep-mob-animasu"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;flex-shrink:0"></span>Animasu
+        </button>
+      </div>
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
 
       <!-- Login (tampil saat belum login) -->
@@ -953,8 +989,166 @@ document.addEventListener('click', function(e) {
     if (dd)  dd.classList.remove('show');
     if (btn) btn.classList.remove('open');
   }
+  // Tutup endpoint dropdown juga
+  if (!e.target.closest('#endpointSwitcher')) {
+    var epdd = document.getElementById('endpointDropdown');
+    if (epdd) epdd.style.display = 'none';
+  }
 });
 </script>
+
+<script>
+// ── Endpoint Switcher ──────────────────────────────────────────────────────
+// Nilai langsung dari server — tidak perlu fetch lagi
+let _activeEndpoint = '{{ active_source }}';
+
+function toggleEndpointDropdown(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('endpointDropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function _updateEndpointUI(active) {
+  _activeEndpoint = active;
+  const label = document.getElementById('endpointLabel');
+  const dot   = document.getElementById('endpointDot');
+  if (!label) return;
+
+  if (active === 'animasu') {
+    label.textContent = 'Animasu';
+    dot.style.background = '#f4a261';
+    // highlight option
+    ['samehadaku','animasu'].forEach(k => {
+      const el = document.getElementById('ep-opt-' + k);
+      if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
+      const mob = document.getElementById('ep-mob-' + k);
+      if (mob) {
+        mob.style.borderColor = k === active ? '#f4a261' : 'var(--border)';
+        mob.style.background  = k === active ? 'rgba(244,162,97,0.1)' : 'var(--card)';
+      }
+    });
+  } else {
+    label.textContent = 'Samehadaku';
+    dot.style.background = '#4caf7d';
+    ['samehadaku','animasu'].forEach(k => {
+      const el = document.getElementById('ep-opt-' + k);
+      if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
+      const mob = document.getElementById('ep-mob-' + k);
+      if (mob) {
+        mob.style.borderColor = k === active ? '#4caf7d' : 'var(--border)';
+        mob.style.background  = k === active ? 'rgba(76,175,125,0.1)' : 'var(--card)';
+      }
+    });
+  }
+}
+
+async function loadEndpointState() {
+  // Sudah punya nilai dari server, langsung render UI
+  _updateEndpointUI(_activeEndpoint);
+}
+
+async function setEndpoint(source) {
+  // Tutup dropdown
+  var dd = document.getElementById('endpointDropdown');
+  if (dd) dd.style.display = 'none';
+
+  // Cek apakah user adalah admin (hanya admin bisa ganti)
+  // Kalau bukan admin, cukup ganti tampilan lokal saja (simulasi preview)
+  // tapi yang benar-benar tersimpan global hanya admin
+  try {
+    const r = await fetch('/api/source/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      _updateEndpointUI(source);
+      // Reload halaman supaya data ikut berubah
+      window.location.reload();
+    } else if (r.status === 403) {
+      // Bukan admin → tampilkan notif
+      _showEndpointToast('Hanya admin yang bisa ganti endpoint global', 'error');
+    } else {
+      _showEndpointToast(d.error || 'Gagal ganti endpoint', 'error');
+    }
+  } catch(e) {
+    _showEndpointToast('Gagal koneksi ke server', 'error');
+  }
+}
+
+function _showEndpointToast(msg, type) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '24px', right: '24px', zIndex: '99999',
+    padding: '12px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
+    background: type === 'error' ? '#e63946' : '#4caf7d',
+    color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+    transition: 'opacity .3s', opacity: '1'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+loadEndpointState();
+
+<!-- ── Premium Gate (Global) ─────────────────────────────────────────────── -->
+<div id="premiumGateModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--bg2,#1a1a2e);border:1px solid rgba(244,162,97,0.3);border-radius:18px;padding:36px 28px;max-width:380px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.7)">
+    <div style="font-size:52px;margin-bottom:12px">👑</div>
+    <h2 style="margin:0 0 8px;font-size:20px;color:var(--text,#fff)">Konten Premium</h2>
+    <p style="color:var(--text3,#aaa);font-size:13px;margin:0 0 22px;line-height:1.7">
+      Sumber data aktif saat ini adalah <strong style="color:#f4a261">Animasu</strong>.<br>
+      Akses halaman detail &amp; episode memerlukan akun <strong style="color:#fff">Premium</strong>.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="/premium" style="background:var(--accent,#e63946);color:#fff;padding:11px 24px;border-radius:9px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px">⭐ Upgrade Premium</a>
+      <button onclick="document.getElementById('premiumGateModal').style.display='none'" style="background:var(--bg3,#252540);color:var(--text2,#ccc);border:1px solid var(--border,#333);padding:11px 20px;border-radius:9px;cursor:pointer;font-size:14px">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function initPremiumGate() {
+  if (_activeEndpoint !== 'animasu') return;
+
+  // Cek status premium user
+  let isPremium = false;
+  try {
+    const token = localStorage.getItem('sb_access_token') || '';
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const r = await fetch('/api/premium/status', { headers });
+    const d = await r.json();
+    isPremium = !!d.premium;
+  } catch(e) {}
+
+  if (isPremium) return;
+
+  // Intercept klik ke /anime/... dan /episode/...
+  const modal = document.getElementById('premiumGateModal');
+
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (href.startsWith('/anime/') || href.startsWith('/episode/')) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      modal.style.display = 'flex';
+    }
+  }, true);
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') modal.style.display = 'none';
+  });
+})();
+</script>
+
   {% block scripts %}{% endblock %}
 </body>
 </html>
