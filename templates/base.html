@@ -641,6 +641,10 @@ function closeAnnouncement() {
                   <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;display:inline-block;flex-shrink:0"></span>
                   Dayynime-v2
                 </a>
+                <a href="#" onclick="event.preventDefault();document.getElementById('desktopEpSub').style.display='none';document.getElementById('navMoreDropdown').classList.remove('show');(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'otakudesu'})});if(r.ok)window.location.reload();})();" class="nav-more-item" id="ep-opt-otakudesu">
+                  <span style="width:7px;height:7px;border-radius:50%;background:#60a5fa;display:inline-block;flex-shrink:0"></span>
+                  Dayynime-v3
+                </a>
               </div>
             </div>
           </div>
@@ -757,6 +761,9 @@ function closeAnnouncement() {
         </a>
         <a href="#" onclick="event.preventDefault();document.getElementById('epMobDropdown').style.display='none';(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'animasu'})});if(r.ok)window.location.reload();})();" id="ep-mob-animasu">
           <span style="width:6px;height:6px;border-radius:50%;background:#f4a261;display:inline-block;margin-right:8px;vertical-align:middle"></span>Dayynime-v2
+        </a>
+        <a href="#" onclick="event.preventDefault();document.getElementById('epMobDropdown').style.display='none';(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'otakudesu'})});if(r.ok)window.location.reload();})();" id="ep-mob-otakudesu">
+          <span style="width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;margin-right:8px;vertical-align:middle"></span>Dayynime-v3
         </a>
       </div>
 
@@ -1034,32 +1041,26 @@ function _updateEndpointUI(active) {
   const dot   = document.getElementById('endpointDot');
   if (!label) return;
 
-  if (active === 'animasu') {
-    label.textContent = 'Animasu';
-    dot.style.background = '#f4a261';
-    // highlight option
-    ['samehadaku','animasu'].forEach(k => {
-      const el = document.getElementById('ep-opt-' + k);
-      if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
-      const mob = document.getElementById('ep-mob-' + k);
-      if (mob) {
-        mob.style.borderColor = k === active ? '#f4a261' : 'var(--border)';
-        mob.style.background  = k === active ? 'rgba(244,162,97,0.1)' : 'var(--card)';
-      }
-    });
-  } else {
-    label.textContent = 'Samehadaku';
-    dot.style.background = '#4caf7d';
-    ['samehadaku','animasu'].forEach(k => {
-      const el = document.getElementById('ep-opt-' + k);
-      if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
-      const mob = document.getElementById('ep-mob-' + k);
-      if (mob) {
-        mob.style.borderColor = k === active ? '#4caf7d' : 'var(--border)';
-        mob.style.background  = k === active ? 'rgba(76,175,125,0.1)' : 'var(--card)';
-      }
-    });
-  }
+  const sources = {
+    'samehadaku': { text: 'Samehadaku', color: '#4caf7d' },
+    'animasu':    { text: 'Animasu',    color: '#f4a261' },
+    'otakudesu':  { text: 'Otakudesu', color: '#60a5fa' },
+  };
+  const src = sources[active] || sources['samehadaku'];
+
+  label.textContent   = src.text;
+  dot.style.background = src.color;
+
+  // Highlight opsi aktif di desktop & mobile
+  ['samehadaku', 'animasu', 'otakudesu'].forEach(k => {
+    const el = document.getElementById('ep-opt-' + k);
+    if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
+    const mob = document.getElementById('ep-mob-' + k);
+    if (mob) {
+      mob.style.borderColor = k === active ? sources[k].color : 'var(--border)';
+      mob.style.background  = k === active ? `rgba(${k === 'samehadaku' ? '76,175,125' : k === 'animasu' ? '244,162,97' : '96,165,250'},0.1)` : 'var(--card)';
+    }
+  });
 }
 
 async function loadEndpointState() {
@@ -1119,7 +1120,7 @@ loadEndpointState();
     <div style="font-size:52px;margin-bottom:12px">👑</div>
     <h2 style="margin:0 0 8px;font-size:20px;color:var(--text,#fff)">Konten Premium</h2>
     <p style="color:var(--text3,#aaa);font-size:13px;margin:0 0 22px;line-height:1.7">
-      Sumber data aktif saat ini adalah <strong style="color:#f4a261">Animasu</strong>.<br>
+      Sumber data aktif saat ini adalah <strong style="color:#f4a261" id="premiumGateSourceLabel">Animasu</strong>.<br>
       Akses halaman detail &amp; episode memerlukan akun <strong style="color:#fff">Premium</strong>.
     </p>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -1131,7 +1132,7 @@ loadEndpointState();
 
 <script>
 (async function initPremiumGate() {
-  if (_activeEndpoint !== 'animasu') return;
+  if (_activeEndpoint !== 'animasu' && _activeEndpoint !== 'otakudesu') return;
 
   // Cek status premium user
   let isPremium = false;
@@ -1144,6 +1145,13 @@ loadEndpointState();
   } catch(e) {}
 
   if (isPremium) return;
+
+  // Update label source di modal
+  var srcLbl = document.getElementById('premiumGateSourceLabel');
+  if (srcLbl) {
+    var srcNames = { 'animasu': 'Animasu', 'otakudesu': 'Otakudesu' };
+    srcLbl.textContent = srcNames[_activeEndpoint] || _activeEndpoint;
+  }
 
   // Intercept klik ke /anime/... dan /episode/...
   const modal = document.getElementById('premiumGateModal');
