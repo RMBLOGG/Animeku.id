@@ -270,17 +270,17 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 }
 .anime-grid.lg { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); }
 
-/* Ongoing section: 3 kolom, card 16:9 */
+/* Ongoing section: sama seperti Terbaru (portrait 2/3) */
 .ongoing-grid {
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
 }
 .ongoing-grid .card-poster {
-  aspect-ratio: 16/9;
+  aspect-ratio: 2/3;
 }
 .ongoing-grid .card-title {
-  font-size: 11px;
-  -webkit-line-clamp: 1;
+  font-size: 13px;
+  -webkit-line-clamp: 2;
 }
 
 .anime-card {
