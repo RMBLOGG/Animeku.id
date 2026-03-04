@@ -24,11 +24,38 @@ SOURCES = {
 DEFAULT_SOURCE = "samehadaku"
 
 def get_active_source():
-    """Baca source aktif dari Redis (global setting oleh admin)."""
+    """Baca source aktif: cookie user → Redis cache → site_config Supabase → default."""
+    # 1. Cookie browser user (pilihan per-user, 30 hari)
+    try:
+        user_src = request.cookies.get("active_source")
+        if user_src and user_src in SOURCES:
+            return user_src
+    except Exception:
+        pass
+    # 2. Redis cache (cepat, di-set oleh admin saat switch)
     try:
         val = redis.get("animeku:active_source")
         if val and val in SOURCES:
             return val
+    except Exception:
+        pass
+    # 3. Supabase site_config (source of truth untuk admin)
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/site_config",
+            headers=supabase_service_headers(),
+            params={"key": "eq.active_source", "select": "value"},
+            timeout=3
+        )
+        if r.ok and r.json():
+            val = r.json()[0].get("value")
+            if isinstance(val, str) and val in SOURCES:
+                # Cache ke Redis supaya request berikutnya tidak perlu ke Supabase
+                try:
+                    redis.set("animeku:active_source", val, ex=3600)
+                except Exception:
+                    pass
+                return val
     except Exception:
         pass
     return DEFAULT_SOURCE
@@ -723,39 +750,50 @@ def api_get_source():
 
 @app.route("/api/source/switch", methods=["POST"])
 def api_switch_source():
-    """Ganti source aktif — hanya admin."""
-    user = session.get("user")
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    ADMIN_IDS = [
-        "1a2c72de-e85c-4430-8e27-8c1c1fd0b8f1",
-    ]
-    if user.get("id") not in ADMIN_IDS:
-        return jsonify({"error": "Forbidden"}), 403
-
+    """Ganti source aktif untuk user ini (cookie, works di Vercel serverless)."""
     data   = request.get_json()
     source = data.get("source", "")
     if source not in SOURCES:
         return jsonify({"error": f"Source tidak valid. Pilih: {list(SOURCES.keys())}"}), 400
 
-    try:
-        redis.set("animeku:active_source", source, ex=86400 * 365)  # simpan 1 tahun
-    except Exception as e:
-        return jsonify({"error": f"Gagal simpan ke Redis: {e}"}), 500
+    # Simpan ke cookie browser user (30 hari) — tidak butuh session/Redis
+    resp = jsonify({"ok": True, "active": source, "label": SOURCES[source]["label"]})
+    resp.set_cookie("active_source", source, max_age=30*24*3600, samesite="Lax")
 
-    # Flush cache source baru supaya data langsung fresh dari API
+    # Kalau admin → juga update Redis global sebagai default semua user
+    user = session.get("user")
+    ADMIN_IDS = ["1a2c72de-e85c-4430-8e27-8c1c1fd0b8f1"]
     try:
-        # Hapus beberapa key cache utama untuk source yang baru dipilih
-        flush_paths = ["home", "ongoing", "completed", "latest", "popular", "schedule", "genres"]
-        pfx = SOURCES[source]["prefix"]
-        for fp in flush_paths:
-            k = f"animeku:{source}:{pfx}/{fp}[]"
-            redis.delete(k)
+        r_cfg = requests.get(
+            f"{SUPABASE_URL}/rest/v1/site_config",
+            headers=supabase_service_headers(),
+            params={"key": "eq.admin_ids", "select": "value"}
+        )
+        if r_cfg.ok and r_cfg.json():
+            val = r_cfg.json()[0].get("value")
+            if val:
+                ADMIN_IDS = val if isinstance(val, list) else val.get("ids", ADMIN_IDS)
     except Exception:
-        pass  # Tidak critical, cache akan expire sendiri
+        pass
 
-    return jsonify({"ok": True, "active": source, "label": SOURCES[source]["label"]})
+    if user and user.get("id") in ADMIN_IDS:
+        # Admin: update Supabase site_config sebagai default global semua user
+        try:
+            requests.post(
+                f"{SUPABASE_URL}/rest/v1/site_config",
+                headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates"},
+                json={"key": "active_source", "value": source},
+                timeout=5
+            )
+        except Exception:
+            pass
+        # Update Redis cache juga
+        try:
+            redis.set("animeku:active_source", source, ex=86400 * 365)
+        except Exception:
+            pass
+
+    return resp
 
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
