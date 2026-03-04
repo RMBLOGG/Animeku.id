@@ -560,15 +560,20 @@ def home():
 
     if source == "animasu":
         raw      = fetch(f"{pfx}/home")
+        pop_raw  = fetch(f"{pfx}/latest")
         schedule = fetch(f"{pfx}/schedule")
         data     = animasu_norm_home(raw)
-        pop_norm = None
+        # populer dari latest animasu
+        pop_norm = animasu_norm_paginated(pop_raw, 1) if pop_raw else None
+        if pop_norm:
+            pop_norm = {"animes": pop_norm.get("animes", [])}
         sched    = animasu_norm_schedule(schedule)
     elif source == "otakudesu":
         raw      = fetch(f"{pfx}/home")
         schedule = fetch(f"{pfx}/schedule")
         data     = otakudesu_norm_home(raw)
-        pop_norm = None
+        # populer dari ongoing (otakudesu tidak punya endpoint popular terpisah)
+        pop_norm = {"animes": data["ongoing"][:10]} if data and data.get("ongoing") else None
         sched    = otakudesu_norm_schedule(schedule)
     else:
         raw      = fetch(f"{pfx}/home")
