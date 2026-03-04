@@ -715,15 +715,25 @@ function closeAnnouncement() {
     </div>
 
     <div class="mobile-menu" id="mobileMenu">
-      <a href="/ongoing">Ongoing</a>
-      <a href="/completed">Completed</a>
-      <a href="/movies">Movie</a>
-      <a href="/popular">Populer</a>
-      <a href="/jadwal">Jadwal</a>
-      <a href="/genres">Genre</a>
-      <a href="/koleksi">Koleksi</a>
-      <a href="/animelist">Anime A-Z</a>
-      <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
+      <!-- Navigasi Accordion -->
+      <a href="#" onclick="event.preventDefault();var d=document.getElementById('mobNavDropdown');var arrow=document.getElementById('mobNavArrow');var open=d.style.display==='flex';d.style.display=open?'none':'flex';arrow.style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:10px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          Menu
+        </span>
+        <svg id="mobNavArrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5;transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+      </a>
+      <div id="mobNavDropdown" style="display:none;flex-direction:column;padding:0 0 4px 28px;gap:0">
+        <a href="/ongoing">Ongoing</a>
+        <a href="/completed">Completed</a>
+        <a href="/movies">Movie</a>
+        <a href="/popular">Populer</a>
+        <a href="/jadwal">Jadwal</a>
+        <a href="/genres">Genre</a>
+        <a href="/koleksi">Koleksi</a>
+        <a href="/animelist">Anime A-Z</a>
+        <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
+      </div>
 
       <!-- Endpoint Switcher Mobile -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
