@@ -1103,6 +1103,7 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .hamburger { display: flex; }
+  .desktop-endpoint-switcher { display: none !important; }
 
   .anime-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
   .ongoing-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
