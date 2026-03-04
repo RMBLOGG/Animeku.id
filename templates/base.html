@@ -1041,24 +1041,23 @@ function _updateEndpointUI(active) {
   const dot   = document.getElementById('endpointDot');
   if (!label) return;
 
-  const sources = {
-    'samehadaku': { text: 'Samehadaku', color: '#4caf7d' },
-    'animasu':    { text: 'Animasu',    color: '#f4a261' },
-    'otakudesu':  { text: 'Otakudesu', color: '#60a5fa' },
+  const SRC = {
+    'samehadaku': { text: 'Samehadaku', color: '#4caf7d', bg: 'rgba(76,175,125,0.1)' },
+    'animasu':    { text: 'Animasu',    color: '#f4a261', bg: 'rgba(244,162,97,0.1)' },
+    'otakudesu':  { text: 'Otakudesu', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)' },
   };
-  const src = sources[active] || sources['samehadaku'];
+  const s = SRC[active] || SRC['samehadaku'];
+  label.textContent    = s.text;
+  dot.style.background = s.color;
 
-  label.textContent   = src.text;
-  dot.style.background = src.color;
-
-  // Highlight opsi aktif di desktop & mobile
-  ['samehadaku', 'animasu', 'otakudesu'].forEach(k => {
-    const el = document.getElementById('ep-opt-' + k);
+  ['samehadaku','animasu','otakudesu'].forEach(k => {
+    const cfg = SRC[k] || SRC['samehadaku'];
+    const el  = document.getElementById('ep-opt-' + k);
     if (el) el.style.background = k === active ? 'rgba(255,255,255,0.06)' : '';
     const mob = document.getElementById('ep-mob-' + k);
     if (mob) {
-      mob.style.borderColor = k === active ? sources[k].color : 'var(--border)';
-      mob.style.background  = k === active ? `rgba(${k === 'samehadaku' ? '76,175,125' : k === 'animasu' ? '244,162,97' : '96,165,250'},0.1)` : 'var(--card)';
+      mob.style.borderColor = k === active ? cfg.color : 'var(--border)';
+      mob.style.background  = k === active ? cfg.bg    : 'var(--card)';
     }
   });
 }
@@ -1120,7 +1119,7 @@ loadEndpointState();
     <div style="font-size:52px;margin-bottom:12px">👑</div>
     <h2 style="margin:0 0 8px;font-size:20px;color:var(--text,#fff)">Konten Premium</h2>
     <p style="color:var(--text3,#aaa);font-size:13px;margin:0 0 22px;line-height:1.7">
-      Sumber data aktif saat ini adalah <strong style="color:#f4a261" id="premiumGateSourceLabel">Animasu</strong>.<br>
+      Sumber data aktif saat ini adalah <strong style="color:#f4a261" id="premiumGateSrcLabel">Animasu</strong>.<br>
       Akses halaman detail &amp; episode memerlukan akun <strong style="color:#fff">Premium</strong>.
     </p>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -1147,10 +1146,10 @@ loadEndpointState();
   if (isPremium) return;
 
   // Update label source di modal
-  var srcLbl = document.getElementById('premiumGateSourceLabel');
+  const srcLbl = document.getElementById('premiumGateSrcLabel');
   if (srcLbl) {
-    var srcNames = { 'animasu': 'Animasu', 'otakudesu': 'Otakudesu' };
-    srcLbl.textContent = srcNames[_activeEndpoint] || _activeEndpoint;
+    const names = { 'animasu': 'Animasu', 'otakudesu': 'Otakudesu' };
+    srcLbl.textContent = names[_activeEndpoint] || _activeEndpoint;
   }
 
   // Intercept klik ke /anime/... dan /episode/...
