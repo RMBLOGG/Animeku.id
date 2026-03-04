@@ -409,11 +409,25 @@ def otakudesu_norm_genres(raw):
     ]
 
 def otakudesu_norm_schedule(raw):
-    """GET /anime/schedule → data.days[{day, animeList}]"""
-    if not raw or not raw.get("data") or not raw["data"].get("days"):
+    """GET /anime/schedule
+    Possible structures:
+      A) { status, data: { days: [{day, animeList}] } }  ← dict
+      B) { status, data: [{day, animeList}] }             ← list
+    """
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    data = raw["data"]
+    # Normalize: ambil list of day objects
+    if isinstance(data, dict):
+        days = data.get("days", [])
+    elif isinstance(data, list):
+        days = data
+    else:
+        return None
+    if not days:
         return None
     sched_dict = {}
-    for day_obj in raw["data"]["days"]:
+    for day_obj in days:
         day_name = DAY_ID.get(day_obj.get("day", ""), day_obj.get("day", ""))
         items = [{
             "slug":          a.get("animeId", ""),
@@ -1661,6 +1675,25 @@ def cron_premium_reminder():
         "notified": len(notified),
         "users": notified
     })
+
+
+@app.route("/debug")
+def debug():
+    import traceback
+    try:
+        source = get_active_source()
+        pfx    = SOURCES[source]["prefix"]
+        raw    = fetch(f"{pfx}/home")
+        return jsonify({
+            "source":    source,
+            "pfx":       pfx,
+            "raw_ok":    raw is not None,
+            "status":    raw.get("status") if raw else None,
+            "data_keys": list(raw.get("data", {}).keys()) if raw else None,
+            "ongoing_count": len(raw["data"].get("ongoing", {}).get("animeList", [])) if raw and raw.get("data") else 0,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
