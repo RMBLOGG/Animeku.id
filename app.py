@@ -356,11 +356,12 @@ def animasu_norm_search(raw):
         return None
     return {"animes": animasu_norm_list(raw.get("animes", []))}
 
-# ── Otakudesu Normalizers ──────────────────────────────────────────────────────
-# Otakudesu response: GET /anime/home → data.ongoing.animeList & data.completed.animeList
+# ── Otakudesu Normalizers ─────────────────────────────────────────────────────
+# Endpoint: GET /anime/home
+# Response: { status, data: { ongoing: { animeList: [...] }, completed: { animeList: [...] } } }
+# Tiap item: { animeId, title, poster, episodes, releaseDay, latestReleaseDate, score, type }
 
 def otakudesu_norm_anime(a):
-    """Normalize satu item anime dari otakudesu ke format internal."""
     if not a:
         return a
     return {
@@ -378,79 +379,72 @@ def otakudesu_norm_list(animes):
     return [otakudesu_norm_anime(a) for a in (animes or [])]
 
 def otakudesu_norm_home(raw):
-    """Parse otakudesu /anime/home response."""
+    """GET /anime/home → data.ongoing.animeList & data.completed.animeList"""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
     d = raw["data"]
-    ongoing_list   = d.get("ongoing",   {}).get("animeList",   [])
-    completed_list = d.get("completed", {}).get("animeList",   [])
     return {
-        "ongoing":   otakudesu_norm_list(ongoing_list),
-        "recent":    otakudesu_norm_list(completed_list),
+        "ongoing": otakudesu_norm_list(d.get("ongoing",   {}).get("animeList", [])),
+        "recent":  otakudesu_norm_list(d.get("completed", {}).get("animeList", [])),
     }
 
 def otakudesu_norm_paginated(raw, page):
-    """Parse otakudesu paginated list."""
     if not raw or raw.get("status") != "success":
         return None
     anime_list = raw.get("data", {}).get("animeList", [])
-    pagination = raw.get("pagination")
-    pag_norm = None
-    if pagination:
-        pag_norm = {
-            "hasNext":     pagination.get("hasNextPage", False),
-            "hasPrev":     pagination.get("hasPrevPage", False),
-            "currentPage": pagination.get("currentPage", page),
-        }
+    pag        = raw.get("pagination") or {}
+    pag_norm   = {
+        "hasNext":     pag.get("hasNextPage", False),
+        "hasPrev":     pag.get("hasPrevPage", False),
+        "currentPage": pag.get("currentPage", page),
+    } if pag else None
     return {"animes": otakudesu_norm_list(anime_list), "pagination": pag_norm}
 
 def otakudesu_norm_genres(raw):
-    """Parse otakudesu genres list."""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
-    genre_list = raw["data"].get("genreList", [])
-    return [{"name": g.get("title", g.get("name", "")), "slug": g.get("genreId", g.get("slug", ""))} for g in genre_list]
+    return [
+        {"name": g.get("title", g.get("name", "")), "slug": g.get("genreId", g.get("slug", ""))}
+        for g in raw["data"].get("genreList", [])
+    ]
 
 def otakudesu_norm_schedule(raw):
-    """Parse otakudesu schedule."""
+    """GET /anime/schedule → data.days[{day, animeList}]"""
     if not raw or not raw.get("data") or not raw["data"].get("days"):
         return None
     sched_dict = {}
     for day_obj in raw["data"]["days"]:
         day_name = DAY_ID.get(day_obj.get("day", ""), day_obj.get("day", ""))
-        items = []
-        for a in day_obj.get("animeList", []):
-            items.append({
-                "slug":          a.get("animeId", ""),
-                "title":         a.get("title", ""),
-                "poster":        a.get("poster", ""),
-                "episode":       str(a.get("episodes", "")),
-                "time":          a.get("estimation", ""),
-                "status_or_day": a.get("estimation", ""),
-                "type":          a.get("type", ""),
-            })
+        items = [{
+            "slug":          a.get("animeId", ""),
+            "title":         a.get("title", ""),
+            "poster":        a.get("poster", ""),
+            "episode":       str(a.get("episodes", "")),
+            "time":          a.get("estimation", ""),
+            "status_or_day": a.get("estimation", ""),
+            "type":          a.get("type", ""),
+        } for a in day_obj.get("animeList", [])]
         sched_dict[day_name] = items
     return {"schedule": sched_dict}
 
 def otakudesu_norm_detail(raw, slug):
-    """Parse otakudesu /anime/:slug detail response."""
+    """GET /anime/anime/:slug"""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
     d = raw["data"]
-    eps    = [{"name": str(e.get("title", e.get("name", ""))), "slug": e.get("episodeId", e.get("slug", ""))}
+    eps    = [{"name": str(e.get("title", "")), "slug": e.get("episodeId", "")}
               for e in d.get("episodeList", [])]
-    genres = [{"name": g.get("title", g.get("name", "")), "slug": g.get("genreId", g.get("slug", ""))}
+    genres = [{"name": g.get("title", ""), "slug": g.get("genreId", "")}
               for g in d.get("genreList", [])]
-    score_val = ""
-    if isinstance(d.get("score"), dict):
-        score_val = d["score"].get("value", "")
-    else:
-        score_val = str(d.get("score", ""))
+    score  = d["score"].get("value", "") if isinstance(d.get("score"), dict) else str(d.get("score", ""))
+    syn    = d.get("synopsis", "")
+    if isinstance(syn, dict):
+        syn = " ".join(syn.get("paragraphs", []))
     return {
         "detail": {
             "title":    d.get("title", ""),
             "poster":   d.get("poster", ""),
-            "synopsis": " ".join(d.get("synopsis", {}).get("paragraphs", [])) if isinstance(d.get("synopsis"), dict) else str(d.get("synopsis", "")),
+            "synopsis": syn,
             "trailer":  d.get("trailer", ""),
             "genres":   genres,
             "episodes": eps,
@@ -458,7 +452,7 @@ def otakudesu_norm_detail(raw, slug):
                 "japanese":      d.get("japanese", ""),
                 "status":        d.get("status", ""),
                 "type":          d.get("type", ""),
-                "score":         score_val,
+                "score":         score,
                 "total_episode": str(d.get("episodes", "")),
                 "duration":      d.get("duration", ""),
                 "released":      d.get("aired", ""),
@@ -469,16 +463,16 @@ def otakudesu_norm_detail(raw, slug):
     }
 
 def otakudesu_norm_episode(raw):
-    """Parse otakudesu /episode/:slug response."""
+    """GET /anime/episode/:slug"""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
-    d = raw["data"]
+    d       = raw["data"]
     streams = []
     for quality in d.get("server", {}).get("qualities", []):
         q_title = quality.get("title", "")
         for srv in quality.get("serverList", []):
             srv_name = srv.get("title", "")
-            label = f"{srv_name} {q_title}".strip() if q_title and q_title.lower() not in srv_name.lower() else srv_name
+            label    = f"{srv_name} {q_title}".strip() if q_title and q_title.lower() not in srv_name.lower() else srv_name
             streams.append({"name": label, "serverId": srv.get("serverId", ""), "url": ""})
     default_url = d.get("defaultStreamingUrl", "")
     if default_url:
@@ -491,25 +485,22 @@ def otakudesu_norm_episode(raw):
     }
 
 def otakudesu_norm_animelist(raw):
-    """Parse otakudesu /list response (grouped by letter)."""
+    """GET /anime/list → data.list[{startWith, animeList}]"""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
-    list_data = raw["data"].get("list", [])
     anime_list = []
-    for group in list_data:
-        letter = group.get("startWith", "#")
+    for group in raw["data"].get("list", []):
         animes = [{"title": a.get("title", ""), "slug": a.get("animeId", "")}
                   for a in group.get("animeList", [])]
         if animes:
-            anime_list.append({"letter": letter, "animes": animes})
+            anime_list.append({"letter": group.get("startWith", "#"), "animes": animes})
     return {"anime_list": anime_list}
 
 def otakudesu_norm_search(raw):
-    """Parse otakudesu search response."""
+    """GET /anime/search?q=... → data.animeList"""
     if not raw or raw.get("status") != "success" or not raw.get("data"):
         return None
-    anime_list = raw["data"].get("animeList", [])
-    return {"animes": otakudesu_norm_list(anime_list)}
+    return {"animes": otakudesu_norm_list(raw["data"].get("animeList", []))}
 
 def norm_schedule(raw):
     if not raw or not raw.get("data") or not raw["data"].get("days"):
@@ -564,7 +555,7 @@ def home():
         raw      = fetch(f"{pfx}/home")
         schedule = fetch(f"{pfx}/schedule")
         data     = animasu_norm_home(raw)
-        pop_norm = None  # animasu tidak punya popular terpisah
+        pop_norm = None
         sched    = animasu_norm_schedule(schedule)
     elif source == "otakudesu":
         raw      = fetch(f"{pfx}/home")
@@ -651,11 +642,10 @@ def episode(slug):
     if source == "animasu":
         raw  = fetch(f"{pfx}/episode/{slug}")
         data = animasu_norm_episode(raw)
-        # animasu tidak punya anime_id di episode, pakai param
         anime_data = None
         if anime_slug:
-            araw  = fetch(f"{pfx}/detail/{anime_slug}")
-            adat  = animasu_norm_detail(araw, anime_slug)
+            araw = fetch(f"{pfx}/detail/{anime_slug}")
+            adat = animasu_norm_detail(araw, anime_slug)
             if adat:
                 anime_data = adat
     elif source == "otakudesu":
@@ -755,19 +745,10 @@ def genre(slug):
         genres_raw = fetch(f"{pfx}/genres")
         data = None
         if raw and raw.get("data"):
-            animes     = otakudesu_norm_list(raw["data"].get("animeList", []))
-            pagination = raw.get("pagination")
-            pag_norm   = None
-            if pagination:
-                pag_norm = {
-                    "hasNext":     pagination.get("hasNextPage", False),
-                    "hasPrev":     pagination.get("hasPrevPage", False),
-                    "currentPage": pagination.get("currentPage", 1),
-                }
-            data = {"animes": animes, "pagination": pag_norm}
-        genres = None
-        if genres_raw and genres_raw.get("data"):
-            genres = {"genres": otakudesu_norm_genres(genres_raw)}
+            pag      = raw.get("pagination") or {}
+            pag_norm = {"hasNext": pag.get("hasNextPage", False), "hasPrev": pag.get("hasPrevPage", False), "currentPage": pag.get("currentPage", 1)} if pag else None
+            data     = {"animes": otakudesu_norm_list(raw["data"].get("animeList", [])), "pagination": pag_norm}
+        genres = {"genres": otakudesu_norm_genres(genres_raw)} if genres_raw else None
     else:
         raw        = fetch(f"{pfx}/genres/{slug}", {"page": page})
         genres_raw = fetch(f"{pfx}/genres")
@@ -800,7 +781,7 @@ def genres():
         if raw:
             data = {"genres": animasu_norm_genres(raw)}
     elif source == "otakudesu":
-        if raw and raw.get("data"):
+        if raw:
             data = {"genres": otakudesu_norm_genres(raw)}
     else:
         if raw and raw.get("data"):
@@ -828,7 +809,6 @@ def movies():
     source = get_active_source()
     pfx    = SOURCES[source]["prefix"]
     if source == "animasu":
-        # animasu tidak punya movies endpoint, fallback ke completed
         data = animasu_norm_paginated(fetch(f"{pfx}/completed", {"page": page}), int(page))
     elif source == "otakudesu":
         data = otakudesu_norm_paginated(fetch(f"{pfx}/movies", {"page": page}), int(page))
@@ -871,7 +851,6 @@ def popular():
     source = get_active_source()
     pfx    = SOURCES[source]["prefix"]
     if source == "animasu":
-        # animasu tidak punya popular terpisah, pakai latest
         data = animasu_norm_paginated(fetch(f"{pfx}/latest", {"page": page}), int(page))
     elif source == "otakudesu":
         data = otakudesu_norm_paginated(fetch(f"{pfx}/popular", {"page": page}), int(page))
