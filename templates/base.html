@@ -715,8 +715,8 @@ function closeAnnouncement() {
     </div>
 
     <div class="mobile-menu" id="mobileMenu">
-      <!-- Navigasi Accordion -->
-      <a href="#" onclick="event.preventDefault();var d=document.getElementById('mobNavDropdown');var arrow=document.getElementById('mobNavArrow');var open=d.style.display==='flex';d.style.display=open?'none':'flex';arrow.style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between">
+      <!-- Menu Accordion -->
+      <a href="#" onclick="event.preventDefault();var d=document.getElementById('mobNavDropdown');var open=d.style.display==='flex';d.style.display=open?'none':'flex';document.getElementById('mobNavArrow').style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between">
         <span style="display:flex;align-items:center;gap:10px">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           Menu
@@ -732,8 +732,17 @@ function closeAnnouncement() {
         <a href="/genres">Genre</a>
         <a href="/koleksi">Koleksi</a>
         <a href="/animelist">Anime A-Z</a>
-        <a href="/chat" style="color:var(--accent);font-weight:600">🔴 Live Chat</a>
       </div>
+
+      <!-- Live Chat - di luar menu, desain khusus -->
+      <a href="/chat" style="display:flex;align-items:center;gap:10px;padding:11px 16px;margin:4px 0;background:linear-gradient(135deg,rgba(230,57,70,0.15),rgba(230,57,70,0.05));border:1px solid rgba(230,57,70,0.3);border-radius:10px;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none">
+        <span style="position:relative;display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--accent);border-radius:50%;flex-shrink:0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#4caf7d;border-radius:50%;border:1.5px solid var(--bg)"></span>
+        </span>
+        Live Chat
+        <span style="margin-left:auto;font-size:10px;background:rgba(230,57,70,0.2);color:var(--accent);border-radius:20px;padding:2px 8px;font-weight:600;letter-spacing:.5px">LIVE</span>
+      </a>
 
       <!-- Endpoint Switcher Mobile -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
