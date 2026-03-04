@@ -1677,6 +1677,40 @@ def cron_premium_reminder():
     })
 
 
+
+@app.route("/debug2")
+def debug2():
+    import traceback
+    results = {}
+    endpoints = {
+        "ongoing":  "/anime/ongoing-anime",
+        "completed": "/anime/complete-anime",
+        "movies":   "/anime/movies",
+        "popular":  "/anime/popular",
+        "genres":   "/anime/genres",
+    }
+    for key, path in endpoints.items():
+        try:
+            raw = fetch(path)
+            if raw is None:
+                results[key] = "None (fetch failed)"
+            elif not isinstance(raw, dict):
+                results[key] = f"type={type(raw).__name__}"
+            else:
+                data = raw.get("data")
+                results[key] = {
+                    "status": raw.get("status"),
+                    "data_type": type(data).__name__,
+                    "data_keys": list(data.keys()) if isinstance(data, dict) else (f"list[{len(data)}]" if isinstance(data, list) else str(data)[:100]),
+                }
+                if isinstance(data, dict):
+                    results[key]["animeList_count"] = len(data.get("animeList", []))
+                elif isinstance(data, list) and len(data) > 0:
+                    results[key]["first_keys"] = list(data[0].keys()) if isinstance(data[0], dict) else str(data[0])[:50]
+        except Exception as e:
+            results[key] = {"error": str(e), "trace": traceback.format_exc()[-300:]}
+    return jsonify(results)
+
 @app.route("/debug")
 def debug():
     import traceback
