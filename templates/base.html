@@ -630,10 +630,9 @@ function closeAnnouncement() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                   Dayynime Endpoint
                 </span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5"><path d="M9 18l6-6-6-6"/></svg>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5"><path d="M6 9l6 6 6-6"/></svg>
               </a>
-              <div id="desktopEpSub" style="display:none;position:absolute;left:100%;top:-4px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:155px;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;z-index:9999">
-                <div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase">Pilih Endpoint</div>
+              <div id="desktopEpSub" style="display:none;background:rgba(255,255,255,0.04);border-left:2px solid var(--border);margin:2px 8px 4px 28px;border-radius:4px">
                 <a href="#" onclick="event.preventDefault();document.getElementById('desktopEpSub').style.display='none';document.getElementById('navMoreDropdown').classList.remove('show');(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'samehadaku'})});if(r.ok)window.location.reload();})();" class="nav-more-item" id="ep-opt-samehadaku">
                   <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;display:inline-block;flex-shrink:0"></span>
                   Dayynime-v1
