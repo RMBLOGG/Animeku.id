@@ -184,16 +184,10 @@ function removeWatchlistItem(slug) {
 }
 
 function clearWatchlist() {
-  showConfirmModal(
-    'Hapus Semua Watchlist?',
-    'Semua anime di watchlist kamu akan dihapus permanen.',
-    'fas fa-heart-broken',
-    function() {
-      lsSet(WL_KEY, []);
-      showToast('Watchlist dikosongkan');
-      renderWatchlist();
-    }
-  );
+  if (!confirm('Hapus semua watchlist?')) return;
+  lsSet(WL_KEY, []);
+  showToast('Watchlist dikosongkan');
+  renderWatchlist();
 }
 
 // ── Render history ────────────────────────────────
@@ -240,17 +234,11 @@ function removeHistoryItem(epSlug) {
 }
 
 function clearHistory() {
-  showConfirmModal(
-    'Hapus Semua Riwayat?',
-    'Semua riwayat tontonan kamu akan dihapus permanen.',
-    'fas fa-history',
-    function() {
-      lsSet(HIST_KEY, []);
-      lsSet(PROG_KEY, {});
-      showToast('Riwayat dikosongkan');
-      renderHistory();
-    }
-  );
+  if (!confirm('Hapus semua riwayat?')) return;
+  lsSet(HIST_KEY, []);
+  lsSet(PROG_KEY, {});
+  showToast('Riwayat dikosongkan');
+  renderHistory();
 }
 
 // Hapus semua sesuai tab aktif
