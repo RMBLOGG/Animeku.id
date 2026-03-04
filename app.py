@@ -1682,33 +1682,55 @@ def cron_premium_reminder():
 def debug2():
     import traceback
     results = {}
+    # Test berbagai path alternatif untuk otakudesu
     endpoints = {
-        "ongoing":  "/anime/ongoing-anime",
-        "completed": "/anime/complete-anime",
-        "movies":   "/anime/movies",
-        "popular":  "/anime/popular",
-        "genres":   "/anime/genres",
+        "ongoing_v1":    "/anime/ongoing-anime",
+        "ongoing_v2":    "/anime/ongoing",
+        "completed_v1":  "/anime/complete-anime",
+        "completed_v2":  "/anime/completed",
+        "movies_v1":     "/anime/movies",
+        "movies_v2":     "/anime/movie",
+        "popular_v1":    "/anime/popular",
+        "popular_v2":    "/anime/populer",
+        "genres_v1":     "/anime/genres",
+        "genres_v2":     "/anime/genre",
+        "animelist_v1":  "/anime/list",
+        "animelist_v2":  "/anime/anime-list",
+        "search_v1":     "/anime/search?q=naruto",
     }
     for key, path in endpoints.items():
         try:
             raw = fetch(path)
             if raw is None:
-                results[key] = "None (fetch failed)"
+                results[key] = "NULL"
             elif not isinstance(raw, dict):
                 results[key] = f"type={type(raw).__name__}"
             else:
                 data = raw.get("data")
-                results[key] = {
+                info = {
                     "status": raw.get("status"),
-                    "data_type": type(data).__name__,
-                    "data_keys": list(data.keys()) if isinstance(data, dict) else (f"list[{len(data)}]" if isinstance(data, list) else str(data)[:100]),
+                    "top_keys": list(raw.keys()),
                 }
                 if isinstance(data, dict):
-                    results[key]["animeList_count"] = len(data.get("animeList", []))
-                elif isinstance(data, list) and len(data) > 0:
-                    results[key]["first_keys"] = list(data[0].keys()) if isinstance(data[0], dict) else str(data[0])[:50]
+                    info["data_keys"] = list(data.keys())
+                    info["animeList_count"] = len(data.get("animeList", []))
+                elif isinstance(data, list):
+                    info["data_type"] = f"list[{len(data)}]"
+                    if data and isinstance(data[0], dict):
+                        info["first_item_keys"] = list(data[0].keys())
+                results[key] = info
         except Exception as e:
-            results[key] = {"error": str(e), "trace": traceback.format_exc()[-300:]}
+            results[key] = {"error": str(e)[:100]}
+    
+    # Juga cek ongoing item pertama untuk lihat struktur field
+    try:
+        raw = fetch("/anime/ongoing-anime")
+        if raw and raw.get("data") and raw["data"].get("animeList"):
+            first = raw["data"]["animeList"][0]
+            results["_ongoing_first_item"] = first
+    except Exception as e:
+        results["_ongoing_first_item"] = str(e)
+    
     return jsonify(results)
 
 @app.route("/debug")
