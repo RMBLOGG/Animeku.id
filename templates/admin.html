@@ -723,6 +723,16 @@
         </div>
 
         <div style="padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:6px">🔀 Endpoint / Sumber Data</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Pilih sumber data anime. Hanya user premium yang bisa akses detail & episode saat menggunakan Animasu.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap" id="sourceButtons">
+            <button class="btn" id="src-btn-samehadaku" onclick="switchSource('samehadaku')" style="opacity:0.5">Samehadaku</button>
+            <button class="btn" id="src-btn-animasu" onclick="switchSource('animasu')" style="opacity:0.5">Animasu</button>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-top:10px">Aktif: <span id="activeSourceLabel" style="color:var(--gold);font-weight:600">—</span></div>
+        </div>
+
+        <div style="padding:14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
           <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:12px">🗑️ Hapus Semua Pesan Chat</div>
           <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Hapus seluruh riwayat pesan di live chat. Tindakan ini tidak bisa dibatalkan!</div>
           <button class="btn btn-danger" onclick="clearAllChat()">🗑️ Hapus Semua Pesan Chat</button>
@@ -1196,6 +1206,38 @@ async function loadSiteSettings() {
       if (chatEl)        chatEl.checked         = !cfg.chat_disabled;
     }
   } catch(e) { console.error("Gagal load site settings:", e); }
+  // Load active source
+  loadActiveSource();
+}
+
+async function loadActiveSource() {
+  try {
+    const res  = await fetch("/api/source");
+    const data = await res.json();
+    const lbl  = document.getElementById("activeSourceLabel");
+    if (lbl) lbl.textContent = data.label || data.active;
+    // Highlight active button
+    document.querySelectorAll("[id^='src-btn-']").forEach(b => {
+      b.style.opacity = "0.5";
+      b.style.background = "";
+    });
+    const activeBtn = document.getElementById(`src-btn-${data.active}`);
+    if (activeBtn) { activeBtn.style.opacity = "1"; activeBtn.style.background = "var(--accent)"; }
+  } catch(e) { console.error("Gagal load source:", e); }
+}
+
+async function switchSource(source) {
+  try {
+    const res  = await fetch("/api/source/switch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source })
+    });
+    const data = await res.json();
+    if (!res.ok) { toast(data.error || "Gagal ganti endpoint", "error"); return; }
+    toast(`✓ Endpoint diganti ke ${data.label}`, "success");
+    loadActiveSource();
+  } catch(e) { toast("Gagal ganti endpoint", "error"); }
 }
 
 async function _saveSiteSettings(patch) {
