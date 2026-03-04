@@ -729,10 +729,10 @@ function closeAnnouncement() {
 
       <!-- Endpoint Switcher Mobile -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
-      <a href="#" onclick="event.preventDefault();setEndpoint('samehadaku')" id="ep-mob-samehadaku">
+      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'samehadaku'})});if(r.ok)window.location.reload();})();" id="ep-mob-samehadaku">
         <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;display:inline-block;margin-right:6px;vertical-align:middle"></span>Samehadaku
       </a>
-      <a href="#" onclick="event.preventDefault();setEndpoint('animasu')" id="ep-mob-animasu">
+      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'animasu'})});if(r.ok)window.location.reload();})();" id="ep-mob-animasu">
         <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;display:inline-block;margin-right:6px;vertical-align:middle"></span>Animasu
       </a>
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -1043,32 +1043,22 @@ async function loadEndpointState() {
 }
 
 async function setEndpoint(source) {
-  // Tutup dropdown
   var dd = document.getElementById('endpointDropdown');
   if (dd) dd.style.display = 'none';
-
-  // Cek apakah user adalah admin (hanya admin bisa ganti)
-  // Kalau bukan admin, cukup ganti tampilan lokal saja (simulasi preview)
-  // tapi yang benar-benar tersimpan global hanya admin
   try {
     const r = await fetch('/api/source/switch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source })
     });
-    const d = await r.json();
     if (r.ok) {
-      _updateEndpointUI(source);
-      // Reload halaman supaya data ikut berubah
       window.location.reload();
-    } else if (r.status === 403) {
-      // Bukan admin → tampilkan notif
-      _showEndpointToast('Hanya admin yang bisa ganti endpoint global', 'error');
     } else {
-      _showEndpointToast(d.error || 'Gagal ganti endpoint', 'error');
+      const d = await r.json();
+      alert(d.error || 'Gagal ganti endpoint');
     }
   } catch(e) {
-    _showEndpointToast('Gagal koneksi ke server', 'error');
+    alert('Gagal: ' + e);
   }
 }
 
