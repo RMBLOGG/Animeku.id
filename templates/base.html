@@ -1178,5 +1178,764 @@ loadEndpointState();
 </script>
 
   {% block scripts %}{% endblock %}
+
+<!-- ── FLOATING CHAT WIDGET ──────────────────────────────────────── -->
+<style>
+/* ── Floating Button ── */
+#fchatBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e63946, #c1121f);
+  border: none;
+  cursor: pointer;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(230,57,70,0.5), 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#fchatBtn:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 8px 28px rgba(230,57,70,0.6), 0 2px 8px rgba(0,0,0,0.4);
+}
+#fchatBtn:active { transform: scale(0.96); }
+#fchatBtn svg { transition: transform 0.3s; }
+#fchatBtn.open svg { transform: rotate(90deg); }
+
+/* Unread badge */
+#fchatUnread {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 20px; height: 20px;
+  background: #ff6b6b;
+  border: 2px solid var(--bg, #090b0f);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  animation: badgePop 0.3s cubic-bezier(.22,.68,0,1.4) both;
+}
+#fchatUnread.show { display: flex; }
+@keyframes badgePop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── Chat Panel ── */
+#fchatPanel {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  height: 540px;
+  max-height: calc(100vh - 120px);
+  background: #0d0d12;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  z-index: 9989;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  transform: translateY(20px) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(.22,.68,0,1.2), opacity 0.25s ease;
+}
+#fchatPanel.open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Panel Header */
+.fc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(0,0,0,0));
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  position: relative;
+}
+.fc-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230,57,70,0.3), transparent);
+}
+.fc-header-icon {
+  width: 34px; height: 34px;
+  background: rgba(230,57,70,0.15);
+  border: 1px solid rgba(230,57,70,0.25);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.fc-header-info { flex: 1; min-width: 0; }
+.fc-header-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #e8eaf0);
+  letter-spacing: 1px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 16px;
+}
+.fc-header-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text3, #555d70);
+  font-family: "JetBrains Mono", monospace;
+  margin-top: 1px;
+}
+.fc-live-dot {
+  width: 6px; height: 6px;
+  background: var(--accent, #e63946);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent, #e63946);
+  animation: fcLivePulse 1.5s infinite;
+}
+@keyframes fcLivePulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.3; }
+}
+.fc-online-dot {
+  width: 6px; height: 6px;
+  background: #4caf7d;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #4caf7d;
+}
+.fc-close-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text3, #555d70);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.fc-close-btn:hover { color: var(--text, #e8eaf0); background: rgba(255,255,255,0.09); }
+
+/* Messages */
+.fc-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  scroll-behavior: smooth;
+}
+.fc-messages::-webkit-scrollbar { width: 3px; }
+.fc-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px; }
+
+/* Message item */
+.fc-msg {
+  display: flex;
+  gap: 7px;
+  padding: 4px 7px;
+  border-radius: 10px;
+  transition: background 0.15s;
+  animation: fcMsgIn 0.25s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes fcMsgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.fc-msg:hover { background: rgba(255,255,255,0.03); }
+.fc-msg.own { flex-direction: row-reverse; }
+.fc-msg.own .fc-msg-body { align-items: flex-end; }
+.fc-msg.own .fc-msg-meta { flex-direction: row-reverse; }
+.fc-msg.own .fc-msg-bubble {
+  background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.1));
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: 12px 12px 2px 12px;
+}
+.fc-msg:not(.own) .fc-msg-bubble {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px 12px 12px 2px;
+}
+
+.fc-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.fc-avatar-ph {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(230,57,70,0.2), rgba(80,80,100,0.3));
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2, #8b92a5);
+}
+.fc-msg-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fc-msg-meta { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.fc-msg-name { font-size: 11px; font-weight: 700; color: var(--text2, #8b92a5); }
+.fc-msg-name.is-me { color: #ff8a95; }
+.fc-msg-name.is-admin { color: #f4a261; }
+.fc-msg-time { font-size: 9px; color: var(--text3, #555d70); font-family: "JetBrains Mono", monospace; opacity: 0.6; }
+.fc-msg-bubble {
+  display: inline-block;
+  font-size: 12.5px;
+  color: var(--text, #e8eaf0);
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+  padding: 6px 10px;
+}
+.fc-admin-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 1px 5px;
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  border-radius: 3px; font-size: 8px; font-weight: 800;
+  color: #000; letter-spacing: 0.5px; margin-left: 2px;
+  vertical-align: middle;
+}
+.fc-msg-system {
+  text-align: center; font-size: 10px; color: var(--text3, #555d70);
+  padding: 4px 0; font-family: "JetBrains Mono", monospace; opacity: 0.5;
+}
+
+/* Donation msg in widget */
+.fc-donation {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; margin: 6px 0;
+  background: linear-gradient(135deg, rgba(230,57,70,0.1), rgba(255,107,107,0.04));
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: 12px;
+  animation: fcMsgIn 0.3s ease both;
+  position: relative; overflow: hidden;
+}
+.fc-donation::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230,57,70,0.4), transparent);
+}
+.fc-donation-icon { font-size: 18px; flex-shrink: 0; }
+.fc-donation-body { flex: 1; min-width: 0; }
+.fc-donation-name { font-weight: 700; font-size: 12px; color: var(--text, #e8eaf0); }
+.fc-donation-amount { font-size: 13px; font-weight: 700; color: var(--accent, #e63946); font-family: "JetBrains Mono", monospace; }
+.fc-donation-msg { font-size: 11px; color: var(--text2, #8b92a5); font-style: italic; }
+
+/* Reply bar */
+.fc-reply-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: rgba(230,57,70,0.06);
+  border-top: 1px solid rgba(230,57,70,0.12);
+  font-size: 11px;
+  color: var(--text2, #8b92a5);
+  flex-shrink: 0;
+}
+.fc-reply-bar.show { display: flex; }
+.fc-reply-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-reply-close { font-size: 16px; color: var(--text3, #555d70); cursor: pointer; padding: 1px 5px; border-radius: 4px; transition: color 0.15s; line-height: 1; }
+.fc-reply-close:hover { color: var(--text, #e8eaf0); }
+
+/* Input */
+.fc-input-wrap {
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.fc-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 9px 13px;
+  color: var(--text, #e8eaf0);
+  font-family: var(--font-body, "DM Sans", sans-serif);
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  max-height: 100px;
+  min-height: 38px;
+  line-height: 1.45;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: text; -webkit-user-select: text;
+}
+.fc-input::placeholder { color: rgba(255,255,255,0.2); }
+.fc-input:focus { border-color: rgba(230,57,70,0.4); box-shadow: 0 0 0 3px rgba(230,57,70,0.06); }
+.fc-send-btn {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e63946, #c1121f);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(230,57,70,0.35);
+}
+.fc-send-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(230,57,70,0.5); }
+.fc-send-btn:active { transform: translateY(0); }
+.fc-send-btn:disabled { opacity: 0.4; pointer-events: none; box-shadow: none; }
+
+/* Auth notice */
+.fc-auth-notice {
+  padding: 8px 14px;
+  background: rgba(230,57,70,0.05);
+  border-top: 1px solid rgba(230,57,70,0.1);
+  font-size: 11px;
+  color: var(--text3, #555d70);
+  text-align: center;
+  flex-shrink: 0;
+}
+.fc-auth-notice a { color: var(--accent, #e63946); font-weight: 600; text-decoration: none; }
+
+/* scroll to bottom */
+.fc-scroll-btn {
+  display: none;
+  position: absolute;
+  bottom: 70px; right: 12px;
+  width: 30px; height: 30px;
+  background: rgba(18,18,24,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  color: var(--text2, #8b92a5);
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+}
+.fc-scroll-btn.show { display: flex; }
+.fc-scroll-btn:hover { color: var(--text, #e8eaf0); transform: translateY(-1px); }
+
+/* Panel wrapper (relative for abs children) */
+#fchatPanelWrap { position: relative; }
+</style>
+
+<!-- Floating Button -->
+<button id="fchatBtn" onclick="fcToggle()" title="Live Chat" aria-label="Buka chat">
+  <span id="fchatUnread"></span>
+  <svg id="fchatIconChat" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+</button>
+
+<!-- Chat Panel -->
+<div id="fchatPanelWrap">
+  <div id="fchatPanel">
+    <!-- Header -->
+    <div class="fc-header">
+      <div class="fc-header-icon">💬</div>
+      <div class="fc-header-info">
+        <div class="fc-header-title">LiveChat</div>
+        <div class="fc-header-sub">
+          <div class="fc-live-dot"></div>
+          <span>LIVE</span>
+          &nbsp;·&nbsp;
+          <div class="fc-online-dot"></div>
+          <span id="fcOnlineCount">0 online</span>
+        </div>
+      </div>
+      <button class="fc-close-btn" onclick="fcToggle()" title="Tutup">✕</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="fc-messages" id="fcMessages">
+      <div class="fc-msg-system">Memuat pesan...</div>
+    </div>
+
+    <!-- Reply bar -->
+    <div class="fc-reply-bar" id="fcReplyBar">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6M3 10l6-6"/></svg>
+      <div class="fc-reply-text" id="fcReplyText">Membalas...</div>
+      <span class="fc-reply-close" onclick="fcCancelReply()">×</span>
+    </div>
+
+    <!-- Input -->
+    <div class="fc-input-wrap">
+      <textarea class="fc-input" id="fcInput" placeholder="Tulis pesan..." rows="1" maxlength="500"
+        onkeydown="fcHandleKey(event)" oninput="fcAutoResize(this)"></textarea>
+      <button class="fc-send-btn" id="fcSendBtn" onclick="fcSend()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+
+    <!-- Auth notice -->
+    <div class="fc-auth-notice" id="fcAuthNotice" style="display:none">
+      Chat sebagai anonim · <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">Login</a> untuk tampil dengan nama
+    </div>
+
+    <!-- Scroll button -->
+    <button class="fc-scroll-btn" id="fcScrollBtn" onclick="fcScrollToBottom()">↓</button>
+  </div>
+</div>
+
+<script>
+(function() {
+const SUPABASE_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+const ROOM_ID       = "global";
+const ADMIN_IDS     = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
+const MAX_MSGS      = 80;
+const HEARTBEAT_MS  = 20000;
+
+let fcUser       = null;
+let fcReplyTo    = null;
+let fcMessages   = [];
+let fcSub        = null;
+let fcHbTimer    = null;
+let fcAtBottom   = true;
+let fcUnread     = 0;
+let fcOpen       = false;
+let fcInitDone   = false;
+
+// ── Toggle ──────────────────────────────────────────
+window.fcToggle = function() {
+  fcOpen = !fcOpen;
+  const panel = document.getElementById("fchatPanel");
+  const btn   = document.getElementById("fchatBtn");
+  panel.classList.toggle("open", fcOpen);
+  btn.classList.toggle("open", fcOpen);
+  if (fcOpen) {
+    fcUnread = 0;
+    const badge = document.getElementById("fchatUnread");
+    badge.textContent = "";
+    badge.classList.remove("show");
+    fcScrollToBottom();
+    if (!fcInitDone) { fcInit(); fcInitDone = true; }
+  }
+};
+
+// ── Init ─────────────────────────────────────────────
+async function fcInit() {
+  // Auth
+  try {
+    const raw = localStorage.getItem("sb_user");
+    if (raw) {
+      const u = JSON.parse(raw);
+      fcUser = { id: u.id, name: u.name || u.email || "User", avatar: u.avatar || "", is_anon: false };
+    }
+  } catch(e) {}
+  if (!fcUser) {
+    fcUser = { id: "anon-" + Math.random().toString(36).slice(2,8), name: "Anonim", avatar: "", is_anon: true };
+    document.getElementById("fcAuthNotice").style.display = "block";
+  }
+
+  await fcLoadMessages();
+  fcSubscribe();
+  fcHeartbeat();
+  fcLoadOnline();
+  setInterval(fcLoadOnline, 30000);
+}
+
+// ── Load messages ────────────────────────────────────
+async function fcLoadMessages() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.${ROOM_ID}&order=created_at.asc&limit=${MAX_MSGS}`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
+    );
+    if (!res.ok) return;
+    const msgs = await res.json();
+    fcMessages = msgs;
+    fcRenderAll(msgs);
+    fcScrollToBottom();
+  } catch(e) {}
+}
+
+// ── Realtime subscribe ───────────────────────────────
+function fcSubscribe() {
+  try {
+    const es = new EventSource(
+      `${SUPABASE_URL}/realtime/v1/api/broadcast?apikey=${SUPABASE_ANON}`
+    );
+  } catch(e) {}
+  // Polling fallback every 5s
+  setInterval(async () => {
+    if (!fcOpen) return;
+    try {
+      const last = fcMessages.length ? fcMessages[fcMessages.length-1].created_at : new Date(0).toISOString();
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/chat_messages?room_id=eq.${ROOM_ID}&created_at=gt.${encodeURIComponent(last)}&order=created_at.asc&limit=20`,
+        { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
+      );
+      if (!res.ok) return;
+      const newMsgs = await res.json();
+      newMsgs.forEach(m => {
+        if (!fcMessages.find(x => x.id === m.id)) {
+          fcMessages.push(m);
+          fcAppend(m, true);
+          if (!fcOpen || !fcAtBottom) {
+            fcUnread++;
+            const badge = document.getElementById("fchatUnread");
+            badge.textContent = fcUnread > 9 ? "9+" : fcUnread;
+            badge.classList.add("show");
+          }
+        }
+      });
+    } catch(e) {}
+  }, 5000);
+}
+
+// ── Heartbeat (online presence) ──────────────────────
+async function fcHeartbeat() {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/online_users`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ user_id: fcUser.id, user_name: fcUser.name, user_avatar: fcUser.avatar, is_anon: fcUser.is_anon, room_id: ROOM_ID, last_seen: new Date().toISOString() })
+    });
+  } catch(e) {}
+  fcHbTimer = setTimeout(fcHeartbeat, HEARTBEAT_MS);
+}
+
+async function fcLoadOnline() {
+  try {
+    const cutoff = new Date(Date.now() - 60000).toISOString();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/online_users?room_id=eq.${ROOM_ID}&last_seen=gte.${encodeURIComponent(cutoff)}&select=user_id`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const el = document.getElementById("fcOnlineCount");
+      if (el) el.textContent = data.length + " online";
+    }
+  } catch(e) {}
+}
+
+// ── Send ─────────────────────────────────────────────
+window.fcSend = async function() {
+  const input = document.getElementById("fcInput");
+  const text  = (input.value || "").trim();
+  if (!text) return;
+  const btn = document.getElementById("fcSendBtn");
+  btn.disabled = true;
+  input.value  = "";
+  fcAutoResize(input);
+
+  const payload = {
+    room_id: ROOM_ID,
+    user_id: fcUser.id,
+    user_name: fcUser.name,
+    user_avatar: fcUser.avatar || "",
+    is_anon: fcUser.is_anon,
+    content: text,
+    is_donation: false,
+    reactions: {},
+  };
+  if (fcReplyTo) {
+    payload.reply_to_id   = fcReplyTo.id;
+    payload.reply_to_name = fcReplyTo.name;
+    payload.reply_to_text = fcReplyTo.text;
+    fcCancelReply();
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON, "Content-Type": "application/json", Prefer: "return=representation" },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const [msg] = await res.json();
+      if (!fcMessages.find(x => x.id === msg.id)) {
+        fcMessages.push(msg);
+        fcAppend(msg, true);
+        fcScrollToBottom();
+      }
+    }
+  } catch(e) {}
+  btn.disabled = false;
+  input.focus();
+};
+
+// ── Reply ─────────────────────────────────────────────
+window.fcSetReply = function(id, name, text) {
+  fcReplyTo = { id, name, text };
+  const bar = document.getElementById("fcReplyBar");
+  const txt = document.getElementById("fcReplyText");
+  txt.textContent = "↩ " + name + ": " + text.slice(0, 40);
+  bar.classList.add("show");
+  document.getElementById("fcInput").focus();
+};
+window.fcCancelReply = function() {
+  fcReplyTo = null;
+  document.getElementById("fcReplyBar").classList.remove("show");
+};
+
+// ── Render ─────────────────────────────────────────────
+function fcRenderAll(msgs) {
+  const c = document.getElementById("fcMessages");
+  c.innerHTML = "";
+  if (!msgs.length) { fcSysMsg("Belum ada pesan. Jadilah yang pertama! 🎌"); return; }
+  msgs.forEach(m => fcAppend(m, false));
+}
+
+function fcAppend(msg, animate) {
+  const c = document.getElementById("fcMessages");
+  c.querySelectorAll(".fc-msg-system").forEach(el => { if (el.textContent.includes("Memuat") || el.textContent.includes("pertama")) el.remove(); });
+
+  if (msg.is_donation) {
+    const el = document.createElement("div");
+    el.className = "fc-donation";
+    el.id = "fcmsg-" + msg.id;
+    if (!animate) el.style.animation = "none";
+    const amt = msg.amount ? "Rp " + Number(msg.amount).toLocaleString("id-ID") : "";
+    const donor = msg.donor_name || msg.user_name || "Supporter";
+    let dmsg = msg.message || "";
+    if (!dmsg && msg.content) { const m = msg.content.match(/💬 "(.+)"$/); if (m) dmsg = m[1]; }
+    el.innerHTML = `<div class="fc-donation-icon">💸</div><div class="fc-donation-body"><div class="fc-donation-name">❤️ ${fcEsc(donor)}</div>${amt ? `<div class="fc-donation-amount">${fcEsc(amt)}</div>` : ""}${dmsg ? `<div class="fc-donation-msg">"${fcEsc(dmsg)}"</div>` : ""}<div style="font-size:10px;color:var(--text3,#555d70);margin-top:2px">Makasih support Animeku.ID! 🙏</div></div>`;
+    c.appendChild(el);
+    if (fcAtBottom) fcScrollToBottom();
+    return;
+  }
+
+  const isOwn = msg.user_id === fcUser.id;
+  const wrap  = document.createElement("div");
+  wrap.className = "fc-msg" + (isOwn ? " own" : "");
+  wrap.id        = "fcmsg-" + msg.id;
+  if (!animate) wrap.style.animation = "none";
+
+  // Avatar
+  const avWrap = document.createElement("div");
+  if (msg.user_avatar && !msg.is_anon) {
+    const img = document.createElement("img"); img.src = msg.user_avatar; img.className = "fc-avatar"; img.alt = "";
+    avWrap.appendChild(img);
+  } else {
+    const ph = document.createElement("div"); ph.className = "fc-avatar-ph";
+    ph.textContent = msg.is_anon ? "#" : (msg.user_name || "?")[0].toUpperCase();
+    avWrap.appendChild(ph);
+  }
+  wrap.appendChild(avWrap);
+
+  const body = document.createElement("div"); body.className = "fc-msg-body";
+
+  // Meta
+  const meta = document.createElement("div"); meta.className = "fc-msg-meta";
+  const nameEl = document.createElement("span");
+  nameEl.className = "fc-msg-name" + (isOwn ? " is-me" : "") + (msg.is_anon ? " is-anon" : "");
+  nameEl.textContent = msg.is_anon ? (msg.user_name || "Anonim") : (msg.user_name || "User");
+  if (ADMIN_IDS.includes(msg.user_id)) {
+    nameEl.classList.add("is-admin");
+    const badge = document.createElement("span"); badge.className = "fc-admin-badge"; badge.innerHTML = "⭐ ADMIN";
+    meta.appendChild(nameEl); meta.appendChild(badge);
+  } else { meta.appendChild(nameEl); }
+  const timeEl = document.createElement("span"); timeEl.className = "fc-msg-time";
+  timeEl.textContent = fcFmtTime(msg.created_at);
+  meta.appendChild(timeEl);
+  body.appendChild(meta);
+
+  // Reply ref
+  if (msg.reply_to_id) {
+    const ref = document.createElement("div"); ref.className = "fc-reply-ref";
+    ref.style.cssText = "display:flex;align-items:center;gap:5px;padding:3px 8px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-left:2px solid rgba(230,57,70,0.4);border-radius:0 4px 4px 0;font-size:10px;color:var(--text3,#555d70);cursor:pointer;max-width:240px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;";
+    ref.textContent = "↩ " + (msg.reply_to_name || "User") + ": " + (msg.reply_to_text || "").slice(0, 40);
+    ref.onclick = () => { const t = document.getElementById("fcmsg-" + msg.reply_to_id); if (t) { t.scrollIntoView({behavior:"smooth",block:"center"}); t.style.background="rgba(230,57,70,0.07)"; setTimeout(()=>t.style.background="",1200); } };
+    body.appendChild(ref);
+  }
+
+  // Bubble
+  const bubble = document.createElement("span"); bubble.className = "fc-msg-bubble";
+  bubble.textContent = msg.content;
+  body.appendChild(bubble);
+  wrap.appendChild(body);
+
+  // Reply action on hover
+  wrap.addEventListener("mouseenter", () => {
+    if (!wrap.querySelector(".fc-reply-action")) {
+      const rb = document.createElement("button");
+      rb.className = "fc-reply-action";
+      rb.style.cssText = "background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-size:11px;color:var(--text3,#555d70);cursor:pointer;margin-top:4px;transition:all 0.15s;";
+      rb.textContent = "↩ balas";
+      rb.onmouseenter = () => rb.style.color = "var(--text,#e8eaf0)";
+      rb.onmouseleave = () => rb.style.color = "var(--text3,#555d70)";
+      rb.onclick = () => fcSetReply(msg.id, msg.user_name || "User", msg.content);
+      body.appendChild(rb);
+    }
+  });
+  wrap.addEventListener("mouseleave", () => {
+    const rb = wrap.querySelector(".fc-reply-action"); if (rb) rb.remove();
+  });
+
+  c.appendChild(wrap);
+  if (fcAtBottom) fcScrollToBottom();
+}
+
+function fcSysMsg(text) {
+  const c = document.getElementById("fcMessages");
+  const el = document.createElement("div"); el.className = "fc-msg-system"; el.textContent = text;
+  c.appendChild(el);
+}
+
+// ── Scroll ────────────────────────────────────────────
+window.fcScrollToBottom = function() {
+  const c = document.getElementById("fcMessages");
+  if (!c) return;
+  c.scrollTop = c.scrollHeight;
+  fcAtBottom = true;
+  document.getElementById("fcScrollBtn").classList.remove("show");
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const c = document.getElementById("fcMessages");
+  if (!c) return;
+  c.addEventListener("scroll", () => {
+    fcAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 60;
+    document.getElementById("fcScrollBtn").classList.toggle("show", !fcAtBottom);
+  });
+});
+
+// ── Helpers ─────────────────────────────────────────
+window.fcHandleKey = function(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); fcSend(); }
+};
+window.fcAutoResize = function(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 100) + "px";
+};
+function fcFmtTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+}
+function fcEsc(str) {
+  return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+})();
+</script>
+<!-- ── END FLOATING CHAT WIDGET ──────────────────────────────────── -->
+
 </body>
 </html>
