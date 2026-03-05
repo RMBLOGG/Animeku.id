@@ -1756,17 +1756,15 @@ def debug():
     except Exception as e:
         return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
+
 @app.route("/robots.txt")
 def robots():
-    content = "User-agent: *
-Allow: /
-Sitemap: https://animeku-id.vercel.app/sitemap.xml"
+    content = chr(10).join(["User-agent: *", "Allow: /", "Sitemap: https://animeku-id.vercel.app/sitemap.xml"])
     return Response(content, mimetype="text/plain")
 
 @app.route("/sitemap.xml")
 def sitemap():
     return send_from_directory("static", "sitemap.xml")
-
 
 if __name__ == "__main__":
     app.run(debug=True)
