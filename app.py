@@ -1758,60 +1758,15 @@ def debug():
 
 @app.route("/robots.txt")
 def robots():
-    content = "User-agent: *\nAllow: /\nSitemap: https://animeku-id.vercel.app/sitemap.xml"
+    content = "User-agent: *
+Allow: /
+Sitemap: https://animeku-id.vercel.app/sitemap.xml"
     return Response(content, mimetype="text/plain")
 
 @app.route("/sitemap.xml")
 def sitemap():
-    from datetime import date
-    today = date.today().isoformat()
+    return send_from_directory("static", "sitemap.xml")
 
-    static_pages = [
-        "/", "/anime-list", "/jadwal", "/genre",
-        "/ongoing", "/completed", "/movies", "/popular"
-    ]
-
-    urls = []
-    for page in static_pages:
-        urls.append(f"""  <url>
-    <loc>https://animeku-id.vercel.app{page}</loc>
-    <lastmod>{today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>""")
-
-    # Halaman anime dinamis
-    try:
-        source = get_active_source()
-        prefix = SOURCES[source]["prefix"]
-        data = fetch(f"{prefix}/anime-list")
-        anime_list = []
-        if data and data.get("data"):
-            raw = data["data"]
-            if isinstance(raw, list):
-                anime_list = raw
-            elif isinstance(raw, dict):
-                anime_list = raw.get("animeList", [])
-
-        for anime in anime_list:
-            slug = anime.get("animeId") or anime.get("slug", "")
-            if slug:
-                urls.append(f"""  <url>
-    <loc>https://animeku-id.vercel.app/anime/{slug}</loc>
-    <lastmod>{today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>""")
-    except Exception as e:
-        print(f"Sitemap anime error: {e}")
-
-    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-{chr(10).join(urls)}
-</urlset>"""
-    return Response(xml, mimetype="application/xml", headers={
-    "Content-Type": "application/xml; charset=utf-8"
-})
 
 if __name__ == "__main__":
     app.run(debug=True)
