@@ -1809,8 +1809,9 @@ def sitemap():
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 {chr(10).join(urls)}
 </urlset>"""
-    return Response(xml, mimetype="application/xml")
-
+    return Response(xml, mimetype="application/xml", headers={
+    "Content-Type": "application/xml; charset=utf-8"
+})
 
 if __name__ == "__main__":
     app.run(debug=True)
