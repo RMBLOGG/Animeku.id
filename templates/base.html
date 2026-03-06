@@ -1620,6 +1620,7 @@ let fcAtBottom   = true;
 let fcUnread     = 0;
 let fcOpen       = false;
 let fcInitDone   = false;
+let fcNeedLoad   = false;
 
 // ── Toggle ──────────────────────────────────────────
 window.fcToggle = function() {
@@ -1650,14 +1651,22 @@ async function fcInit() {
   } catch(e) {}
   if (!fcUser) {
     fcUser = { id: "anon-" + Math.random().toString(36).slice(2,8), name: "Anonim", avatar: "", is_anon: true };
-    document.getElementById("fcAuthNotice").style.display = "block";
+    const an = document.getElementById("fcAuthNotice"); if (an) an.style.display = "block";
   }
 
-  await fcLoadMessages();
-  fcSubscribe();
+  // Heartbeat & online count jalan langsung saat halaman load
   await fcHeartbeat();
   await fcLoadOnline();
   setInterval(fcLoadOnline, 30000);
+
+  // Load messages & subscribe polling baru jalan saat panel dibuka
+  if (fcOpen) {
+    await fcLoadMessages();
+    fcSubscribe();
+  } else {
+    // Simpan flag supaya load messages dipanggil saat panel pertama kali dibuka
+    fcNeedLoad = true;
+  }
 }
 
 // ── Load messages ────────────────────────────────────
@@ -1912,11 +1921,16 @@ window.fcScrollToBottom = function() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const c = document.getElementById("fcMessages");
-  if (!c) return;
-  c.addEventListener("scroll", () => {
-    fcAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 60;
-    document.getElementById("fcScrollBtn").classList.toggle("show", !fcAtBottom);
-  });
+  if (c) {
+    c.addEventListener("scroll", () => {
+      fcAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 60;
+      document.getElementById("fcScrollBtn").classList.toggle("show", !fcAtBottom);
+    });
+  }
+
+  // Init langsung saat halaman load — heartbeat & online count jalan dari awal
+  // tidak perlu tunggu tombol chat diklik
+  if (!fcInitDone) { fcInitDone = true; fcInit(); }
 });
 
 // ── Helpers ─────────────────────────────────────────
