@@ -1185,7 +1185,7 @@ loadEndpointState();
 #fchatBtn {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 24px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -1234,12 +1234,12 @@ loadEndpointState();
 #fchatPanel {
   position: fixed;
   bottom: 88px;
-  right: 24px;
+  left: 16px;
   width: 360px;
   max-width: calc(100vw - 32px);
   height: 540px;
   max-height: calc(100vh - 120px);
-  background: #0d0d12;
+  background: var(--bg2, #0d0d12);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 20px;
   z-index: 9989;
@@ -1366,13 +1366,13 @@ loadEndpointState();
 .fc-msg.own .fc-msg-body { align-items: flex-end; }
 .fc-msg.own .fc-msg-meta { flex-direction: row-reverse; }
 .fc-msg.own .fc-msg-bubble {
-  background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.1));
-  border: 1px solid rgba(230,57,70,0.2);
+  background: linear-gradient(135deg, rgba(230,57,70,0.35), rgba(180,20,30,0.3));
+  border: 1px solid rgba(230,57,70,0.3);
   border-radius: 12px 12px 2px 12px;
 }
 .fc-msg:not(.own) .fc-msg-bubble {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg3, #1e2030);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
   border-radius: 12px 12px 12px 2px;
 }
 
