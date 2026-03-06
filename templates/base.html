@@ -1641,7 +1641,7 @@ window.fcToggle = function() {
 
 // ── Init ─────────────────────────────────────────────
 async function fcInit() {
-  // Auth
+  // Auth — HARUS selesai dulu sebelum heartbeat
   try {
     const raw = localStorage.getItem("sb_user");
     if (raw) {
@@ -1650,21 +1650,22 @@ async function fcInit() {
     }
   } catch(e) {}
   if (!fcUser) {
-    fcUser = { id: "anon-" + Math.random().toString(36).slice(2,8), name: "Anonim", avatar: "", is_anon: true };
+    let anonId = sessionStorage.getItem("fc_anon_id");
+    if (!anonId) { anonId = "anon-" + Math.random().toString(36).slice(2,8); sessionStorage.setItem("fc_anon_id", anonId); }
+    fcUser = { id: anonId, name: "Anonim#" + anonId.slice(-4).toUpperCase(), avatar: "", is_anon: true };
     const an = document.getElementById("fcAuthNotice"); if (an) an.style.display = "block";
   }
 
-  // Heartbeat & online count jalan langsung saat halaman load
-  await fcHeartbeat();
-  await fcLoadOnline();
-  setInterval(fcLoadOnline, 30000);
+  // Heartbeat dulu (tulis kehadiran), lalu baru baca online count
+  try { await fcHeartbeat(); } catch(e) {}
+  try { await fcLoadOnline(); } catch(e) {}
+  setInterval(fcLoadOnline, 25000);
 
-  // Load messages & subscribe polling baru jalan saat panel dibuka
+  // Load messages & polling — jalan saat panel dibuka
   if (fcOpen) {
     await fcLoadMessages();
     fcSubscribe();
   } else {
-    // Simpan flag supaya load messages dipanggil saat panel pertama kali dibuka
     fcNeedLoad = true;
   }
 }
