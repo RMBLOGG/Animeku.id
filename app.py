@@ -1759,5 +1759,26 @@ def debug():
 
 
 
+
+@app.route("/sitemap.xml")
+def sitemap():
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://animeku-id.vercel.app/</loc><lastmod>2026-03-06</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://animeku-id.vercel.app/anime-list</loc><lastmod>2026-03-06</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://animeku-id.vercel.app/ongoing</loc><lastmod>2026-03-06</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://animeku-id.vercel.app/completed</loc><lastmod>2026-03-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://animeku-id.vercel.app/movies</loc><lastmod>2026-03-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://animeku-id.vercel.app/popular</loc><lastmod>2026-03-06</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://animeku-id.vercel.app/genre</loc><lastmod>2026-03-06</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://animeku-id.vercel.app/jadwal</loc><lastmod>2026-03-06</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>"""
+    return Response(xml, mimetype="application/xml")
+
+@app.route("/robots.txt")
+def robots():
+    content = "User-agent: *\nAllow: /\nSitemap: https://animeku-id.vercel.app/sitemap.xml"
+    return Response(content, mimetype="text/plain")
+
 if __name__ == "__main__":
     app.run(debug=True)
