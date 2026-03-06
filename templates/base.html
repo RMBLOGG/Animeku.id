@@ -1634,8 +1634,16 @@ window.fcToggle = function() {
     const badge = document.getElementById("fchatUnread");
     badge.textContent = "";
     badge.classList.remove("show");
-    fcScrollToBottom();
-    if (!fcInitDone) { fcInit(); fcInitDone = true; }
+    // Load pesan saat panel pertama kali dibuka
+    if (fcNeedLoad) {
+      fcNeedLoad = false;
+      fcLoadMessages().then(() => {
+        fcScrollToBottom();
+        fcSubscribe();
+      });
+    } else {
+      setTimeout(fcScrollToBottom, 50);
+    }
   }
 };
 
