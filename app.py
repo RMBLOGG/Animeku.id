@@ -1766,5 +1766,217 @@ def robots():
     return send_from_directory("static", "robots.txt", mimetype="text/plain")
 
 
+
+# ── DONGHUA ROUTES ─────────────────────────────────────────────────────────────
+DONGHUA_PREFIX = "/anime/donghua"
+
+def fetch_donghua(path, params=None):
+    """Fetch dari donghua API — cache key pakai prefix donghua terpisah."""
+    key      = f"animeku:donghua:" + path + str(sorted(params.items()) if params else "")
+    lock_key = key + ":lock"
+    import json, random, time
+    try:
+        cached = redis.get(key)
+        if cached:
+            return json.loads(cached)
+    except Exception as e:
+        print(f"Redis get error (donghua): {e}")
+
+    lock_acquired = False
+    try:
+        lock_acquired = redis.set(lock_key, "1", nx=True, ex=10)
+    except Exception as e:
+        print(f"Redis lock error (donghua): {e}")
+
+    if lock_acquired:
+        try:
+            url  = f"{API_BASE}{path}"
+            resp = requests.get(url, params=params, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+            ttl  = _ttl(path)
+            try:
+                redis.set(key, json.dumps(data), ex=ttl)
+            except Exception as e:
+                print(f"Redis set error (donghua): {e}")
+            return data
+        except Exception as e:
+            print(f"Fetch error (donghua) {path}: {e}")
+            return None
+        finally:
+            try:
+                redis.delete(lock_key)
+            except Exception:
+                pass
+    else:
+        # Tunggu worker lain selesai
+        for _ in range(10):
+            time.sleep(0.3)
+            try:
+                cached = redis.get(key)
+                if cached:
+                    return json.loads(cached)
+            except Exception:
+                pass
+        return None
+
+
+@app.route("/donghua")
+@app.route("/donghua/")
+def donghua_home():
+    page = request.args.get("page", 1, type=int)
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/home/{page}")
+    data = None
+    if raw and raw.get("status") == "success":
+        data = {
+            "latest":    raw.get("latest_release", []),
+            "completed": raw.get("completed_donghua", []),
+        }
+    return render_template("donghua.html", data=data, page=page, section="home")
+
+
+@app.route("/donghua/ongoing")
+def donghua_ongoing():
+    page = request.args.get("page", 1, type=int)
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/ongoing/{page}")
+    items = []
+    if raw and raw.get("status") == "success":
+        items = raw.get("ongoing_donghua", [])
+    return render_template("donghua.html", data={"items": items}, page=page, section="ongoing")
+
+
+@app.route("/donghua/completed")
+def donghua_completed():
+    page = request.args.get("page", 1, type=int)
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/completed/{page}")
+    items = []
+    if raw and raw.get("status") == "success":
+        items = raw.get("completed_donghua", [])
+    return render_template("donghua.html", data={"items": items}, page=page, section="completed")
+
+
+@app.route("/donghua/jadwal")
+def donghua_schedule():
+    raw   = fetch_donghua(f"{DONGHUA_PREFIX}/schedule")
+    sched = []
+    if raw and raw.get("status") == "success":
+        sched = raw.get("schedule", [])
+    return render_template("donghua.html", data={"schedule": sched}, page=1, section="schedule")
+
+
+@app.route("/donghua/search")
+def donghua_search():
+    q    = request.args.get("q", "").strip()
+    page = request.args.get("page", 1, type=int)
+    items = []
+    if q:
+        raw = fetch_donghua(f"{DONGHUA_PREFIX}/search/{q}/{page}")
+        if raw and raw.get("status") == "success":
+            items = raw.get("data", [])
+    return render_template("donghua.html", data={"items": items, "query": q}, page=page, section="search")
+
+
+@app.route("/donghua/genres")
+def donghua_genres():
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres")
+    genres = []
+    if raw and raw.get("status") == "success":
+        genres = raw.get("data", [])
+        # Filter hanya genre konten (bukan studio/tahun)
+        CONTENT_GENRES = {
+            "action","adventure","comedy","drama","ecchi","fantasy","game",
+            "historical","horror","josei","kids","magic","martial-arts","mecha",
+            "military","music","mystery","psychological","romance","school",
+            "sci-fi","seinen","shoujo","shounen","slice-of-life","space",
+            "sports","super-power","supernatural","thriller","vampire","wuxia",
+            "xianxia","xuanhuan","isekai","cultivation"
+        }
+        genres = [g for g in genres if any(k in g.get("slug","").lower() for k in CONTENT_GENRES)
+                  or not any(c.isdigit() for c in g.get("slug",""))]
+    return render_template("donghua.html", data={"genres": genres}, page=1, section="genres")
+
+
+@app.route("/donghua/genre/<slug>")
+def donghua_genre(slug):
+    page = request.args.get("page", 1, type=int)
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres/{slug}/{page}")
+    items = []
+    if raw and raw.get("status") == "success":
+        items = raw.get("data", [])
+    return render_template("donghua.html", data={"items": items, "genre_slug": slug}, page=page, section="genre")
+
+
+@app.route("/donghua/anime/<slug>")
+def donghua_detail(slug):
+    raw  = fetch_donghua(f"{DONGHUA_PREFIX}/detail/{slug}")
+    data = None
+    if raw and raw.get("status") == "success":
+        d = raw
+        data = {
+            "title":          d.get("title", ""),
+            "alter_title":    d.get("alter_title", ""),
+            "poster":         d.get("poster", ""),
+            "rating":         d.get("rating", ""),
+            "status":         d.get("status", ""),
+            "studio":         d.get("studio", ""),
+            "network":        d.get("network", ""),
+            "released":       d.get("released", ""),
+            "duration":       d.get("duration", ""),
+            "type":           d.get("type", ""),
+            "episodes_count": d.get("episodes_count", ""),
+            "season":         d.get("season", ""),
+            "country":        d.get("country", ""),
+            "released_on":    d.get("released_on", ""),
+            "updated_on":     d.get("updated_on", ""),
+            "genres":         d.get("genres", []),
+            "synopsis":       d.get("synopsis", ""),
+            "episodes":       d.get("episodes_list", []),
+        }
+    return render_template("donghua_detail.html", data=data, slug=slug)
+
+
+@app.route("/donghua/episode/<slug>")
+def donghua_episode(slug):
+    raw       = fetch_donghua(f"{DONGHUA_PREFIX}/episode/{slug}")
+    data      = None
+    anime_slug = request.args.get("anime", "")
+
+    if raw and raw.get("status") == "success":
+        streaming = raw.get("streaming", {})
+        downloads = raw.get("download_url", {})
+        nav       = raw.get("navigation", {})
+        details   = raw.get("donghua_details", {})
+
+        # Kumpulkan semua server streaming
+        servers = streaming.get("servers", [])
+        main_url = streaming.get("main_url", "")
+
+        # Flatten download links
+        dl_links = []
+        for quality, providers in downloads.items():
+            if isinstance(providers, dict):
+                for provider, url in providers.items():
+                    if url:
+                        dl_links.append({"quality": quality, "provider": provider, "url": url})
+            elif isinstance(providers, str) and providers:
+                dl_links.append({"quality": quality, "provider": "Direct", "url": providers})
+
+        data = {
+            "title":    raw.get("title", ""),
+            "main_url": main_url,
+            "servers":  servers,
+            "downloads": dl_links,
+            "prev":     nav.get("previous_episode"),
+            "next":     nav.get("next_episode"),
+            "all_eps":  nav.get("all_episodes", []),
+            "anime":    details,
+        }
+
+        if not anime_slug and details.get("slug"):
+            anime_slug = details["slug"]
+
+    return render_template("donghua_episode.html", data=data, slug=slug, anime_slug=anime_slug)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
