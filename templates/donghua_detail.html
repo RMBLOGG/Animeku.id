@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}{{ data.title if data else "Detail" }} — Donghua — Animeku.id{% endblock %}
+
+{% block content %}
+<style>
+.dh-detail-wrap {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 20px 60px;
+}
+.dh-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text3);
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+.dh-back:hover { color: var(--text); }
+.dh-detail-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .dh-detail-grid { grid-template-columns: 1fr; }
+}
+.dh-poster-wrap { position: relative; }
+.dh-poster {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: block;
+}
+.dh-status-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+}
+.dh-status-badge.ongoing { background: rgba(76,175,125,0.9); color: #fff; }
+.dh-status-badge.completed { background: rgba(96,165,250,0.9); color: #fff; }
+.dh-status-badge.hiatus { background: rgba(251,191,36,0.9); color: #000; }
+.dh-info-title {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: clamp(22px, 4vw, 34px);
+  letter-spacing: 2px;
+  color: var(--text);
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+.dh-info-alt {
+  font-size: 13px;
+  color: var(--text3);
+  margin: 0 0 14px;
+}
+.dh-info-badge { display: inline-flex; align-items: center; gap: 5px; }
+.dh-info-badge .dh-tag {
+  font-size: 10px; padding: 3px 8px; border-radius: 5px; font-weight: 700;
+  font-family: var(--font-mono, monospace); border: 1px solid;
+}
+.dh-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+  margin: 16px 0 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.dh-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.dh-meta-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono, monospace); }
+.dh-meta-value { font-size: 13px; color: var(--text); font-weight: 500; }
+.dh-genres-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.dh-genre-pill {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(220,38,38,0.1);
+  border: 1px solid rgba(220,38,38,0.25);
+  color: #f87171;
+  text-decoration: none;
+  transition: var(--trans);
+}
+.dh-genre-pill:hover { background: rgba(220,38,38,0.2); }
+.dh-synopsis {
+  font-size: 14px;
+  color: var(--text2, var(--text));
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+.dh-section-title {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dh-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.dh-eps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.dh-eps-grid::-webkit-scrollbar { width: 4px; }
+.dh-eps-grid::-webkit-scrollbar-track { background: transparent; }
+.dh-eps-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+.dh-ep-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  transition: var(--trans);
+}
+.dh-ep-link:hover {
+  border-color: rgba(220,38,38,0.4);
+  background: rgba(220,38,38,0.06);
+  color: #f87171;
+}
+.dh-ep-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+.dh-not-found {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text3);
+}
+</style>
+
+<div class="dh-detail-wrap">
+  <a href="/donghua" class="dh-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+    Kembali ke Donghua
+  </a>
+
+  {% if data %}
+  <div class="dh-detail-grid">
+    <!-- Poster -->
+    <div class="dh-poster-wrap">
+      <img class="dh-poster" src="{{ data.poster }}" alt="{{ data.title }}" onerror="this.src='/static/img/placeholder.webp'">
+      {% if data.status %}
+      <div class="dh-status-badge {{ data.status | lower }}">{{ data.status }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div>
+      <h1 class="dh-info-title">{{ data.title }}</h1>
+      {% if data.alter_title %}
+      <div class="dh-info-alt">{{ data.alter_title }}</div>
+      {% endif %}
+
+      <!-- Rating -->
+      {% if data.rating %}
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span style="font-size:15px;font-weight:700;color:#fbbf24">{{ data.rating }}</span>
+        <span style="font-size:12px;color:var(--text3)">/ 10</span>
+      </div>
+      {% endif %}
+
+      <!-- Meta -->
+      <div class="dh-meta-grid">
+        {% if data.type %}<div class="dh-meta-item"><span class="dh-meta-label">Type</span><span class="dh-meta-value">{{ data.type }}</span></div>{% endif %}
+        {% if data.episodes_count %}<div class="dh-meta-item"><span class="dh-meta-label">Episodes</span><span class="dh-meta-value">{{ data.episodes_count }}</span></div>{% endif %}
+        {% if data.released %}<div class="dh-meta-item"><span class="dh-meta-label">Released</span><span class="dh-meta-value">{{ data.released }}</span></div>{% endif %}
+        {% if data.duration %}<div class="dh-meta-item"><span class="dh-meta-label">Duration</span><span class="dh-meta-value">{{ data.duration }}</span></div>{% endif %}
+        {% if data.studio %}<div class="dh-meta-item"><span class="dh-meta-label">Studio</span><span class="dh-meta-value">{{ data.studio }}</span></div>{% endif %}
+        {% if data.season %}<div class="dh-meta-item"><span class="dh-meta-label">Season</span><span class="dh-meta-value">{{ data.season }}</span></div>{% endif %}
+        {% if data.country %}<div class="dh-meta-item"><span class="dh-meta-label">Country</span><span class="dh-meta-value">{{ data.country }}</span></div>{% endif %}
+        {% if data.network %}<div class="dh-meta-item"><span class="dh-meta-label">Network</span><span class="dh-meta-value">{{ data.network }}</span></div>{% endif %}
+      </div>
+
+      <!-- Genres -->
+      {% if data.genres %}
+      <div class="dh-genres-list">
+        {% for g in data.genres %}
+        <a href="/donghua/genre/{{ g | lower | replace(' ', '-') }}" class="dh-genre-pill">{{ g }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Synopsis -->
+      {% if data.synopsis %}
+      <div class="dh-synopsis">{{ data.synopsis }}</div>
+      {% endif %}
+
+      <!-- Episodes -->
+      {% if data.episodes %}
+      <h3 class="dh-section-title">Daftar Episode</h3>
+      <div class="dh-eps-grid">
+        {% for ep in data.episodes %}
+        <a href="/donghua/episode/{{ ep.slug }}{% if slug %}?anime={{ slug }}{% endif %}" class="dh-ep-link">
+          <span class="dh-ep-num">EP</span>
+          <span>{{ ep.title | replace("Subtitle Indonesia", "") | replace("Sub Indo", "") | truncate(40, true, '...') }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% else %}
+  <div class="dh-not-found">
+    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="margin-bottom:12px;opacity:.25"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p style="font-size:16px;font-weight:600">Data tidak ditemukan</p>
+    <p style="font-size:13px;margin-top:6px">Coba kembali ke <a href="/donghua" style="color:#dc2626">halaman Donghua</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

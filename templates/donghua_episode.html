@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}{{ data.title if data else "Episode" }} — Donghua — Animeku.id{% endblock %}
+
+{% block content %}
+<style>
+.dh-ep-wrap {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 20px 60px;
+}
+.dh-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text3);
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: color 0.2s;
+}
+.dh-back:hover { color: var(--text); }
+.dh-ep-title {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: clamp(18px, 3.5vw, 28px);
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 0 0 20px;
+  line-height: 1.2;
+}
+/* Player */
+.dh-player-box {
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  position: relative;
+}
+.dh-iframe {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: none;
+  display: block;
+}
+.dh-player-placeholder {
+  width: 100%;
+  aspect-ratio: 16/9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  color: var(--text3);
+  gap: 12px;
+}
+.dh-player-placeholder svg { opacity: 0.2; }
+.dh-player-placeholder p { font-size: 13px; }
+
+/* Server tabs */
+.dh-server-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.dh-server-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 10px;
+}
+.dh-server-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.dh-srv-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg, transparent);
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--trans);
+}
+.dh-srv-btn:hover, .dh-srv-btn.active {
+  background: rgba(220,38,38,0.15);
+  border-color: rgba(220,38,38,0.5);
+  color: #f87171;
+}
+
+/* Navigation */
+.dh-nav-btns {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.dh-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: var(--trans);
+}
+.dh-nav-btn:hover {
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.4);
+  color: #f87171;
+}
+
+/* Download */
+.dh-dl-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.dh-dl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 10px;
+}
+.dh-dl-group { margin-bottom: 10px; }
+.dh-dl-quality {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-family: var(--font-mono, monospace);
+}
+.dh-dl-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.25);
+  color: #60a5fa;
+  transition: var(--trans);
+}
+.dh-dl-btn:hover { background: rgba(96,165,250,0.2); }
+
+/* Eps sidebar */
+.dh-ep-layout { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
+@media (max-width: 768px) { .dh-ep-layout { grid-template-columns: 1fr; } }
+.dh-eps-sidebar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: sticky;
+  top: 80px;
+}
+.dh-eps-sbar-hd {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.dh-eps-sbar-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.dh-eps-sbar-list::-webkit-scrollbar { width: 4px; }
+.dh-eps-sbar-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+.dh-eps-sbar-item {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dh-eps-sbar-item:hover { background: rgba(255,255,255,0.05); }
+.dh-eps-sbar-item.active { background: rgba(220,38,38,0.12); color: #f87171; font-weight: 700; }
+</style>
+
+<div class="dh-ep-wrap">
+  <a href="{% if data and data.anime and data.anime.slug %}/donghua/anime/{{ data.anime.slug }}{% elif anime_slug %}/donghua/anime/{{ anime_slug }}{% else %}/donghua{% endif %}" class="dh-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+    Kembali
+  </a>
+
+  {% if data %}
+  <h1 class="dh-ep-title">
+    {{ data.title | replace("Subtitle Indonesia", "") | replace("Sub Indo", "") }}
+  </h1>
+
+  <div class="dh-ep-layout">
+    <!-- Kolom kiri: player + server + download + nav -->
+    <div>
+      <!-- Player -->
+      <div class="dh-player-box" id="playerBox">
+        {% if data.main_url %}
+        <iframe class="dh-iframe" id="mainFrame" src="{{ data.main_url }}" allowfullscreen scrolling="no" allow="autoplay; encrypted-media"></iframe>
+        {% else %}
+        <div class="dh-player-placeholder">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <p>Pilih server untuk mulai menonton</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Server buttons -->
+      {% if data.servers %}
+      <div class="dh-server-section">
+        <div class="dh-server-label">Server Streaming</div>
+        <div class="dh-server-btns" id="serverBtns">
+          {% if data.main_url %}
+          <button class="dh-srv-btn active" onclick="loadServer('{{ data.main_url }}', this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Default
+          </button>
+          {% endif %}
+          {% for srv in data.servers %}
+          {% if srv.url %}
+          <button class="dh-srv-btn" onclick="loadServer('{{ srv.url }}', this)">
+            {{ srv.name }}
+          </button>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Navigation -->
+      <div class="dh-nav-btns">
+        {% if data.prev %}
+        <a href="/donghua/episode/{{ data.prev.slug if data.prev.slug else data.prev }}" class="dh-nav-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+          Episode Sebelumnya
+        </a>
+        {% endif %}
+        {% if data.next %}
+        <a href="/donghua/episode/{{ data.next.slug if data.next.slug else data.next }}" class="dh-nav-btn" style="margin-left:auto">
+          Episode Berikutnya
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M14 6l6 6-6 6"/></svg>
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Downloads -->
+      {% if data.downloads %}
+      <div class="dh-dl-section">
+        <div class="dh-dl-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </div>
+        {% set ns = namespace(cur_quality='') %}
+        {% for dl in data.downloads %}
+          {% if dl.quality != ns.cur_quality %}
+            {% if ns.cur_quality != '' %}</div></div>{% endif %}
+            {% set ns.cur_quality = dl.quality %}
+            <div class="dh-dl-group">
+            <div class="dh-dl-quality">{{ dl.quality }}</div>
+            <div class="dh-dl-links">
+          {% endif %}
+          <a href="{{ dl.url }}" target="_blank" rel="noopener" class="dh-dl-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            {{ dl.provider }}
+          </a>
+        {% endfor %}
+        {% if data.downloads %}</div></div>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar: episode list -->
+    {% if data.all_eps or (data.anime and data.anime.episodes_list) %}
+    <div class="dh-eps-sidebar">
+      <div class="dh-eps-sbar-hd">Daftar Episode</div>
+      <div class="dh-eps-sbar-list">
+        {% set ep_list = data.all_eps if data.all_eps else data.anime.episodes_list %}
+        {% for ep in ep_list %}
+        <a href="/donghua/episode/{{ ep.slug if ep.slug else ep }}"
+           class="dh-eps-sbar-item {% if (ep.slug if ep.slug else ep) == slug %}active{% endif %}">
+          {{ (ep.title if ep.title else ep) | replace("Subtitle Indonesia", "") | replace("Sub Indo", "") | truncate(50, true, '...') }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div style="text-align:center;padding:80px 20px;color:var(--text3)">
+    <p style="font-size:15px">Episode tidak ditemukan atau sedang tidak tersedia.</p>
+    <a href="/donghua" style="color:#dc2626;font-size:13px;display:inline-block;margin-top:10px">← Kembali ke Donghua</a>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function loadServer(url, btn) {
+  if (!url) return;
+  document.getElementById('playerBox').innerHTML =
+    '<iframe class="dh-iframe" src="' + url + '" allowfullscreen scrolling="no" allow="autoplay; encrypted-media"></iframe>';
+  document.querySelectorAll('.dh-srv-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+{% endblock %}

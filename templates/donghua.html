@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if section == "home" %}Donghua — Animeku.id
+  {% elif section == "ongoing" %}Donghua Ongoing — Animeku.id
+  {% elif section == "completed" %}Donghua Completed — Animeku.id
+  {% elif section == "schedule" %}Jadwal Donghua — Animeku.id
+  {% elif section == "search" %}Cari Donghua — Animeku.id
+  {% elif section == "genres" %}Genre Donghua — Animeku.id
+  {% elif section == "genre" %}Genre {{ data.genre_slug }} — Donghua
+  {% else %}Donghua — Animeku.id{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+.dh-hero {
+  background: linear-gradient(135deg, rgba(220,38,38,0.12) 0%, rgba(251,146,60,0.08) 50%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 0 20px;
+  margin-bottom: 28px;
+}
+.dh-hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.dh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #dc2626, #f97316);
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+}
+.dh-title-group { flex: 1; }
+.dh-title-group h1 {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: clamp(26px, 5vw, 38px);
+  letter-spacing: 3px;
+  color: var(--text);
+  line-height: 1;
+  margin: 0 0 4px;
+}
+.dh-title-group p {
+  font-size: 13px;
+  color: var(--text3);
+  margin: 0;
+}
+.dh-nav {
+  max-width: 1200px;
+  margin: 0 auto 28px;
+  padding: 0 20px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.dh-nav a {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.dh-nav a:hover, .dh-nav a.active {
+  color: var(--text);
+  background: rgba(220,38,38,0.12);
+  border-color: rgba(220,38,38,0.4);
+}
+.dh-search-bar {
+  max-width: 1200px;
+  margin: 0 auto 28px;
+  padding: 0 20px;
+}
+.dh-search-bar form {
+  display: flex;
+  gap: 8px;
+}
+.dh-search-bar input {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.dh-search-bar input:focus { border-color: #dc2626; }
+.dh-search-bar button {
+  padding: 10px 20px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.dh-search-bar button:hover { background: #b91c1c; }
+.dh-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+.dh-section-title {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dh-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.dh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 36px;
+}
+@media (max-width: 480px) {
+  .dh-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+}
+.dh-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  transition: var(--trans);
+  position: relative;
+}
+.dh-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(220,38,38,0.5);
+  box-shadow: 0 8px 24px rgba(220,38,38,0.15);
+}
+.dh-card-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  background: var(--border);
+}
+.dh-card-body {
+  padding: 10px;
+}
+.dh-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dh-card-meta {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.dh-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  background: rgba(220,38,38,0.12);
+  color: #f87171;
+  border: 1px solid rgba(220,38,38,0.2);
+}
+.dh-tag.ongoing { background: rgba(76,175,125,0.12); color: #4caf7d; border-color: rgba(76,175,125,0.2); }
+.dh-tag.completed { background: rgba(96,165,250,0.12); color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+.dh-tag.ep { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.2); }
+.dh-ep-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-family: var(--font-mono, monospace);
+}
+/* Schedule */
+.dh-sched-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.dh-sched-day {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.dh-sched-day-hd {
+  padding: 12px 16px;
+  background: rgba(220,38,38,0.1);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dh-sched-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.dh-sched-item:last-child { border-bottom: none; }
+.dh-sched-item:hover { background: rgba(255,255,255,0.03); }
+.dh-sched-img { width: 40px; height: 56px; object-fit: cover; border-radius: 5px; flex-shrink: 0; background: var(--border); }
+.dh-sched-info { flex: 1; min-width: 0; }
+.dh-sched-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dh-sched-ep { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.dh-sched-time { font-size: 11px; color: #fbbf24; font-family: var(--font-mono, monospace); flex-shrink: 0; }
+/* Genres */
+.dh-genres-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.dh-genre-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: var(--trans);
+}
+.dh-genre-card:hover {
+  border-color: rgba(220,38,38,0.4);
+  background: rgba(220,38,38,0.06);
+  color: #f87171;
+  transform: translateY(-2px);
+}
+/* Empty state */
+.dh-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text3);
+}
+.dh-empty svg { margin-bottom: 12px; opacity: 0.3; }
+.dh-empty p { font-size: 14px; }
+/* Pagination */
+.dh-pager {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+.dh-pager a, .dh-pager span {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  transition: var(--trans);
+}
+.dh-pager a:hover { border-color: rgba(220,38,38,0.4); color: #f87171; }
+.dh-pager span.current { background: #dc2626; border-color: #dc2626; color: #fff; }
+</style>
+
+<!-- Hero -->
+<div class="dh-hero">
+  <div class="dh-hero-inner">
+    <div>
+      <div class="dh-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        CHINESE ANIMATION
+      </div>
+    </div>
+    <div class="dh-title-group">
+      <h1>DONGHUA</h1>
+      <p>Animasi China — Sub Indonesia</p>
+    </div>
+  </div>
+</div>
+
+<!-- Nav Tabs -->
+<div class="dh-nav">
+  <a href="/donghua" class="{% if section == 'home' %}active{% endif %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a href="/donghua/ongoing" class="{% if section == 'ongoing' %}active{% endif %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Ongoing
+  </a>
+  <a href="/donghua/completed" class="{% if section == 'completed' %}active{% endif %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg>
+    Completed
+  </a>
+  <a href="/donghua/jadwal" class="{% if section == 'schedule' %}active{% endif %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Jadwal
+  </a>
+  <a href="/donghua/genres" class="{% if section == 'genres' or section == 'genre' %}active{% endif %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px"><path d="M4 6h16M4 12h8M4 18h4"/></svg>
+    Genre
+  </a>
+</div>
+
+<!-- Search bar -->
+<div class="dh-search-bar">
+  <form action="/donghua/search" method="get">
+    <input type="text" name="q" placeholder="Cari donghua..." value="{{ data.query if data and data.query else '' }}" autocomplete="off">
+    <button type="submit">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+  </form>
+</div>
+
+<!-- Content -->
+<div class="dh-container">
+
+  {# ── HOME ── #}
+  {% if section == "home" %}
+    {% if data and data.latest %}
+      <h2 class="dh-section-title">Update Terbaru</h2>
+      <div class="dh-grid">
+        {% for item in data.latest %}
+        <a href="/donghua/episode/{{ item.slug }}" class="dh-card">
+          <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
+          {% if item.current_episode %}
+          <div class="dh-ep-badge">{{ item.current_episode }}</div>
+          {% endif %}
+          <div class="dh-card-body">
+            <div class="dh-card-title">{{ item.title | replace(" Subtitle Indonesia", "") | replace(" Sub Indo", "") }}</div>
+            <div class="dh-card-meta">
+              <span class="dh-tag {{ item.status | lower }}">{{ item.status }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if data and data.completed %}
+      <h2 class="dh-section-title">Completed</h2>
+      <div class="dh-grid">
+        {% for item in data.completed %}
+        <a href="/donghua/anime/{{ item.slug }}" class="dh-card">
+          <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
+          <div class="dh-card-body">
+            <div class="dh-card-title">{{ item.title }}</div>
+            <div class="dh-card-meta">
+              <span class="dh-tag completed">Completed</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if not data %}
+      <div class="dh-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>Gagal memuat data. Coba lagi nanti.</p>
+      </div>
+    {% endif %}
+
+  {# ── ONGOING / COMPLETED / SEARCH / GENRE ── #}
+  {% elif section in ["ongoing", "completed", "search", "genre"] %}
+    {% if section == "search" and data.query %}
+      <h2 class="dh-section-title">Hasil: "{{ data.query }}"</h2>
+    {% elif section == "genre" %}
+      <h2 class="dh-section-title">Genre: {{ data.genre_slug | replace("-", " ") | title }}</h2>
+    {% elif section == "ongoing" %}
+      <h2 class="dh-section-title">Ongoing Donghua</h2>
+    {% elif section == "completed" %}
+      <h2 class="dh-section-title">Completed Donghua</h2>
+    {% endif %}
+
+    {% if data and data.items %}
+      <div class="dh-grid">
+        {% for item in data.items %}
+        <a href="{% if item.get('type','') == 'episode' or 'episode' in item.get('slug','') %}/donghua/episode/{{ item.slug }}{% else %}/donghua/anime/{{ item.slug }}{% endif %}" class="dh-card">
+          <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
+          <div class="dh-card-body">
+            <div class="dh-card-title">{{ item.title }}</div>
+            <div class="dh-card-meta">
+              {% if item.status %}<span class="dh-tag {{ item.status | lower }}">{{ item.status }}</span>{% endif %}
+              {% if item.type and item.type != item.status %}<span class="dh-tag">{{ item.type }}</span>{% endif %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      <!-- Pagination -->
+      <div class="dh-pager">
+        {% if page > 1 %}
+          <a href="?{% if data.query %}q={{ data.query }}&{% endif %}{% if data.genre_slug %}{% endif %}page={{ page - 1 }}">← Prev</a>
+        {% endif %}
+        <span class="current">{{ page }}</span>
+        <a href="?{% if data.query %}q={{ data.query }}&{% endif %}page={{ page + 1 }}">Next →</a>
+      </div>
+    {% else %}
+      <div class="dh-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <p>{% if section == "search" and not data.query %}Masukkan kata kunci untuk mencari.{% else %}Tidak ada hasil ditemukan.{% endif %}</p>
+      </div>
+    {% endif %}
+
+  {# ── SCHEDULE ── #}
+  {% elif section == "schedule" %}
+    <h2 class="dh-section-title">Jadwal Tayang Donghua</h2>
+    {% if data and data.schedule %}
+      <div class="dh-sched-grid">
+        {% for day in data.schedule %}
+        <div class="dh-sched-day">
+          <div class="dh-sched-day-hd">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {{ day.day }}
+          </div>
+          {% for item in day.donghua_list %}
+          <a href="/donghua/episode/{{ item.slug }}" class="dh-sched-item">
+            <img class="dh-sched-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
+            <div class="dh-sched-info">
+              <div class="dh-sched-name">{{ item.title }}</div>
+              <div class="dh-sched-ep">Ep {{ item.episode }}</div>
+            </div>
+            {% if item.release_time %}
+            <div class="dh-sched-time">{{ item.release_time }}</div>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="dh-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <p>Jadwal tidak tersedia saat ini.</p>
+      </div>
+    {% endif %}
+
+  {# ── GENRES ── #}
+  {% elif section == "genres" %}
+    <h2 class="dh-section-title">Semua Genre</h2>
+    {% if data and data.genres %}
+      <div class="dh-genres-grid">
+        {% for g in data.genres %}
+        <a href="/donghua/genre/{{ g.slug }}" class="dh-genre-card">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;flex-shrink:0"><path d="M7 7h10M7 12h6M7 17h4"/></svg>
+          {{ g.name }}
+        </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="dh-empty">
+        <p>Genre tidak tersedia.</p>
+      </div>
+    {% endif %}
+
+  {% endif %}
+
+</div>
+{% endblock %}
