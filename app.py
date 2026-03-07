@@ -1821,8 +1821,8 @@ def fetch_donghua(path, params=None):
         return None
 
 
-@app.route("/donghua")
-@app.route("/donghua/")
+@app.route("/donghua", strict_slashes=False)
+@app.route("/donghua/", strict_slashes=False)
 def donghua_home():
     page = request.args.get("page", 1, type=int)
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/home/{page}")
@@ -1835,7 +1835,7 @@ def donghua_home():
     return render_template("donghua.html", data=data, page=page, section="home")
 
 
-@app.route("/donghua/ongoing")
+@app.route("/donghua/ongoing", strict_slashes=False)
 def donghua_ongoing():
     page = request.args.get("page", 1, type=int)
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/ongoing/{page}")
@@ -1845,7 +1845,7 @@ def donghua_ongoing():
     return render_template("donghua.html", data={"items": items}, page=page, section="ongoing")
 
 
-@app.route("/donghua/completed")
+@app.route("/donghua/completed", strict_slashes=False)
 def donghua_completed():
     page = request.args.get("page", 1, type=int)
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/completed/{page}")
@@ -1855,7 +1855,7 @@ def donghua_completed():
     return render_template("donghua.html", data={"items": items}, page=page, section="completed")
 
 
-@app.route("/donghua/jadwal")
+@app.route("/donghua/jadwal", strict_slashes=False)
 def donghua_schedule():
     raw   = fetch_donghua(f"{DONGHUA_PREFIX}/schedule")
     sched = []
@@ -1864,7 +1864,7 @@ def donghua_schedule():
     return render_template("donghua.html", data={"schedule": sched}, page=1, section="schedule")
 
 
-@app.route("/donghua/search")
+@app.route("/donghua/search", strict_slashes=False)
 def donghua_search():
     q    = request.args.get("q", "").strip()
     page = request.args.get("page", 1, type=int)
@@ -1876,7 +1876,7 @@ def donghua_search():
     return render_template("donghua.html", data={"items": items, "query": q}, page=page, section="search")
 
 
-@app.route("/donghua/genres")
+@app.route("/donghua/genres", strict_slashes=False)
 def donghua_genres():
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres")
     genres = []
@@ -1896,8 +1896,9 @@ def donghua_genres():
     return render_template("donghua.html", data={"genres": genres}, page=1, section="genres")
 
 
-@app.route("/donghua/genre/<slug>")
+@app.route("/donghua/genre/<slug>", strict_slashes=False)
 def donghua_genre(slug):
+    slug = slug.rstrip("/")
     page = request.args.get("page", 1, type=int)
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres/{slug}/{page}")
     items = []
@@ -1906,8 +1907,9 @@ def donghua_genre(slug):
     return render_template("donghua.html", data={"items": items, "genre_slug": slug}, page=page, section="genre")
 
 
-@app.route("/donghua/anime/<slug>")
+@app.route("/donghua/anime/<slug>", strict_slashes=False)
 def donghua_detail(slug):
+    slug = slug.rstrip("/")
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/detail/{slug}")
     data = None
     if raw and raw.get("status") == "success":
@@ -1935,8 +1937,9 @@ def donghua_detail(slug):
     return render_template("donghua_detail.html", data=data, slug=slug)
 
 
-@app.route("/donghua/episode/<slug>")
+@app.route("/donghua/episode/<slug>", strict_slashes=False)
 def donghua_episode(slug):
+    slug = slug.rstrip("/")
     raw       = fetch_donghua(f"{DONGHUA_PREFIX}/episode/{slug}")
     data      = None
     anime_slug = request.args.get("anime", "")
