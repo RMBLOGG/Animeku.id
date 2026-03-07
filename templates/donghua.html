@@ -368,7 +368,7 @@
       <h2 class="dh-section-title">Update Terbaru</h2>
       <div class="dh-grid">
         {% for item in data.latest %}
-        <a href="/donghua/episode/{{ item.slug }}" class="dh-card">
+        <a href="/donghua/episode/{{ item.slug | replace("/", "") }}" class="dh-card">
           <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
           {% if item.current_episode %}
           <div class="dh-ep-badge">{{ item.current_episode }}</div>
@@ -387,7 +387,7 @@
       <h2 class="dh-section-title">Completed</h2>
       <div class="dh-grid">
         {% for item in data.completed %}
-        <a href="/donghua/anime/{{ item.slug }}" class="dh-card">
+        <a href="/donghua/anime/{{ item.slug | replace("/", "") }}" class="dh-card">
           <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
           <div class="dh-card-body">
             <div class="dh-card-title">{{ item.title }}</div>
@@ -421,7 +421,7 @@
     {% if data and data.items %}
       <div class="dh-grid">
         {% for item in data.items %}
-        <a href="{% if item.get('type','') == 'episode' or 'episode' in item.get('slug','') %}/donghua/episode/{{ item.slug }}{% else %}/donghua/anime/{{ item.slug }}{% endif %}" class="dh-card">
+        <a href="{% if item.get('type','') == 'episode' or 'episode' in item.get('slug','') %}/donghua/episode/{{ item.slug | replace("/", "") }}{% else %}/donghua/anime/{{ item.slug | replace("/", "") }}{% endif %}" class="dh-card">
           <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
           <div class="dh-card-body">
             <div class="dh-card-title">{{ item.title }}</div>
@@ -460,7 +460,7 @@
             {{ day.day }}
           </div>
           {% for item in day.donghua_list %}
-          <a href="/donghua/episode/{{ item.slug }}" class="dh-sched-item">
+          <a href="/donghua/episode/{{ item.slug | replace("/", "") }}" class="dh-sched-item">
             <img class="dh-sched-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
             <div class="dh-sched-info">
               <div class="dh-sched-name">{{ item.title }}</div>
@@ -487,7 +487,7 @@
     {% if data and data.genres %}
       <div class="dh-genres-grid">
         {% for g in data.genres %}
-        <a href="/donghua/genre/{{ g.slug }}" class="dh-genre-card">
+        <a href="/donghua/genre/{{ g.slug | replace("/", "") }}" class="dh-genre-card">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;flex-shrink:0"><path d="M7 7h10M7 12h6M7 17h4"/></svg>
           {{ g.name }}
         </a>

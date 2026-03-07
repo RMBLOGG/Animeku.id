@@ -261,13 +261,13 @@
       <!-- Navigation -->
       <div class="dh-nav-btns">
         {% if data.prev %}
-        <a href="/donghua/episode/{{ data.prev.slug if data.prev.slug else data.prev }}" class="dh-nav-btn">
+        <a href="/donghua/episode/{{ (data.prev.slug if data.prev.slug else data.prev) | string | replace("/", "") }}" class="dh-nav-btn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
           Episode Sebelumnya
         </a>
         {% endif %}
         {% if data.next %}
-        <a href="/donghua/episode/{{ data.next.slug if data.next.slug else data.next }}" class="dh-nav-btn" style="margin-left:auto">
+        <a href="/donghua/episode/{{ (data.next.slug if data.next.slug else data.next) | string | replace("/", "") }}" class="dh-nav-btn" style="margin-left:auto">
           Episode Berikutnya
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M14 6l6 6-6 6"/></svg>
         </a>
@@ -307,7 +307,7 @@
       <div class="dh-eps-sbar-list">
         {% set ep_list = data.all_eps if data.all_eps else data.anime.episodes_list %}
         {% for ep in ep_list %}
-        <a href="/donghua/episode/{{ ep.slug if ep.slug else ep }}"
+        <a href="/donghua/episode/{{ (ep.slug if ep.slug else ep) | string | replace("/", "") }}"
            class="dh-eps-sbar-item {% if (ep.slug if ep.slug else ep) == slug %}active{% endif %}">
           {{ (ep.title if ep.title else ep) | replace("Subtitle Indonesia", "") | replace("Sub Indo", "") | truncate(50, true, '...') }}
         </a>

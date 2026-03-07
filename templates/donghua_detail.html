@@ -219,7 +219,7 @@
       <h3 class="dh-section-title">Daftar Episode</h3>
       <div class="dh-eps-grid">
         {% for ep in data.episodes %}
-        <a href="/donghua/episode/{{ ep.slug }}{% if slug %}?anime={{ slug }}{% endif %}" class="dh-ep-link">
+        <a href="/donghua/episode/{{ ep.slug | replace("/", "") }}{% if slug %}?anime={{ slug }}{% endif %}" class="dh-ep-link">
           <span class="dh-ep-num">EP</span>
           <span>{{ ep.title | replace("Subtitle Indonesia", "") | replace("Sub Indo", "") | truncate(40, true, '...') }}</span>
         </a>
