@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory, make_response
+from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory
 import requests
 import json
 import os
@@ -1758,34 +1758,12 @@ def debug():
 
 @app.route("/sitemap.xml")
 def sitemap():
-    host = request.host_url.rstrip("/")
-    pages = [
-        {"loc": f"{host}/", "priority": "1.0"},
-        {"loc": f"{host}/anime", "priority": "0.8"},
-        {"loc": f"{host}/ongoing", "priority": "0.8"},
-        {"loc": f"{host}/completed", "priority": "0.7"},
-        {"loc": f"{host}/movies", "priority": "0.7"},
-        {"loc": f"{host}/popular", "priority": "0.7"},
-        {"loc": f"{host}/genres", "priority": "0.6"},
-        {"loc": f"{host}/schedule", "priority": "0.6"},
-    ]
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    for page in pages:
-        xml += f'  <url>\n    <loc>{page["loc"]}</loc>\n    <priority>{page["priority"]}</priority>\n  </url>\n'
-    xml += "</urlset>"
-    response = make_response(xml)
-    response.headers["Content-Type"] = "application/xml"
-    return response
+    return send_from_directory("static", "sitemap.xml", mimetype="application/xml")
 
 
 @app.route("/robots.txt")
 def robots():
-    host = request.host_url.rstrip("/")
-    content = f"User-agent: *\nAllow: /\n\nSitemap: {host}/sitemap.xml\n"
-    response = make_response(content)
-    response.headers["Content-Type"] = "text/plain"
-    return response
+    return send_from_directory("static", "robots.txt", mimetype="text/plain")
 
 
 if __name__ == "__main__":
