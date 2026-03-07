@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://animeku-id.vercel.app/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/anime</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/ongoing</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/completed</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/movies</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/popular</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/genres</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://animeku-id.vercel.app/schedule</loc>
+    <priority>0.6</priority>
+  </url>
+</urlset>

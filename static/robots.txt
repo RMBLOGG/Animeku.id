@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://animeku-id.vercel.app/sitemap.xml
