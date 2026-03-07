@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory, Response
+from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory, make_response
 import requests
 import json
 import os
@@ -1756,26 +1756,37 @@ def debug():
     except Exception as e:
         return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
-
 @app.route("/sitemap.xml")
 def sitemap():
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://animeku-id.vercel.app/</loc><lastmod>2026-03-07</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://animeku-id.vercel.app/anime-list</loc><lastmod>2026-03-07</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://animeku-id.vercel.app/ongoing</loc><lastmod>2026-03-07</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://animeku-id.vercel.app/completed</loc><lastmod>2026-03-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://animeku-id.vercel.app/movies</loc><lastmod>2026-03-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://animeku-id.vercel.app/popular</loc><lastmod>2026-03-07</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://animeku-id.vercel.app/genre</loc><lastmod>2026-03-07</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://animeku-id.vercel.app/jadwal</loc><lastmod>2026-03-07</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-</urlset>"""
-    return Response(xml, mimetype="application/xml")
+    host = request.host_url.rstrip("/")
+    pages = [
+        {"loc": f"{host}/", "priority": "1.0"},
+        {"loc": f"{host}/anime", "priority": "0.8"},
+        {"loc": f"{host}/ongoing", "priority": "0.8"},
+        {"loc": f"{host}/completed", "priority": "0.7"},
+        {"loc": f"{host}/movies", "priority": "0.7"},
+        {"loc": f"{host}/popular", "priority": "0.7"},
+        {"loc": f"{host}/genres", "priority": "0.6"},
+        {"loc": f"{host}/schedule", "priority": "0.6"},
+    ]
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for page in pages:
+        xml += f'  <url>\n    <loc>{page["loc"]}</loc>\n    <priority>{page["priority"]}</priority>\n  </url>\n'
+    xml += "</urlset>"
+    response = make_response(xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
+
 
 @app.route("/robots.txt")
 def robots():
-    txt = "User-agent: *\nAllow: /\nSitemap: https://animeku-id.vercel.app/sitemap.xml"
-    return Response(txt, mimetype="text/plain")
+    host = request.host_url.rstrip("/")
+    content = f"User-agent: *\nAllow: /\n\nSitemap: {host}/sitemap.xml\n"
+    response = make_response(content)
+    response.headers["Content-Type"] = "text/plain"
+    return response
+
 
 if __name__ == "__main__":
     app.run(debug=True)
