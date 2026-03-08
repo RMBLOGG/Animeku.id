@@ -31,6 +31,57 @@
   </style>
 
 <style>
+/* ── PREMIUM BADGE ─── */
+.user-premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  background: linear-gradient(135deg, #f4a261, #e76f1b);
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #000;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+.user-premium-countdown {
+  font-size: 10px;
+  color: #f4a261;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.user-premium-expired {
+  font-size: 10px;
+  color: var(--accent, #e63946);
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+.dropdown-premium-info {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dropdown-premium-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #f4a261;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: var(--trans);
+  text-decoration: none;
+  cursor: pointer;
+  border-top: 1px solid var(--border);
+}
+.dropdown-premium-link:hover { background: rgba(244,162,97,0.08); }
+
 /* ── NAV MORE DROPDOWN ─── */
 .nav-more {
   position: relative;
@@ -568,6 +619,11 @@ function closeAnnouncement() {
               Live Chat
             </a>
             <div class="nav-more-divider"></div>
+            <a href="/premium" class="nav-more-item" style="color:#f4a261;font-weight:700">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color:#f4a261"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Upgrade Premium
+            </a>
+            <div class="nav-more-divider"></div>
             <!-- Dayynime Endpoint -->
             <div style="position:relative" id="desktopEpWrapper">
               <a href="#" onclick="event.preventDefault();var s=document.getElementById('desktopEpSub');s.style.display=s.style.display==='block'?'none':'block';" class="nav-more-item" style="display:flex;justify-content:space-between;align-items:center">
@@ -616,6 +672,9 @@ function closeAnnouncement() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           Login
         </a>
+        <!-- Upgrade Premium untuk belum login (dipindah ke dropdown Lainnya) -->
+        <span id="desktopBtnUpgradePremium" class="desktop-auth-item" style="display:none"></span>
+
         <div id="desktopUserMenu" class="desktop-auth-item" style="display:none;position:relative">
           <button id="desktopAvatarBtn" onclick="toggleDesktopDropdown()"
             style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
@@ -627,6 +686,16 @@ function closeAnnouncement() {
           <div id="desktopDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;
             background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
             min-width:190px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden">
+            <!-- Premium status -->
+            <div class="dropdown-premium-info" id="desktopPremiumInfo" style="display:none">
+              <div id="desktopPremiumBadge"></div>
+              <div id="desktopPremiumCountdown"></div>
+            </div>
+            <!-- Link ke halaman premium -->
+            <a href="/premium" class="dropdown-premium-link">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Premium
+            </a>
             <button onclick="logoutUser()"
               style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
               background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;
@@ -707,7 +776,10 @@ function closeAnnouncement() {
         Login
       </a>
       <!-- Upgrade Premium (tampil saat belum login) -->
-      
+      <a href="/premium" id="menuBtnUpgradePremium" style="display:none;align-items:center;gap:8px;padding:9px 14px;background:rgba(244,162,97,0.1);border:1px solid rgba(244,162,97,0.3);border-radius:8px;color:#f4a261;font-size:13px;font-weight:600;text-decoration:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Upgrade Premium
+      </a>
 
       <!-- User info (tampil saat sudah login) -->
       <div id="menuUserInfo" style="display:none">
@@ -715,11 +787,15 @@ function closeAnnouncement() {
           <img id="menuAvatar" src="" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover;flex-shrink:0">
           <div style="flex:1;min-width:0">
             <div id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-
+            <div id="menuPremiumStatus" style="font-size:11px;color:var(--text3);margin-top:2px">Logged in</div>
+            <div id="menuPremiumCountdown" style="display:none;margin-top:3px"></div>
           </div>
           <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
         </div>
-
+        <a href="/premium" style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:9px 14px;background:rgba(244,162,97,0.1);border:1px solid rgba(244,162,97,0.3);border-radius:8px;color:#f4a261;font-size:13px;font-weight:600;text-decoration:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Halaman Premium
+        </a>
       </div>
     </div>
   </nav>
@@ -924,6 +1000,96 @@ function closeAnnouncement() {
     try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
   }
 
+  // Format countdown ke "X hari Y jam" atau "X jam Y menit"
+  function formatCountdown(expiresAt) {
+    var now = new Date();
+    var exp = new Date(expiresAt);
+    var diff = exp - now;
+    if (diff <= 0) return null; // sudah expired
+    var days  = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var mins  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0)  return days + ' hari ' + hours + ' jam lagi';
+    if (hours > 0) return hours + ' jam ' + mins + ' menit lagi';
+    return mins + ' menit lagi';
+  }
+
+  var _premiumCountdownInterval = null;
+
+  function applyPremiumUI(premiumData) {
+    // premiumData: { premium: bool, expires_at?: string, reason?: string }
+    var isActive   = premiumData && premiumData.premium;
+    var expiresAt  = premiumData && premiumData.expires_at;
+
+    // ── Desktop badge di samping nama ──
+    var dn = document.getElementById('desktopUserName');
+    if (dn && isActive) {
+      // Hapus badge lama kalau ada
+      var oldBadge = document.getElementById('desktopPremiumInlineBadge');
+      if (oldBadge) oldBadge.remove();
+      var badge = document.createElement('span');
+      badge.id = 'desktopPremiumInlineBadge';
+      badge.className = 'user-premium-badge';
+      badge.innerHTML = '&#10022; PRO';
+      badge.style.marginLeft = '4px';
+      dn.parentNode.insertBefore(badge, dn.nextSibling);
+    }
+
+    // ── Desktop dropdown premium info ──
+    var dInfo = document.getElementById('desktopPremiumInfo');
+    var dBadge = document.getElementById('desktopPremiumBadge');
+    var dCountdown = document.getElementById('desktopPremiumCountdown');
+    if (dInfo && dBadge && dCountdown) {
+      if (isActive) {
+        dInfo.style.display = 'block';
+        dBadge.innerHTML = '<span class="user-premium-badge">&#10022; Premium Aktif</span>';
+        if (expiresAt) {
+          var updateDesktopCountdown = function() {
+            var txt = formatCountdown(expiresAt);
+            if (txt) {
+              dCountdown.innerHTML = '<span class="user-premium-countdown">⏳ ' + txt + '</span>';
+            } else {
+              dCountdown.innerHTML = '<span class="user-premium-expired">✕ Expired</span>';
+            }
+          };
+          updateDesktopCountdown();
+          if (_premiumCountdownInterval) clearInterval(_premiumCountdownInterval);
+          _premiumCountdownInterval = setInterval(updateDesktopCountdown, 60000);
+        } else {
+          dCountdown.innerHTML = '<span class="user-premium-countdown">✦ Lifetime</span>';
+        }
+      } else {
+        dInfo.style.display = 'none';
+      }
+    }
+
+    // ── Mobile menu premium status ──
+    var mStatus   = document.getElementById('menuPremiumStatus');
+    var mCountdown = document.getElementById('menuPremiumCountdown');
+    if (mStatus) {
+      if (isActive) {
+        mStatus.innerHTML = '<span class="user-premium-badge">&#10022; Premium Aktif</span>';
+        if (mCountdown) {
+          if (expiresAt) {
+            var txt = formatCountdown(expiresAt);
+            if (txt) {
+              mCountdown.style.display = 'block';
+              mCountdown.innerHTML = '<span class="user-premium-countdown">⏳ ' + txt + '</span>';
+            } else {
+              mCountdown.style.display = 'block';
+              mCountdown.innerHTML = '<span class="user-premium-expired">✕ Expired, perpanjang!</span>';
+            }
+          } else {
+            mCountdown.style.display = 'block';
+            mCountdown.innerHTML = '<span class="user-premium-countdown">✦ Lifetime</span>';
+          }
+        }
+      } else {
+        mStatus.innerHTML = 'Logged in &nbsp;·&nbsp; <a href="/premium" style="color:#f4a261;font-weight:600;font-size:10px">Upgrade Premium</a>';
+      }
+    }
+  }
+
   function loadAuthState() {
     const user = getUser();
 
@@ -937,6 +1103,8 @@ function closeAnnouncement() {
     if (user) {
       // Mobile
       if (loginBtn) loginBtn.style.display = 'none';
+      const mUpgrade = document.getElementById('menuBtnUpgradePremium');
+      if (mUpgrade) mUpgrade.style.display = 'none';
       if (userInfo) {
         userInfo.style.display = 'block';
         const avatar = document.getElementById('menuAvatar');
@@ -946,6 +1114,8 @@ function closeAnnouncement() {
       }
       // Desktop
       if (desktopLogin) desktopLogin.style.display = 'none';
+      const dUpgrade = document.getElementById('desktopBtnUpgradePremium');
+      if (dUpgrade) dUpgrade.style.display = 'none';
       if (desktopUserMenu) {
         desktopUserMenu.style.display = 'block';
         const da = document.getElementById('desktopAvatar');
@@ -954,12 +1124,24 @@ function closeAnnouncement() {
         if (dn) dn.textContent = user.name;
       }
 
+      // Fetch premium status
+      var token = localStorage.getItem('sb_access_token') || '';
+      if (token) {
+        fetch('/api/premium/status', { headers: { 'Authorization': 'Bearer ' + token } })
+          .then(function(r) { return r.json(); })
+          .then(function(data) { applyPremiumUI(data); })
+          .catch(function() {});
+      }
     } else {
       // Mobile
       if (loginBtn) loginBtn.style.display = 'flex';
+      const mUpgrade = document.getElementById('menuBtnUpgradePremium');
+      if (mUpgrade) mUpgrade.style.display = 'flex';
       if (userInfo) userInfo.style.display = 'none';
       // Desktop
       if (desktopLogin) desktopLogin.style.display = 'flex';
+      const dUpgrade = document.getElementById('desktopBtnUpgradePremium');
+      if (dUpgrade) dUpgrade.style.display = 'flex';
       if (desktopUserMenu) desktopUserMenu.style.display = 'none';
     }
   }
@@ -1095,6 +1277,68 @@ function _showEndpointToast(msg, type) {
 }
 
 loadEndpointState();
+
+<!-- ── Premium Gate (Global) ─────────────────────────────────────────────── -->
+<div id="premiumGateModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--bg2,#1a1a2e);border:1px solid rgba(244,162,97,0.3);border-radius:18px;padding:36px 28px;max-width:380px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.7)">
+    <div style="font-size:52px;margin-bottom:12px">👑</div>
+    <h2 style="margin:0 0 8px;font-size:20px;color:var(--text,#fff)">Konten Premium</h2>
+    <p style="color:var(--text3,#aaa);font-size:13px;margin:0 0 22px;line-height:1.7">
+      Sumber data aktif saat ini adalah <strong style="color:#f4a261" id="premiumGateSrcLabel">Animasu</strong>.<br>
+      Akses halaman detail &amp; episode memerlukan akun <strong style="color:#fff">Premium</strong>.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="/premium" style="background:var(--accent,#e63946);color:#fff;padding:11px 24px;border-radius:9px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px">⭐ Upgrade Premium</a>
+      <button onclick="document.getElementById('premiumGateModal').style.display='none'" style="background:var(--bg3,#252540);color:var(--text2,#ccc);border:1px solid var(--border,#333);padding:11px 20px;border-radius:9px;cursor:pointer;font-size:14px">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function initPremiumGate() {
+  if (_activeEndpoint !== 'animasu' && _activeEndpoint !== 'otakudesu') return;
+
+  // Cek status premium user
+  let isPremium = false;
+  try {
+    const token = localStorage.getItem('sb_access_token') || '';
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const r = await fetch('/api/premium/status', { headers });
+    const d = await r.json();
+    isPremium = !!d.premium;
+  } catch(e) {}
+
+  if (isPremium) return;
+
+  // Update label source di modal
+  const srcLbl = document.getElementById('premiumGateSrcLabel');
+  if (srcLbl) {
+    const names = { 'animasu': 'Animasu', 'otakudesu': 'Otakudesu' };
+    srcLbl.textContent = names[_activeEndpoint] || _activeEndpoint;
+  }
+
+  // Intercept klik ke /anime/... dan /episode/...
+  const modal = document.getElementById('premiumGateModal');
+
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (href.startsWith('/anime/') || href.startsWith('/episode/')) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      modal.style.display = 'flex';
+    }
+  }, true);
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') modal.style.display = 'none';
+  });
+})();
 </script>
 
   {% block scripts %}{% endblock %}
