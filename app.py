@@ -1160,8 +1160,7 @@ def sociabuzz_webhook():
     # ── Kirim notifikasi ke Live Chat ──────────────────────────────
     try:
         rp_fmt = f"Rp {amount:,}".replace(",", ".")
-        else:
-            chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
+        chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
         if message:
             chat_content += f' 💬 "{message}"'
 
