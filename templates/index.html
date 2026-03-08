@@ -291,32 +291,13 @@ setInterval(function() {
             </div>
           </div>
           {% if anime.type %}<span class="card-badge type">{{ anime.type }}</span>{% endif %}
-          {% if anime.episode %}<span class="card-badge">{{ anime.episode }}</span>{% endif %}
         </div>
         <div class="card-info">
-          {% if anime.genre %}<span class="card-genre">{{ anime.genre }}</span>{% elif anime.type %}<span class="card-genre">{{ anime.type }}</span>{% endif %}
           <div class="card-title">{{ anime.title }}</div>
-          {% if anime.views or anime.favorites %}
-          <div class="card-stats">
-            {% if anime.views %}
-            <span class="card-stat views">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-              {{ anime.views }} views
-            </span>
-            {% endif %}
-            {% if anime.favorites %}
-            <span class="card-stat favs">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-              {{ anime.favorites }} favorites
-            </span>
-            {% endif %}
-          </div>
-          {% else %}
           <div class="card-meta">
             <span class="card-ep">{{ anime.episode }}</span>
             <span class="card-status">{{ anime.status_or_day }}</span>
           </div>
-          {% endif %}
         </div>
       </a>
       {% endfor %}
