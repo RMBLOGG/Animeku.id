@@ -8,6 +8,78 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "animeku-secret-2026")
 API_BASE = "https://www.sankavollerei.com"
 
+# ── Endpoint Sources ───────────────────────────────────────────────────────────
+SOURCES = {
+    "samehadaku": {
+        "label": "Samehadaku",
+        "prefix": "/anime/samehadaku",
+        "type": "samehadaku",
+    },
+    "animasu": {
+        "label": "Animasu",
+        "prefix": "/anime/animasu",
+        "type": "animasu",
+    },
+    "otakudesu": {
+        "label": "Otakudesu",
+        "prefix": "/anime",
+        "type": "otakudesu",
+    },
+}
+DEFAULT_SOURCE = "samehadaku"
+
+def get_active_source():
+    """Baca source aktif: cookie user → Redis cache → site_config Supabase → default."""
+    # 1. Cookie browser user (pilihan per-user, 30 hari)
+    try:
+        user_src = request.cookies.get("active_source")
+        if user_src and user_src in SOURCES:
+            return user_src
+    except Exception:
+        pass
+    # 2. Redis cache (cepat, di-set oleh admin saat switch)
+    try:
+        val = redis.get("animeku:active_source")
+        if val and val in SOURCES:
+            return val
+    except Exception:
+        pass
+    # 3. Supabase site_config (source of truth untuk admin)
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/site_config",
+            headers=supabase_service_headers(),
+            params={"key": "eq.active_source", "select": "value"},
+            timeout=3
+        )
+        if r.ok and r.json():
+            val = r.json()[0].get("value")
+            if isinstance(val, str) and val in SOURCES:
+                # Cache ke Redis supaya request berikutnya tidak perlu ke Supabase
+                try:
+                    redis.set("animeku:active_source", val, ex=3600)
+                except Exception:
+                    pass
+                return val
+    except Exception:
+        pass
+    return DEFAULT_SOURCE
+
+def src_prefix():
+    return SOURCES[get_active_source()]["prefix"]
+
+def src_type():
+    return SOURCES[get_active_source()]["type"]
+
+# Inject active_source ke semua template otomatis
+@app.context_processor
+def inject_active_source():
+    src = get_active_source()
+    return {
+        "active_source": src,
+        "active_source_label": SOURCES[src]["label"],
+    }
+
 SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
@@ -53,7 +125,8 @@ def _ttl(path):
     return base + int(base * random.uniform(-0.1, 0.1))
 
 def fetch(path, params=None):
-    key   = "samehadaku:" + path + str(sorted(params.items()) if params else "")
+    source   = get_active_source()          # "samehadaku" atau "animasu"
+    key      = f"animeku:{source}:" + path + str(sorted(params.items()) if params else "")
     lock_key = key + ":lock"
 
     # 1. Fast path — cache hit
@@ -150,6 +223,292 @@ DAY_ID = {
     "Thursday": "Kamis", "Friday": "Jumat", "Saturday": "Sabtu", "Sunday": "Minggu"
 }
 
+# ── Animasu Normalizers ────────────────────────────────────────────────────────
+# Animasu response memakai field berbeda dari samehadaku
+
+def animasu_norm_anime(a):
+    """Normalize satu item anime dari animasu ke format internal."""
+    if not a:
+        return a
+    return {
+        "slug":          a.get("slug", ""),
+        "title":         a.get("title", ""),
+        "poster":        a.get("poster", ""),
+        "episode":       str(a.get("episode", "")),
+        "status_or_day": a.get("status_or_day", ""),
+        "type":          a.get("type", ""),
+        "score":         a.get("score", ""),
+        "rank":          a.get("rank", None),
+    }
+
+def animasu_norm_list(animes):
+    return [animasu_norm_anime(a) for a in (animes or [])]
+
+def animasu_norm_home(raw):
+    """Parse animasu /home response."""
+    if not raw or raw.get("status") != "success":
+        return None
+    return {
+        "ongoing": animasu_norm_list(raw.get("ongoing", [])),
+        "recent":  animasu_norm_list(raw.get("recent", [])),
+    }
+
+def animasu_norm_paginated(raw, page):
+    """Parse animasu paginated list (ongoing/completed/latest/genre)."""
+    if not raw or raw.get("status") != "success":
+        return None
+    animes = animasu_norm_list(raw.get("animes", []))
+    pag = raw.get("pagination", {})
+    return {
+        "animes": animes,
+        "pagination": {
+            "hasNext":     pag.get("hasNext", False),
+            "hasPrev":     pag.get("hasPrev", False),
+            "currentPage": pag.get("currentPage", page),
+        }
+    }
+
+def animasu_norm_genres(raw):
+    """Parse animasu genres list."""
+    if not raw or raw.get("status") != "success":
+        return None
+    return [{"name": g.get("name", ""), "slug": g.get("slug", "")} for g in raw.get("genres", [])]
+
+def animasu_norm_schedule(raw):
+    """Parse animasu schedule (sama formatnya: dict hari -> list anime)."""
+    if not raw or raw.get("status") != "success" or not raw.get("schedule"):
+        return None
+    sched_dict = {}
+    for day_key, items in raw["schedule"].items():
+        normalized = []
+        for a in items:
+            normalized.append({
+                "slug":          a.get("slug", ""),
+                "title":         a.get("title", ""),
+                "poster":        a.get("poster", ""),
+                "episode":       str(a.get("episode", "Sudah Rilis!")),
+                "status_or_day": str(a.get("status_or_day", "")),
+                "time":          str(a.get("status_or_day", "")),
+                "type":          a.get("type", ""),
+            })
+        sched_dict[day_key] = normalized
+    return {"schedule": sched_dict}
+
+def animasu_norm_detail(raw, slug):
+    """Parse animasu /detail/:slug response."""
+    if not raw or raw.get("status") != "success" or not raw.get("detail"):
+        return None
+    d = raw["detail"]
+    genres = [{"name": g.get("name", ""), "slug": g.get("slug", "")} for g in d.get("genres", [])]
+    eps = [{"name": e.get("name", ""), "slug": e.get("slug", "")} for e in d.get("episodes", [])]
+    return {
+        "detail": {
+            "title":    d.get("title", ""),
+            "poster":   d.get("poster", ""),
+            "synopsis": d.get("synopsis", ""),
+            "trailer":  d.get("trailer", ""),
+            "genres":   genres,
+            "episodes": eps,
+            "info": {
+                "japanese":      d.get("synonym", ""),
+                "status":        d.get("status", ""),
+                "type":          d.get("type", ""),
+                "score":         str(d.get("rating", "")),
+                "total_episode": "",
+                "duration":      d.get("duration", ""),
+                "released":      d.get("aired", ""),
+                "studio":        d.get("studio", ""),
+                "season":        d.get("season", ""),
+            }
+        }
+    }
+
+def animasu_norm_episode(raw):
+    """Parse animasu /episode/:slug response."""
+    if not raw or raw.get("status") != "success":
+        return None
+    streams = [{"name": s.get("name", ""), "serverId": "", "url": s.get("url", "")} for s in raw.get("streams", [])]
+    return {
+        "title":    raw.get("title", ""),
+        "anime_id": "",
+        "streams":  streams,
+        "downloads": raw.get("downloads", []),
+    }
+
+def animasu_norm_animelist(raw):
+    """Parse animasu /animelist - tidak ada grouping huruf, buat flat."""
+    if not raw or raw.get("status") != "success":
+        return None
+    animes = raw.get("animes", [])
+    # Group by huruf pertama
+    groups = {}
+    for a in animes:
+        letter = a.get("title", "#")[0].upper()
+        if letter not in groups:
+            groups[letter] = []
+        groups[letter].append({"title": a.get("title", ""), "slug": a.get("slug", "")})
+    anime_list = [{"letter": k, "animes": v} for k, v in sorted(groups.items())]
+    return {"anime_list": anime_list}
+
+def animasu_norm_search(raw):
+    """Parse animasu search response."""
+    if not raw or raw.get("status") != "success":
+        return None
+    return {"animes": animasu_norm_list(raw.get("animes", []))}
+
+# ── Otakudesu Normalizers ─────────────────────────────────────────────────────
+# Endpoint: GET /anime/home
+# Response: { status, data: { ongoing: { animeList: [...] }, completed: { animeList: [...] } } }
+# Tiap item: { animeId, title, poster, episodes, releaseDay, latestReleaseDate, score, type }
+
+def otakudesu_norm_anime(a):
+    if not a:
+        return a
+    return {
+        "slug":          a.get("animeId", ""),
+        "title":         a.get("title", ""),
+        "poster":        a.get("poster", ""),
+        "episode":       str(a.get("episodes", "")),
+        "status_or_day": a.get("releaseDay", a.get("status", "")),
+        "type":          a.get("type", ""),
+        "score":         str(a.get("score", "")),
+        "rank":          a.get("rank", None),
+    }
+
+def otakudesu_norm_list(animes):
+    return [otakudesu_norm_anime(a) for a in (animes or [])]
+
+def otakudesu_norm_home(raw):
+    """GET /anime/home → data.ongoing.animeList & data.completed.animeList"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    d = raw["data"]
+    return {
+        "ongoing": otakudesu_norm_list(d.get("ongoing",   {}).get("animeList", [])),
+        "recent":  otakudesu_norm_list(d.get("completed", {}).get("animeList", [])),
+    }
+
+def otakudesu_norm_paginated(raw, page):
+    if not raw or raw.get("status") != "success":
+        return None
+    anime_list = raw.get("data", {}).get("animeList", [])
+    pag        = raw.get("pagination") or {}
+    pag_norm   = {
+        "hasNext":     pag.get("hasNextPage", False),
+        "hasPrev":     pag.get("hasPrevPage", False),
+        "currentPage": pag.get("currentPage", page),
+    } if pag else None
+    return {"animes": otakudesu_norm_list(anime_list), "pagination": pag_norm}
+
+def otakudesu_norm_genres(raw):
+    """GET /anime/genre → data.genreList: [{title, genreId}]"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    return [
+        {"name": g.get("title", ""), "slug": g.get("genreId", "")}
+        for g in raw["data"].get("genreList", [])
+    ]
+
+def otakudesu_norm_schedule(raw):
+    """GET /anime/schedule → data: [{day, anime_list:[{title,slug,poster}]}]"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    data = raw["data"]
+    days = data if isinstance(data, list) else data.get("days", [])
+    if not days:
+        return None
+    sched_dict = {}
+    for day_obj in days:
+        day_name = DAY_ID.get(day_obj.get("day", ""), day_obj.get("day", ""))
+        # API pakai "anime_list" dan "slug" (bukan animeList/animeId)
+        anime_list = day_obj.get("anime_list", day_obj.get("animeList", []))
+        items = [{
+            "slug":          a.get("slug", a.get("animeId", "")),
+            "title":         a.get("title", ""),
+            "poster":        a.get("poster", ""),
+            "episode":       str(a.get("episodes", "")),
+            "time":          a.get("time", ""),
+            "status_or_day": a.get("time", ""),
+            "type":          a.get("type", ""),
+        } for a in anime_list]
+        sched_dict[day_name] = items
+    return {"schedule": sched_dict}
+
+def otakudesu_norm_detail(raw, slug):
+    """GET /anime/anime/:slug"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    d = raw["data"]
+    eps    = [{"name": str(e.get("title", "")), "slug": e.get("episodeId", "")}
+              for e in d.get("episodeList", [])]
+    genres = [{"name": g.get("title", ""), "slug": g.get("genreId", "")}
+              for g in d.get("genreList", [])]
+    score  = d["score"].get("value", "") if isinstance(d.get("score"), dict) else str(d.get("score", ""))
+    syn    = d.get("synopsis", "")
+    if isinstance(syn, dict):
+        syn = " ".join(syn.get("paragraphs", []))
+    return {
+        "detail": {
+            "title":    d.get("title", ""),
+            "poster":   d.get("poster", ""),
+            "synopsis": syn,
+            "trailer":  d.get("trailer", ""),
+            "genres":   genres,
+            "episodes": eps,
+            "info": {
+                "japanese":      d.get("japanese", ""),
+                "status":        d.get("status", ""),
+                "type":          d.get("type", ""),
+                "score":         score,
+                "total_episode": str(d.get("episodes", "")),
+                "duration":      d.get("duration", ""),
+                "released":      d.get("aired", ""),
+                "studio":        d.get("studios", ""),
+                "season":        d.get("season", ""),
+            }
+        }
+    }
+
+def otakudesu_norm_episode(raw):
+    """GET /anime/episode/:slug"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    d       = raw["data"]
+    streams = []
+    for quality in d.get("server", {}).get("qualities", []):
+        q_title = quality.get("title", "")
+        for srv in quality.get("serverList", []):
+            srv_name = srv.get("title", "")
+            label    = f"{srv_name} {q_title}".strip() if q_title and q_title.lower() not in srv_name.lower() else srv_name
+            streams.append({"name": label, "serverId": srv.get("serverId", ""), "url": ""})
+    default_url = d.get("defaultStreamingUrl", "")
+    if default_url:
+        streams.insert(0, {"name": "Default Auto", "serverId": "", "url": default_url})
+    return {
+        "title":     d.get("title", ""),
+        "anime_id":  d.get("animeId", ""),
+        "streams":   streams,
+        "downloads": [],
+    }
+
+def otakudesu_norm_animelist(raw):
+    """GET /anime/list → data.list[{startWith, animeList}]"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    anime_list = []
+    for group in raw["data"].get("list", []):
+        animes = [{"title": a.get("title", ""), "slug": a.get("animeId", "")}
+                  for a in group.get("animeList", [])]
+        if animes:
+            anime_list.append({"letter": group.get("startWith", "#"), "animes": animes})
+    return {"anime_list": anime_list}
+
+def otakudesu_norm_search(raw):
+    """GET /anime/search/:keyword → data.animeList"""
+    if not raw or raw.get("status") != "success" or not raw.get("data"):
+        return None
+    return {"animes": otakudesu_norm_list(raw["data"].get("animeList", []))}
+
 def norm_schedule(raw):
     if not raw or not raw.get("data") or not raw["data"].get("days"):
         return None
@@ -196,116 +555,173 @@ def landing():
 
 @app.route("/home")
 def home():
-    raw      = fetch("/anime/samehadaku/home")
-    popular  = fetch("/anime/samehadaku/popular")
-    schedule = fetch("/anime/samehadaku/schedule")
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
 
-    data = None
-    if raw and raw.get("data"):
-        d = raw["data"]
-        recent_list = d.get("recent", {}).get("animeList", [])
-        top10_list  = d.get("top10",  {}).get("animeList", [])
-        data = {
-            "ongoing": norm_list(recent_list),
-            "recent":  norm_list(top10_list),
-        }
-
-    pop_norm = None
-    if popular and popular.get("data"):
-        pop_norm = {"animes": norm_list(popular["data"].get("animeList", []))}
+    if source == "animasu":
+        raw      = fetch(f"{pfx}/home")
+        pop_raw  = fetch(f"{pfx}/latest")
+        schedule = fetch(f"{pfx}/schedule")
+        data     = animasu_norm_home(raw)
+        # populer dari latest animasu
+        pop_norm = animasu_norm_paginated(pop_raw, 1) if pop_raw else None
+        if pop_norm:
+            pop_norm = {"animes": pop_norm.get("animes", [])}
+        sched    = animasu_norm_schedule(schedule)
+    elif source == "otakudesu":
+        raw      = fetch(f"{pfx}/home")
+        schedule = fetch(f"{pfx}/schedule")
+        data     = otakudesu_norm_home(raw)
+        # populer dari ongoing (otakudesu tidak punya endpoint popular terpisah)
+        pop_norm = {"animes": data["ongoing"][:10]} if data and data.get("ongoing") else None
+        sched    = otakudesu_norm_schedule(schedule)
+    else:
+        raw      = fetch(f"{pfx}/home")
+        popular  = fetch(f"{pfx}/popular")
+        schedule = fetch(f"{pfx}/schedule")
+        data = None
+        if raw and raw.get("data"):
+            d = raw["data"]
+            recent_list = d.get("recent", {}).get("animeList", [])
+            top10_list  = d.get("top10",  {}).get("animeList", [])
+            data = {
+                "ongoing": norm_list(recent_list),
+                "recent":  norm_list(top10_list),
+            }
+        pop_norm = None
+        if popular and popular.get("data"):
+            pop_norm = {"animes": norm_list(popular["data"].get("animeList", []))}
+        sched = norm_schedule(schedule)
 
     return render_template("index.html", data=data, popular=pop_norm,
-                           schedule=norm_schedule(schedule))
+                           schedule=sched)
 
 
 @app.route("/anime/<slug>")
 def detail(slug):
-    raw = fetch(f"/anime/samehadaku/anime/{slug}")
-    data = None
-    if raw and raw.get("data"):
-        d = raw["data"]
-        eps    = [norm_episode_item(e) for e in d.get("episodeList", [])]
-        genres = norm_genres(d.get("genreList", []))
-        score_val = ""
-        if isinstance(d.get("score"), dict):
-            score_val = d["score"].get("value", "")
-        else:
-            score_val = str(d.get("score", ""))
-        data = {
-            "detail": {
-                "title":    d.get("title", ""),
-                "poster":   d.get("poster", ""),
-                "synopsis": " ".join(d.get("synopsis", {}).get("paragraphs", [])),
-                "trailer":  d.get("trailer", ""),
-                "genres":   genres,
-                "episodes": eps,
-                "info": {
-                    "japanese":      d.get("japanese", ""),
-                    "status":        d.get("status", ""),
-                    "type":          d.get("type", ""),
-                    "score":         score_val,
-                    "total_episode": str(d.get("episodes", "")),
-                    "duration":      d.get("duration", ""),
-                    "released":      d.get("aired", ""),
-                    "studio":        d.get("studios", ""),
-                    "season":        d.get("season", ""),
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+
+    if source == "animasu":
+        raw  = fetch(f"{pfx}/detail/{slug}")
+        data = animasu_norm_detail(raw, slug)
+    elif source == "otakudesu":
+        raw  = fetch(f"{pfx}/anime/{slug}")
+        data = otakudesu_norm_detail(raw, slug)
+    else:
+        raw = fetch(f"{pfx}/anime/{slug}")
+        data = None
+        if raw and raw.get("data"):
+            d = raw["data"]
+            eps    = [norm_episode_item(e) for e in d.get("episodeList", [])]
+            genres = norm_genres(d.get("genreList", []))
+            score_val = ""
+            if isinstance(d.get("score"), dict):
+                score_val = d["score"].get("value", "")
+            else:
+                score_val = str(d.get("score", ""))
+            data = {
+                "detail": {
+                    "title":    d.get("title", ""),
+                    "poster":   d.get("poster", ""),
+                    "synopsis": " ".join(d.get("synopsis", {}).get("paragraphs", [])),
+                    "trailer":  d.get("trailer", ""),
+                    "genres":   genres,
+                    "episodes": eps,
+                    "info": {
+                        "japanese":      d.get("japanese", ""),
+                        "status":        d.get("status", ""),
+                        "type":          d.get("type", ""),
+                        "score":         score_val,
+                        "total_episode": str(d.get("episodes", "")),
+                        "duration":      d.get("duration", ""),
+                        "released":      d.get("aired", ""),
+                        "studio":        d.get("studios", ""),
+                        "season":        d.get("season", ""),
+                    }
                 }
             }
-        }
     return render_template("detail.html", data=data, slug=slug)
 
 
 @app.route("/episode/<slug>")
 def episode(slug):
-    raw        = fetch(f"/anime/samehadaku/episode/{slug}")
+    source     = get_active_source()
+    pfx        = SOURCES[source]["prefix"]
     anime_slug = request.args.get("anime", "")
 
     data = None
-    if raw and raw.get("data"):
-        d = raw["data"]
-        streams = []
-        for quality in d.get("server", {}).get("qualities", []):
-            q_title = quality.get("title", "")
-            for srv in quality.get("serverList", []):
-                srv_name = srv.get("title", "")
-                if q_title and q_title.lower() not in srv_name.lower():
-                    label = f"{srv_name} {q_title}".strip()
-                else:
-                    label = srv_name
-                streams.append({
-                    "name":     label,
-                    "serverId": srv.get("serverId", ""),
-                    "url":      "",
-                })
-        default_url = d.get("defaultStreamingUrl", "")
-        if default_url:
-            streams.insert(0, {"name": "Default Auto", "serverId": "", "url": default_url})
-        ep_anime_id = d.get("animeId", "")
-        data = {
-            "title":    d.get("title", ""),
-            "anime_id": ep_anime_id,
-            "streams":  streams,
-            "downloads": [],
-        }
-
-    # Fallback anime_slug dari animeId di response episode
-    if not anime_slug and data and data.get("anime_id"):
-        anime_slug = data["anime_id"]
-
-    anime_raw  = fetch(f"/anime/samehadaku/anime/{anime_slug}") if anime_slug else None
-    anime_data = None
-    if anime_raw and anime_raw.get("data"):
-        d2     = anime_raw["data"]
-        eps    = [norm_episode_item(e) for e in d2.get("episodeList", [])]
-        genres = norm_genres(d2.get("genreList", []))
-        anime_data = {
-            "detail": {
-                "title":    d2.get("title", ""),
-                "poster":   d2.get("poster", ""),
-                "genres":   genres,
-                "episodes": eps,
+    if source == "animasu":
+        raw  = fetch(f"{pfx}/episode/{slug}")
+        data = animasu_norm_episode(raw)
+        anime_data = None
+        if anime_slug:
+            araw = fetch(f"{pfx}/detail/{anime_slug}")
+            adat = animasu_norm_detail(araw, anime_slug)
+            if adat:
+                anime_data = adat
+    elif source == "otakudesu":
+        raw  = fetch(f"{pfx}/episode/{slug}")
+        data = otakudesu_norm_episode(raw)
+        if not anime_slug and data and data.get("anime_id"):
+            anime_slug = data["anime_id"]
+        anime_raw  = fetch(f"{pfx}/anime/{anime_slug}") if anime_slug else None
+        anime_data = None
+        if anime_raw:
+            adat = otakudesu_norm_detail(anime_raw, anime_slug)
+            if adat:
+                anime_data = {"detail": {
+                    "title":    adat["detail"].get("title", ""),
+                    "poster":   adat["detail"].get("poster", ""),
+                    "genres":   adat["detail"].get("genres", []),
+                    "episodes": adat["detail"].get("episodes", []),
+                }}
+    else:
+        raw        = fetch(f"{pfx}/episode/{slug}")
+        if raw and raw.get("data"):
+            d = raw["data"]
+            streams = []
+            for quality in d.get("server", {}).get("qualities", []):
+                q_title = quality.get("title", "")
+                for srv in quality.get("serverList", []):
+                    srv_name = srv.get("title", "")
+                    if q_title and q_title.lower() not in srv_name.lower():
+                        label = f"{srv_name} {q_title}".strip()
+                    else:
+                        label = srv_name
+                    streams.append({
+                        "name":     label,
+                        "serverId": srv.get("serverId", ""),
+                        "url":      "",
+                    })
+            default_url = d.get("defaultStreamingUrl", "")
+            if default_url:
+                streams.insert(0, {"name": "Default Auto", "serverId": "", "url": default_url})
+            ep_anime_id = d.get("animeId", "")
+            data = {
+                "title":    d.get("title", ""),
+                "anime_id": ep_anime_id,
+                "streams":  streams,
+                "downloads": [],
             }
-        }
+
+        if not anime_slug and data and data.get("anime_id"):
+            anime_slug = data["anime_id"]
+
+        anime_raw  = fetch(f"{pfx}/anime/{anime_slug}") if anime_slug else None
+        anime_data = None
+        if anime_raw and anime_raw.get("data"):
+            d2     = anime_raw["data"]
+            eps    = [norm_episode_item(e) for e in d2.get("episodeList", [])]
+            genres = norm_genres(d2.get("genreList", []))
+            anime_data = {
+                "detail": {
+                    "title":    d2.get("title", ""),
+                    "poster":   d2.get("poster", ""),
+                    "genres":   genres,
+                    "episodes": eps,
+                }
+            }
 
     return render_template("episode.html", data=data, slug=slug,
                            anime_slug=anime_slug, anime_data=anime_data)
@@ -313,105 +729,198 @@ def episode(slug):
 
 @app.route("/api/server/<server_id>")
 def api_server(server_id):
-    raw = fetch(f"/anime/samehadaku/server/{server_id}")
-    if raw and raw.get("data"):
-        return jsonify({"url": raw["data"].get("url", "")})
+    source = get_active_source()
+    if source == "samehadaku":
+        raw = fetch(f"/anime/samehadaku/server/{server_id}")
+        if raw and raw.get("data"):
+            return jsonify({"url": raw["data"].get("url", "")})
+    elif source == "otakudesu":
+        raw = fetch(f"/anime/server/{server_id}")
+        if raw and raw.get("data"):
+            return jsonify({"url": raw["data"].get("url", "")})
     return jsonify({"url": ""}), 404
 
 
 @app.route("/genre/<slug>")
 def genre(slug):
-    page       = request.args.get("page", 1)
-    raw        = fetch(f"/anime/samehadaku/genres/{slug}", {"page": page})
-    genres_raw = fetch("/anime/samehadaku/genres")
+    page   = request.args.get("page", 1)
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
 
-    data = None
-    if raw and raw.get("data"):
-        animes   = norm_list(raw["data"].get("animeList", []))
-        pagination = raw.get("pagination")
-        pag_norm = None
-        if pagination:
-            pag_norm = {
-                "hasNext":    pagination.get("hasNextPage", False),
-                "hasPrev":    pagination.get("hasPrevPage", False),
-                "currentPage": pagination.get("currentPage", 1),
-            }
-        data = {"animes": animes, "pagination": pag_norm}
-
-    genres = None
-    if genres_raw and genres_raw.get("data"):
-        genres = {"genres": norm_genres(genres_raw["data"].get("genreList", []))}
+    if source == "animasu":
+        raw        = fetch(f"{pfx}/genre/{slug}", {"page": page})
+        genres_raw = fetch(f"{pfx}/genres")
+        data       = animasu_norm_paginated(raw, int(page)) if raw else None
+        genres     = {"genres": animasu_norm_genres(genres_raw)} if genres_raw else None
+    elif source == "otakudesu":
+        raw        = fetch(f"{pfx}/genre/{slug}", {"page": page})
+        genres_raw = fetch(f"{pfx}/genre")
+        data = None
+        if raw and raw.get("data"):
+            pag      = raw.get("pagination") or {}
+            pag_norm = {"hasNext": pag.get("hasNextPage", False), "hasPrev": pag.get("hasPrevPage", False), "currentPage": pag.get("currentPage", 1)} if pag else None
+            data     = {"animes": otakudesu_norm_list(raw["data"].get("animeList", [])), "pagination": pag_norm}
+        genres = {"genres": otakudesu_norm_genres(genres_raw)} if genres_raw else None
+    else:
+        raw        = fetch(f"{pfx}/genres/{slug}", {"page": page})
+        genres_raw = fetch(f"{pfx}/genres")
+        data = None
+        if raw and raw.get("data"):
+            animes   = norm_list(raw["data"].get("animeList", []))
+            pagination = raw.get("pagination")
+            pag_norm = None
+            if pagination:
+                pag_norm = {
+                    "hasNext":    pagination.get("hasNextPage", False),
+                    "hasPrev":    pagination.get("hasPrevPage", False),
+                    "currentPage": pagination.get("currentPage", 1),
+                }
+            data = {"animes": animes, "pagination": pag_norm}
+        genres = None
+        if genres_raw and genres_raw.get("data"):
+            genres = {"genres": norm_genres(genres_raw["data"].get("genreList", []))}
 
     return render_template("genre.html", data=data, slug=slug, genres=genres, page=int(page))
 
 
 @app.route("/genres")
 def genres():
-    raw = fetch("/anime/samehadaku/genres")
-    data = None
-    if raw and raw.get("data"):
-        data = {"genres": norm_genres(raw["data"].get("genreList", []))}
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    # otakudesu pakai /anime/genre (tanpa s)
+    if source == "otakudesu":
+        raw = fetch(f"{pfx}/genre")
+    else:
+        raw = fetch(f"{pfx}/genres")
+    data   = None
+    if source == "animasu":
+        if raw:
+            data = {"genres": animasu_norm_genres(raw)}
+    elif source == "otakudesu":
+        if raw:
+            data = {"genres": otakudesu_norm_genres(raw)}
+    else:
+        if raw and raw.get("data"):
+            data = {"genres": norm_genres(raw["data"].get("genreList", []))}
     return render_template("genres.html", data=data)
 
 
 @app.route("/jadwal")
 def schedule():
-    raw = fetch("/anime/samehadaku/schedule")
-    return render_template("schedule.html", data=norm_schedule(raw))
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    raw    = fetch(f"{pfx}/schedule")
+    if source == "animasu":
+        sched = animasu_norm_schedule(raw)
+    elif source == "otakudesu":
+        sched = otakudesu_norm_schedule(raw)
+    else:
+        sched = norm_schedule(raw)
+    return render_template("schedule.html", data=sched)
 
 
 @app.route("/movies")
 def movies():
-    page = request.args.get("page", 1)
-    data = _norm_paginated(fetch("/anime/samehadaku/movies", {"page": page}), int(page))
+    page   = request.args.get("page", 1)
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    if source == "animasu":
+        data = animasu_norm_paginated(fetch(f"{pfx}/completed", {"page": page}), int(page))
+    elif source == "otakudesu":
+        # otakudesu tidak punya endpoint /movies, fallback ke complete-anime
+        data = otakudesu_norm_paginated(fetch(f"{pfx}/complete-anime", {"page": page}), int(page))
+    else:
+        data = _norm_paginated(fetch(f"{pfx}/movies", {"page": page}), int(page))
     return render_template("list.html", data=data, title="Movie", page=int(page), base_url="/movies")
 
 
 @app.route("/ongoing")
 def ongoing():
-    page = request.args.get("page", 1)
-    data = _norm_paginated(fetch("/anime/samehadaku/ongoing", {"page": page}), int(page))
+    page   = request.args.get("page", 1)
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    if source == "animasu":
+        data = animasu_norm_paginated(fetch(f"{pfx}/ongoing", {"page": page}), int(page))
+    elif source == "otakudesu":
+        data = otakudesu_norm_paginated(fetch(f"{pfx}/ongoing-anime", {"page": page}), int(page))
+    else:
+        data = _norm_paginated(fetch(f"{pfx}/ongoing", {"page": page}), int(page))
     return render_template("list.html", data=data, title="Ongoing", page=int(page), base_url="/ongoing")
 
 
 @app.route("/completed")
 def completed():
-    page = request.args.get("page", 1)
-    data = _norm_paginated(fetch("/anime/samehadaku/completed", {"page": page}), int(page))
+    page   = request.args.get("page", 1)
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    if source == "animasu":
+        data = animasu_norm_paginated(fetch(f"{pfx}/completed", {"page": page}), int(page))
+    elif source == "otakudesu":
+        data = otakudesu_norm_paginated(fetch(f"{pfx}/complete-anime", {"page": page}), int(page))
+    else:
+        data = _norm_paginated(fetch(f"{pfx}/completed", {"page": page}), int(page))
     return render_template("list.html", data=data, title="Completed", page=int(page), base_url="/completed")
 
 
 @app.route("/popular")
 def popular():
-    page = request.args.get("page", 1)
-    data = _norm_paginated(fetch("/anime/samehadaku/popular", {"page": page}), int(page))
+    page   = request.args.get("page", 1)
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    if source == "animasu":
+        data = animasu_norm_paginated(fetch(f"{pfx}/latest", {"page": page}), int(page))
+    elif source == "otakudesu":
+        # otakudesu tidak punya endpoint /popular, fallback ke ongoing-anime
+        data = otakudesu_norm_paginated(fetch(f"{pfx}/ongoing-anime", {"page": page}), int(page))
+    else:
+        data = _norm_paginated(fetch(f"{pfx}/popular", {"page": page}), int(page))
     return render_template("list.html", data=data, title="Populer", page=int(page), base_url="/popular")
 
 
 @app.route("/animelist")
 def animelist():
-    raw = fetch("/anime/samehadaku/list")
-    data = None
-    if raw and raw.get("data"):
-        list_data = raw["data"].get("list", [])
-        anime_list = []
-        for group in list_data:
-            letter = group.get("startWith", "#")
-            animes = [{"title": a.get("title", ""), "slug": a.get("animeId", "")}
-                      for a in group.get("animeList", [])]
-            if animes:
-                anime_list.append({"letter": letter, "animes": animes})
-        data = {"anime_list": anime_list}
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    if source == "animasu":
+        raw  = fetch(f"{pfx}/animelist")
+        data = animasu_norm_animelist(raw)
+    elif source == "otakudesu":
+        # otakudesu animelist ada di /anime/unlimited
+        raw  = fetch(f"{pfx}/unlimited")
+        data = otakudesu_norm_animelist(raw)
+    else:
+        raw  = fetch(f"{pfx}/list")
+        data = None
+        if raw and raw.get("data"):
+            list_data = raw["data"].get("list", [])
+            anime_list = []
+            for group in list_data:
+                letter = group.get("startWith", "#")
+                animes = [{"title": a.get("title", ""), "slug": a.get("animeId", "")}
+                          for a in group.get("animeList", [])]
+                if animes:
+                    anime_list.append({"letter": letter, "animes": animes})
+            data = {"anime_list": anime_list}
     return render_template("animelist.html", data=data)
 
 
 @app.route("/search")
 def search():
-    q   = request.args.get("q", "")
-    raw = fetch("/anime/samehadaku/search", {"q": q}) if q else None
-    data = None
-    if raw and raw.get("data"):
-        data = {"animes": norm_list(raw["data"].get("animeList", []))}
+    q      = request.args.get("q", "")
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    data   = None
+    if q:
+        if source == "animasu":
+            raw  = fetch(f"{pfx}/search/{q}")
+            data = animasu_norm_search(raw)
+        elif source == "otakudesu":
+            raw  = fetch(f"{pfx}/search/{q}")
+            data = otakudesu_norm_search(raw)
+        else:
+            raw  = fetch(f"{pfx}/search", {"q": q})
+            if raw and raw.get("data"):
+                data = {"animes": norm_list(raw["data"].get("animeList", []))}
     return render_template("search.html", data=data, query=q)
 
 
@@ -429,20 +938,109 @@ def chat():
 def admin():
     return render_template("admin.html")
 
+@app.route("/api/admin/cache/flush", methods=["POST"])
+def admin_flush_cache():
+    """Hapus semua cache Redis animeku. Admin only."""
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+    try:
+        keys = redis.keys("animeku:*")
+        if keys:
+            for k in keys:
+                redis.delete(k)
+        return jsonify({"ok": True, "deleted": len(keys) if keys else 0})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/premium")
 def premium():
     return render_template("premium.html")
+
+@app.route("/profile")
+def profile():
+    return render_template("profile.html")
 
 
 # ── API Proxy ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/search/<keyword>")
 def api_search(keyword):
-    raw = fetch("/anime/samehadaku/search", {"q": keyword})
-    data = None
-    if raw and raw.get("data"):
-        data = {"animes": norm_list(raw["data"].get("animeList", []))}
+    source = get_active_source()
+    pfx    = SOURCES[source]["prefix"]
+    data   = None
+    if source == "animasu":
+        raw  = fetch(f"{pfx}/search/{keyword}")
+        data = animasu_norm_search(raw)
+    elif source == "otakudesu":
+        raw  = fetch(f"{pfx}/search/{keyword}")
+        data = otakudesu_norm_search(raw)
+    else:
+        raw  = fetch(f"{pfx}/search", {"q": keyword})
+        if raw and raw.get("data"):
+            data = {"animes": norm_list(raw["data"].get("animeList", []))}
     return jsonify(data)
+
+
+# ── Endpoint Switcher API ──────────────────────────────────────────────────────
+
+@app.route("/api/source", methods=["GET"])
+def api_get_source():
+    """Ambil source yang sedang aktif (public)."""
+    active = get_active_source()
+    return jsonify({
+        "active": active,
+        "label":  SOURCES[active]["label"],
+        "sources": [{"key": k, "label": v["label"]} for k, v in SOURCES.items()]
+    })
+
+@app.route("/api/source/switch", methods=["POST"])
+def api_switch_source():
+    """Ganti source aktif untuk user ini (cookie, works di Vercel serverless)."""
+    data   = request.get_json()
+    source = data.get("source", "")
+    if source not in SOURCES:
+        return jsonify({"error": f"Source tidak valid. Pilih: {list(SOURCES.keys())}"}), 400
+
+    # Simpan ke cookie browser user (30 hari) — tidak butuh session/Redis
+    resp = jsonify({"ok": True, "active": source, "label": SOURCES[source]["label"]})
+    resp.set_cookie("active_source", source, max_age=30*24*3600, samesite="Lax")
+
+    # Kalau admin → juga update Redis global sebagai default semua user
+    user = session.get("user")
+    ADMIN_IDS = ["1a2c72de-e85c-4430-8e27-8c1c1fd0b8f1"]
+    try:
+        r_cfg = requests.get(
+            f"{SUPABASE_URL}/rest/v1/site_config",
+            headers=supabase_service_headers(),
+            params={"key": "eq.admin_ids", "select": "value"}
+        )
+        if r_cfg.ok and r_cfg.json():
+            val = r_cfg.json()[0].get("value")
+            if val:
+                ADMIN_IDS = val if isinstance(val, list) else val.get("ids", ADMIN_IDS)
+    except Exception:
+        pass
+
+    if user and user.get("id") in ADMIN_IDS:
+        # Admin: update Supabase site_config sebagai default global semua user
+        try:
+            requests.post(
+                f"{SUPABASE_URL}/rest/v1/site_config",
+                headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates"},
+                json={"key": "active_source", "value": source},
+                timeout=5
+            )
+        except Exception:
+            pass
+        # Update Redis cache juga
+        try:
+            redis.set("animeku:active_source", source, ex=86400 * 365)
+        except Exception:
+            pass
+
+    return resp
 
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
@@ -1102,6 +1700,91 @@ def cron_premium_reminder():
         "notified": len(notified),
         "users": notified
     })
+
+
+
+@app.route("/debug2")
+def debug2():
+    import traceback
+    results = {}
+    # Test berbagai path alternatif untuk otakudesu
+    endpoints = {
+        "ongoing_v1":    "/anime/ongoing-anime",
+        "ongoing_v2":    "/anime/ongoing",
+        "completed_v1":  "/anime/complete-anime",
+        "completed_v2":  "/anime/completed",
+        "movies_v1":     "/anime/movies",
+        "movies_v2":     "/anime/movie",
+        "popular_v1":    "/anime/popular",
+        "popular_v2":    "/anime/populer",
+        "genres_v1":     "/anime/genres",
+        "genres_v2":     "/anime/genre",
+        "animelist_v1":  "/anime/list",
+        "animelist_v2":  "/anime/anime-list",
+        "search_v1":     "/anime/search?q=naruto",
+    }
+    for key, path in endpoints.items():
+        try:
+            raw = fetch(path)
+            if raw is None:
+                results[key] = "NULL"
+            elif not isinstance(raw, dict):
+                results[key] = f"type={type(raw).__name__}"
+            else:
+                data = raw.get("data")
+                info = {
+                    "status": raw.get("status"),
+                    "top_keys": list(raw.keys()),
+                }
+                if isinstance(data, dict):
+                    info["data_keys"] = list(data.keys())
+                    info["animeList_count"] = len(data.get("animeList", []))
+                elif isinstance(data, list):
+                    info["data_type"] = f"list[{len(data)}]"
+                    if data and isinstance(data[0], dict):
+                        info["first_item_keys"] = list(data[0].keys())
+                results[key] = info
+        except Exception as e:
+            results[key] = {"error": str(e)[:100]}
+    
+    # Juga cek ongoing item pertama untuk lihat struktur field
+    try:
+        raw = fetch("/anime/ongoing-anime")
+        if raw and raw.get("data") and raw["data"].get("animeList"):
+            first = raw["data"]["animeList"][0]
+            results["_ongoing_first_item"] = first
+    except Exception as e:
+        results["_ongoing_first_item"] = str(e)
+    
+    return jsonify(results)
+
+@app.route("/debug")
+def debug():
+    import traceback
+    try:
+        source = get_active_source()
+        pfx    = SOURCES[source]["prefix"]
+        raw    = fetch(f"{pfx}/home")
+        return jsonify({
+            "source":    source,
+            "pfx":       pfx,
+            "raw_ok":    raw is not None,
+            "status":    raw.get("status") if raw else None,
+            "data_keys": list(raw.get("data", {}).keys()) if raw else None,
+            "ongoing_count": len(raw["data"].get("ongoing", {}).get("animeList", [])) if raw and raw.get("data") else 0,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+@app.route("/sitemap.xml")
+def sitemap():
+    return send_from_directory("static", "sitemap.xml", mimetype="application/xml")
+
+
+@app.route("/robots.txt")
+def robots():
+    return send_from_directory("static", "robots.txt", mimetype="text/plain")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
