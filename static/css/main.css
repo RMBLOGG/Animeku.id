@@ -270,17 +270,17 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 }
 .anime-grid.lg { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); }
 
-/* Ongoing section: 3 kolom, card 16:9 */
+/* Ongoing section: sama seperti Terbaru (portrait 2/3) */
 .ongoing-grid {
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
 }
 .ongoing-grid .card-poster {
-  aspect-ratio: 16/9;
+  aspect-ratio: 2/3;
 }
 .ongoing-grid .card-title {
-  font-size: 11px;
-  -webkit-line-clamp: 1;
+  font-size: 13px;
+  -webkit-line-clamp: 2;
 }
 
 .anime-card {
@@ -347,7 +347,7 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 }
 .card-badge.type { background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.15); left: auto; right: 8px; }
 
-.card-info { padding: 10px 12px 12px; }
+.card-info { padding: 10px 12px; }
 .card-title {
   font-size: 13px;
   font-weight: 600;
@@ -357,39 +357,7 @@ main { padding-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 6px;
 }
-
-/* Genre badge row */
-.card-genre {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  letter-spacing: 0.3px;
-  margin-bottom: 7px;
-}
-
-/* Stats row: views & favorites */
-.card-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 4px;
-}
-.card-stat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--text2);
-  font-family: var(--font-mono);
-}
-.card-stat svg { flex-shrink: 0; }
-.card-stat.views { color: var(--accent); }
-.card-stat.favs { color: var(--gold); }
-
 .card-meta {
   margin-top: 6px;
   display: flex;
