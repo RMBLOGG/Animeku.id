@@ -1,0 +1,928 @@
+{% extends "base.html" %}
+{% block title %}Profil — Animeku.id{% endblock %}
+
+{% block head %}
+<style>
+/* ── Profile Page Styles ────────────────────────────────── */
+.profile-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+}
+
+/* Header Card */
+.profile-header {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px 24px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #f4a261, var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+.profile-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  background: var(--bg);
+}
+.profile-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #f4a261);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid var(--border);
+}
+.profile-premium-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #f4a261;
+  box-shadow: 0 0 10px rgba(244,162,97,0.4);
+  pointer-events: none;
+  display: none;
+}
+.profile-premium-ring.active { display: block; }
+
+.profile-meta { flex: 1; min-width: 0; }
+.profile-name {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.profile-email {
+  font-size: 13px;
+  color: var(--text2);
+  margin: 0 0 10px;
+}
+.profile-joined {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.profile-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.badge-premium {
+  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(230,111,27,0.15));
+  border: 1px solid rgba(244,162,97,0.4);
+  color: #f4a261;
+}
+.badge-free {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+.badge-user-id {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.badge-user-id:hover { color: var(--text2); border-color: rgba(255,255,255,0.2); }
+
+/* Sections grid */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 620px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+.profile-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.profile-section.full-width { grid-column: 1 / -1; }
+
+.section-title {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Premium Status */
+.premium-status-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.premium-status-info {}
+.premium-status-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.premium-status-sub {
+  font-size: 12px;
+  color: var(--text2);
+}
+.premium-expires {
+  font-size: 12px;
+  color: #f4a261;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.btn-upgrade {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(230,111,27,0.1));
+  border: 1px solid rgba(244,162,97,0.4);
+  border-radius: var(--radius);
+  color: #f4a261;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.btn-upgrade:hover {
+  background: linear-gradient(135deg, rgba(244,162,97,0.25), rgba(230,111,27,0.2));
+  border-color: rgba(244,162,97,0.7);
+}
+
+/* Watchlist */
+.watchlist-empty {
+  text-align: center;
+  padding: 28px 0;
+  color: var(--text3);
+  font-size: 13px;
+}
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+.watchlist-item {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 2/3;
+  background: var(--bg);
+  cursor: pointer;
+  transition: var(--trans);
+}
+.watchlist-item:hover { transform: scale(1.04); }
+.watchlist-item img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.watchlist-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 50%, rgba(0,0,0,0.85));
+}
+.watchlist-item-title {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 6px 5px 5px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* History */
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--trans);
+  text-decoration: none;
+}
+.history-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); }
+.history-thumb {
+  width: 44px; height: 62px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.history-info { flex: 1; min-width: 0; }
+.history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.history-ep {
+  font-size: 11px;
+  color: var(--text2);
+}
+.history-time {
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+.history-empty {
+  text-align: center;
+  padding: 28px 0;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+/* Settings */
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-label {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+.settings-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.settings-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 10px;
+  font-family: var(--font-body);
+  transition: var(--trans);
+  max-width: 180px;
+}
+.settings-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+
+.source-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 10px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--trans);
+}
+.source-select:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+
+.btn-save {
+  padding: 7px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: var(--trans);
+}
+.btn-save:hover { opacity: 0.85; }
+.btn-save:disabled { opacity: 0.4; cursor: default; }
+
+/* Danger zone */
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-logout {
+  padding: 9px 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: var(--trans);
+}
+.btn-logout:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.btn-delete {
+  padding: 9px 18px;
+  background: rgba(230,57,70,0.08);
+  border: 1px solid rgba(230,57,70,0.3);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: var(--trans);
+}
+.btn-delete:hover { background: rgba(230,57,70,0.18); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px 20px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 9999;
+  transition: transform .3s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(76,175,79,0.5); color: #4caf7d; }
+.toast.error { border-color: rgba(230,57,70,0.5); color: var(--accent); }
+
+/* Not logged in */
+.profile-login-prompt {
+  text-align: center;
+  padding: 80px 24px;
+}
+.profile-login-prompt p {
+  font-size: 15px;
+  color: var(--text2);
+  margin-bottom: 20px;
+}
+.btn-login-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--trans);
+}
+.btn-login-google:hover { background: rgba(255,255,255,0.08); }
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, rgba(255,255,255,0.04) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes skeleton-wave {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+
+  <!-- Not Logged In State -->
+  <div id="profileLoginPrompt" class="profile-login-prompt" style="display:none">
+    <p>Login untuk melihat dan mengelola profil kamu</p>
+    <a href="/auth/login" class="btn-login-google">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Login dengan Google
+    </a>
+  </div>
+
+  <!-- Profile Content (hidden until loaded) -->
+  <div id="profileContent" style="display:none">
+
+    <!-- Header Card -->
+    <div class="profile-header">
+      <div class="profile-header-inner">
+        <div class="profile-avatar-wrap">
+          <div class="profile-premium-ring" id="premiumRing"></div>
+          <img id="profileAvatar" class="profile-avatar" src="" alt="" onerror="this.style.display='none';document.getElementById('avatarFallback').style.display='flex'">
+          <div id="avatarFallback" class="profile-avatar-fallback" style="display:none">?</div>
+        </div>
+        <div class="profile-meta">
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-badges">
+            <span class="badge badge-free" id="premiumBadge">● Free</span>
+            <span class="badge badge-user-id" id="userIdBadge" title="Klik untuk copy User ID">ID: …</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+
+      <!-- Status Premium -->
+      <div class="profile-section">
+        <div class="section-title"><span class="dot"></span>Status Premium</div>
+        <div class="premium-status-box">
+          <div class="premium-status-info">
+            <div class="premium-status-label" id="premiumStatusLabel">Memuat…</div>
+            <div class="premium-status-sub" id="premiumStatusSub"></div>
+            <div class="premium-expires" id="premiumExpiresLabel" style="display:none"></div>
+          </div>
+          <a href="/premium" class="btn-upgrade" id="btnUpgrade">⭐ Upgrade</a>
+        </div>
+      </div>
+
+      <!-- Pengaturan Source -->
+      <div class="profile-section">
+        <div class="section-title"><span class="dot"></span>Pengaturan</div>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Source Default</div>
+            <div class="settings-sub">Sumber streaming favorit kamu</div>
+          </div>
+          <select class="source-select" id="sourceSelect">
+            <option value="samehadaku">Dayynime-v1</option>
+            <option value="animasu">Dayynime-v2</option>
+            <option value="otakudesu">Dayynime-v3</option>
+          </select>
+        </div>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Display Name</div>
+            <div class="settings-sub">Nama yang tampil di komentar</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" class="settings-input" id="displayNameInput" placeholder="Nama kamu" maxlength="30">
+            <button class="btn-save" id="btnSaveName">Simpan</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Watchlist -->
+      <div class="profile-section full-width">
+        <div class="section-title" style="justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:8px"><span class="dot"></span>Watchlist</span>
+          <span id="watchlistCount" style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">0 anime</span>
+        </div>
+        <div id="watchlistContainer">
+          <div class="watchlist-empty">Belum ada anime di watchlist</div>
+        </div>
+      </div>
+
+      <!-- Riwayat Tonton -->
+      <div class="profile-section full-width">
+        <div class="section-title" style="justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:8px"><span class="dot"></span>Riwayat Tonton</span>
+          <button id="btnClearHistory" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font-body);padding:0;transition:var(--trans)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">Hapus semua</button>
+        </div>
+        <div id="historyContainer">
+          <div class="history-empty">Belum ada riwayat tonton</div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="profile-section full-width">
+        <div class="section-title"><span class="dot" style="background:var(--accent)"></span>Akun</div>
+        <div class="danger-zone">
+          <div>
+            <div class="settings-label">Keluar dari akun</div>
+            <div class="settings-sub">Sesi kamu di browser ini akan dihapus</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-logout" id="btnLogout">Logout</button>
+            <button class="btn-delete" id="btnDeleteAccount">Hapus Akun</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .profile-grid -->
+  </div><!-- #profileContent -->
+
+  <!-- Loading skeleton -->
+  <div id="profileSkeleton">
+    <div class="profile-header">
+      <div class="profile-header-inner">
+        <div class="skeleton" style="width:80px;height:80px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:22px;width:160px"></div>
+          <div class="skeleton" style="height:14px;width:200px"></div>
+          <div class="skeleton" style="height:22px;width:100px;border-radius:20px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-grid">
+      <div class="profile-section"><div class="skeleton" style="height:80px;border-radius:var(--radius)"></div></div>
+      <div class="profile-section"><div class="skeleton" style="height:80px;border-radius:var(--radius)"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Delete Account Modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;max-width:340px;width:90%;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Hapus Akun?</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Tindakan ini tidak bisa dibatalkan. Semua data termasuk status premium akan dihapus.</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="document.getElementById('deleteModal').style.display='none'" class="btn-logout">Batal</button>
+      <button id="btnConfirmDelete" class="btn-delete">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const $ = id => document.getElementById(id);
+
+  // ── Toast ──────────────────────────────────────────────
+  function showToast(msg, type='') {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => { t.className = 'toast'; }, 3000);
+  }
+
+  // ── Copy to clipboard ──────────────────────────────────
+  $('userIdBadge').addEventListener('click', function() {
+    const uid = this.dataset.uid || '';
+    if (!uid) return;
+    navigator.clipboard.writeText(uid).then(() => showToast('User ID disalin!', 'success'));
+  });
+
+  // ── Load watchlist from localStorage ──────────────────
+  function loadWatchlist() {
+    let wl = [];
+    try {
+      const raw = localStorage.getItem('watchlist');
+      if (raw) wl = JSON.parse(raw);
+      if (!Array.isArray(wl)) wl = [];
+    } catch(e) {}
+
+    $('watchlistCount').textContent = wl.length + ' anime';
+    const container = $('watchlistContainer');
+
+    if (!wl.length) {
+      container.innerHTML = '<div class="watchlist-empty">Belum ada anime di watchlist</div>';
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'watchlist-grid';
+    wl.slice(0, 18).forEach(item => {
+      const el = document.createElement('a');
+      el.href = '/anime/' + (item.slug || item.id || '#');
+      el.className = 'watchlist-item';
+      el.innerHTML = `
+        <img src="${item.poster || item.image || ''}" alt="${item.title || ''}" loading="lazy" onerror="this.src=''">
+        <div class="watchlist-item-overlay"></div>
+        <div class="watchlist-item-title">${item.title || ''}</div>
+      `;
+      grid.appendChild(el);
+    });
+
+    if (wl.length > 18) {
+      const more = document.createElement('div');
+      more.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;min-height:60px;color:var(--text3);font-size:12px';
+      more.textContent = '+' + (wl.length - 18) + ' lagi';
+      grid.appendChild(more);
+    }
+
+    container.innerHTML = '';
+    container.appendChild(grid);
+  }
+
+  // ── Load history from localStorage ────────────────────
+  function loadHistory() {
+    let hist = [];
+    try {
+      const raw = localStorage.getItem('watchHistory');
+      if (raw) hist = JSON.parse(raw);
+      if (!Array.isArray(hist)) hist = [];
+    } catch(e) {}
+
+    const container = $('historyContainer');
+    if (!hist.length) {
+      container.innerHTML = '<div class="history-empty">Belum ada riwayat tonton</div>';
+      return;
+    }
+
+    // Urutkan terbaru dulu, ambil 10
+    hist = hist.slice().reverse().slice(0, 10);
+
+    const list = document.createElement('div');
+    list.className = 'history-list';
+
+    hist.forEach(item => {
+      const el = document.createElement('a');
+      el.href = '/episode/' + (item.episodeSlug || item.slug || '#') + (item.animeSlug ? '?anime=' + item.animeSlug : '');
+      el.className = 'history-item';
+
+      const timeAgo = item.watchedAt ? relativeTime(item.watchedAt) : '';
+
+      el.innerHTML = `
+        <img class="history-thumb" src="${item.poster || ''}" alt="${item.animeTitle || ''}" loading="lazy" onerror="this.style.background='var(--bg)'">
+        <div class="history-info">
+          <div class="history-title">${item.animeTitle || item.title || 'Unknown'}</div>
+          <div class="history-ep">${item.episodeName || item.episode || ''}</div>
+        </div>
+        <div class="history-time">${timeAgo}</div>
+      `;
+      list.appendChild(el);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(list);
+  }
+
+  function relativeTime(ts) {
+    const diff = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'Baru saja';
+    if (m < 60) return m + ' mnt lalu';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' jam lalu';
+    const d = Math.floor(h / 24);
+    return d + ' hari lalu';
+  }
+
+  $('btnClearHistory').addEventListener('click', function() {
+    if (!confirm('Hapus semua riwayat tonton?')) return;
+    localStorage.removeItem('watchHistory');
+    loadHistory();
+    showToast('Riwayat dihapus', 'success');
+  });
+
+  // ── Source preference ──────────────────────────────────
+  async function loadCurrentSource() {
+    try {
+      const r = await fetch('/api/source');
+      const d = await r.json();
+      $('sourceSelect').value = d.active || 'samehadaku';
+    } catch(e) {}
+  }
+
+  $('sourceSelect').addEventListener('change', async function() {
+    try {
+      const r = await fetch('/api/source/switch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ source: this.value })
+      });
+      const d = await r.json();
+      if (d.ok) showToast('Source diubah ke ' + d.label, 'success');
+      else showToast('Gagal ubah source', 'error');
+    } catch(e) {
+      showToast('Gagal ubah source', 'error');
+    }
+  });
+
+  // ── Display name ────────────────────────────────────────
+  function loadDisplayName(defaultName) {
+    const saved = localStorage.getItem('displayName') || defaultName || '';
+    $('displayNameInput').value = saved;
+  }
+
+  $('btnSaveName').addEventListener('click', function() {
+    const name = $('displayNameInput').value.trim();
+    if (!name) { showToast('Nama tidak boleh kosong', 'error'); return; }
+    localStorage.setItem('displayName', name);
+    showToast('Nama disimpan!', 'success');
+  });
+
+  // ── Premium status ──────────────────────────────────────
+  async function loadPremiumStatus(token) {
+    try {
+      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+      const r = await fetch('/api/premium/status', { headers });
+      const d = await r.json();
+
+      const label = $('premiumStatusLabel');
+      const sub = $('premiumStatusSub');
+      const expLabel = $('premiumExpiresLabel');
+      const badge = $('premiumBadge');
+      const ring = $('premiumRing');
+      const btnUpgrade = $('btnUpgrade');
+
+      if (d.premium) {
+        label.textContent = '⭐ Premium Aktif';
+        label.style.color = '#f4a261';
+        sub.textContent = 'Nikmati semua episode tanpa batas';
+        badge.className = 'badge badge-premium';
+        badge.textContent = '✦ Premium';
+        ring.classList.add('active');
+        btnUpgrade.textContent = '🔁 Perpanjang';
+
+        if (d.expires_at) {
+          const exp = new Date(d.expires_at);
+          expLabel.textContent = 'Berakhir: ' + exp.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+          expLabel.style.display = 'block';
+        } else {
+          expLabel.textContent = '✦ Lifetime';
+          expLabel.style.display = 'block';
+        }
+      } else {
+        const reason = d.reason;
+        if (reason === 'expired') {
+          label.textContent = '⏰ Premium Expired';
+          label.style.color = 'var(--accent)';
+          sub.textContent = 'Perpanjang untuk lanjut nonton';
+        } else {
+          label.textContent = 'Akun Gratis';
+          sub.textContent = 'Episode 1–2 gratis, episode selanjutnya butuh Premium';
+        }
+        badge.className = 'badge badge-free';
+        badge.textContent = '● Free';
+      }
+    } catch(e) {}
+  }
+
+  // ── Logout ──────────────────────────────────────────────
+  $('btnLogout').addEventListener('click', async function() {
+    try {
+      await fetch('/auth/logout', { method: 'POST' });
+    } catch(e) {}
+    // Clear supabase session
+    try { localStorage.removeItem('sb-mafnnqttvkdgqqxczqyt-auth-token'); } catch(e) {}
+    showToast('Berhasil logout', 'success');
+    setTimeout(() => { window.location.href = '/'; }, 1000);
+  });
+
+  // ── Delete account ──────────────────────────────────────
+  $('btnDeleteAccount').addEventListener('click', function() {
+    const modal = $('deleteModal');
+    modal.style.display = 'flex';
+  });
+
+  $('btnConfirmDelete').addEventListener('click', async function() {
+    const token = getToken();
+    if (!token) { showToast('Tidak terautentikasi', 'error'); return; }
+    this.disabled = true;
+    this.textContent = 'Menghapus…';
+    try {
+      // Logout saja karena Supabase delete user butuh admin API
+      // Idealnya ada endpoint /api/account/delete di backend
+      await fetch('/auth/logout', { method: 'POST' });
+      localStorage.clear();
+      showToast('Akun dihapus. Sampai jumpa!', 'success');
+      setTimeout(() => { window.location.href = '/'; }, 1500);
+    } catch(e) {
+      showToast('Gagal hapus akun', 'error');
+      this.disabled = false;
+      this.textContent = 'Ya, Hapus';
+    }
+  });
+
+  // ── Get token helper ────────────────────────────────────
+  function getToken() {
+    try {
+      const raw = localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed.access_token || null;
+    } catch(e) { return null; }
+  }
+
+  // ── Init ────────────────────────────────────────────────
+  async function init() {
+    // Ambil session dari /api/me (server-side session)
+    let user = null;
+    let token = getToken();
+
+    try {
+      const r = await fetch('/api/me');
+      const d = await r.json();
+      user = d.user;
+    } catch(e) {}
+
+    // Jika tidak ada server session, coba dari localStorage Supabase
+    if (!user && token) {
+      try {
+        const raw = localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token');
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (parsed && parsed.user) {
+          const u = parsed.user;
+          user = {
+            id:     u.id,
+            name:   u.user_metadata?.full_name || 'User',
+            avatar: u.user_metadata?.avatar_url || '',
+            email:  u.email || '',
+          };
+        }
+      } catch(e) {}
+    }
+
+    $('profileSkeleton').style.display = 'none';
+
+    if (!user) {
+      $('profileLoginPrompt').style.display = 'block';
+      return;
+    }
+
+    // Populate UI
+    $('profileContent').style.display = 'block';
+    $('profileName').textContent = user.name || 'User';
+    $('profileEmail').textContent = user.email || '';
+    $('avatarFallback').textContent = (user.name || 'U')[0].toUpperCase();
+
+    if (user.avatar) {
+      $('profileAvatar').src = user.avatar;
+      $('profileAvatar').style.display = 'block';
+    } else {
+      $('avatarFallback').style.display = 'flex';
+    }
+
+    const idBadge = $('userIdBadge');
+    const shortId = user.id ? user.id.substring(0, 8) + '…' : '—';
+    idBadge.textContent = 'ID: ' + shortId;
+    idBadge.dataset.uid = user.id || '';
+
+    loadDisplayName(user.name);
+    loadWatchlist();
+    loadHistory();
+    loadCurrentSource();
+    loadPremiumStatus(token);
+  }
+
+  init();
+})();
+</script>
+{% endblock %}
