@@ -1783,7 +1783,7 @@ def donghua_anime_slug_from_episode(ep_slug):
             break
     return '-'.join(parts[:cut]).strip('-')
 
-──────────────────────────────────────────────────────────
+
 DONGHUA_PREFIX = "/anime/donghua"
 
 def fetch_donghua(path, params=None):
