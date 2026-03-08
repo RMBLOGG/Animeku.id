@@ -1767,7 +1767,23 @@ def robots():
 
 
 
-# ── DONGHUA ROUTES ─────────────────────────────────────────────────────────────
+# ── DONGHUA ROUTES ───
+def donghua_anime_slug_from_episode(ep_slug):
+    ep_slug = ep_slug.rstrip("/")
+    # Hapus '-subtitle-indonesia' ke belakang
+    idx = ep_slug.lower().find('-subtitle-indonesia')
+    if idx > 0:
+        ep_slug = ep_slug[:idx]
+    # Hapus '-episode-NNN' ke belakang (cari dari kanan)
+    parts = ep_slug.split('-')
+    cut = len(parts)
+    for i, p in enumerate(parts):
+        if p == 'episode' and i + 1 < len(parts) and parts[i + 1].isdigit():
+            cut = i
+            break
+    return '-'.join(parts[:cut]).strip('-')
+
+──────────────────────────────────────────────────────────
 DONGHUA_PREFIX = "/anime/donghua"
 
 def fetch_donghua(path, params=None):
@@ -1828,8 +1844,13 @@ def donghua_home():
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/home/{page}")
     data = None
     if raw and raw.get("status") == "success":
+        latest = raw.get("latest_release", [])
+        # Inject anime_slug ke setiap item latest
+        for item in latest:
+            ep_slug = item.get("slug", "").rstrip("/")
+            item["anime_slug"] = donghua_anime_slug_from_episode(ep_slug)
         data = {
-            "latest":    raw.get("latest_release", []),
+            "latest":    latest,
             "completed": raw.get("completed_donghua", []),
         }
     return render_template("donghua.html", data=data, page=page, section="home")
@@ -1871,7 +1892,7 @@ def donghua_search():
     items = []
     if q:
         raw = fetch_donghua(f"{DONGHUA_PREFIX}/search/{q}/{page}")
-        if raw and raw.get("status") == "success":
+        if raw and isinstance(raw.get("data"), list):
             items = raw.get("data", [])
     return render_template("donghua.html", data={"items": items, "query": q}, page=page, section="search")
 
@@ -1880,19 +1901,8 @@ def donghua_search():
 def donghua_genres():
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres")
     genres = []
-    if raw and raw.get("status") == "success":
+    if raw and isinstance(raw.get("data"), list):
         genres = raw.get("data", [])
-        # Filter hanya genre konten (bukan studio/tahun)
-        CONTENT_GENRES = {
-            "action","adventure","comedy","drama","ecchi","fantasy","game",
-            "historical","horror","josei","kids","magic","martial-arts","mecha",
-            "military","music","mystery","psychological","romance","school",
-            "sci-fi","seinen","shoujo","shounen","slice-of-life","space",
-            "sports","super-power","supernatural","thriller","vampire","wuxia",
-            "xianxia","xuanhuan","isekai","cultivation"
-        }
-        genres = [g for g in genres if any(k in g.get("slug","").lower() for k in CONTENT_GENRES)
-                  or not any(c.isdigit() for c in g.get("slug",""))]
     return render_template("donghua.html", data={"genres": genres}, page=1, section="genres")
 
 
@@ -1902,7 +1912,7 @@ def donghua_genre(slug):
     page = request.args.get("page", 1, type=int)
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/genres/{slug}/{page}")
     items = []
-    if raw and raw.get("status") == "success":
+    if raw and isinstance(raw.get("data"), list):
         items = raw.get("data", [])
     return render_template("donghua.html", data={"items": items, "genre_slug": slug}, page=page, section="genre")
 
@@ -1912,7 +1922,7 @@ def donghua_detail(slug):
     slug = slug.rstrip("/")
     raw  = fetch_donghua(f"{DONGHUA_PREFIX}/detail/{slug}")
     data = None
-    if raw and raw.get("status") == "success":
+    if raw and raw.get("creator"):
         d = raw
         data = {
             "title":          d.get("title", ""),
