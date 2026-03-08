@@ -109,15 +109,6 @@ function showToast(msg) {
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
 }
 
-// ── Sync favorites ke server ─────────────────────
-function syncFavorite(slug, title, poster, action) {
-  fetch('/api/stats/favorite', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slug, title, poster, action }),
-  }).catch(() => {}); // fire-and-forget
-}
-
 // ── Watchlist ───────────────────────────────────
 function toggleWatchlist(slug, title, poster, type) {
   let list = lsGet(WL_KEY, []);
@@ -125,11 +116,9 @@ function toggleWatchlist(slug, title, poster, type) {
   if (idx >= 0) {
     list.splice(idx, 1);
     showToast('Dihapus dari watchlist');
-    syncFavorite(slug, title, poster, 'remove');
   } else {
     list.unshift({ slug, title, poster, type, addedAt: Date.now() });
     showToast('Ditambahkan ke watchlist ❤️');
-    syncFavorite(slug, title, poster, 'add');
   }
   lsSet(WL_KEY, list);
   _syncWatchlistBtn(slug, list);
@@ -188,11 +177,9 @@ function renderWatchlist() {
 
 function removeWatchlistItem(slug) {
   let list = lsGet(WL_KEY, []);
-  const item = list.find(a => a.slug === slug);
   list = list.filter(a => a.slug !== slug);
   lsSet(WL_KEY, list);
   showToast('Dihapus dari watchlist');
-  if (item) syncFavorite(slug, item.title, item.poster, 'remove');
   renderWatchlist();
 }
 
