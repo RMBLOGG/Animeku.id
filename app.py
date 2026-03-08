@@ -1057,6 +1057,9 @@ def api_me():
     return jsonify({"user": session.get("user")})
 
 
+# ── Premium (dihapus — semua konten gratis) ────────────────────────────────────
+
+
 # ── Comments ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/comments/<anime_slug>")
@@ -1154,51 +1157,12 @@ def sociabuzz_webhook():
     except Exception as e:
         print(f"[Sociabuzz] Exception: {e}")
 
-    # ── AUTO GRANT PREMIUM ─────────────────────────────────────────
-    # Syarat: amount >= 15000 DAN pesan mengandung "PREMIUM:<user_id>"
-    PREMIUM_PRICE = 15000
-    premium_granted = False
-    premium_user_id = None
-
-    if amount >= PREMIUM_PRICE:
-        import re
-        # Cari pola PREMIUM:<uuid> di pesan
-        match = re.search(r'PREMIUM:([a-f0-9\-]{36})', message, re.IGNORECASE)
-        if match:
-            premium_user_id = match.group(1)
-            try:
-                from datetime import datetime, timezone, timedelta
-                expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-
-                # Upsert ke tabel user_premium
-                prem_payload = {
-                    "user_id":    premium_user_id,
-                    "is_active":  True,
-                    "expires_at": expires_at,
-                }
-                rp = requests.post(
-                    f"{SUPABASE_URL}/rest/v1/user_premium",
-                    headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
-                    json=prem_payload,
-                )
-                if rp.ok:
-                    premium_granted = True
-                    print(f"[Sociabuzz] ✅ Premium granted untuk user {premium_user_id} hingga {expires_at}")
-                else:
-                    print(f"[Sociabuzz] ❌ Gagal grant premium: {rp.text}")
-            except Exception as e:
-                print(f"[Sociabuzz] Exception grant premium: {e}")
-        else:
-            print(f"[Sociabuzz] ⚠️ Amount cukup tapi User ID tidak ditemukan di pesan: '{message}'")
-
     # ── Kirim notifikasi ke Live Chat ──────────────────────────────
     try:
         rp_fmt = f"Rp {amount:,}".replace(",", ".")
-        if premium_granted:
-            chat_content = f"✦ PREMIUM AKTIF! {donor_name} baru saja berlangganan Premium dengan donasi {rp_fmt}! 🎉"
         else:
             chat_content = f"🎉 SPECIAL THANKS kepada {donor_name} yang telah berdonasi {rp_fmt}!"
-        if message and not premium_granted:
+        if message:
             chat_content += f' 💬 "{message}"'
 
         r2 = requests.post(
@@ -1223,12 +1187,7 @@ def sociabuzz_webhook():
     except Exception as e:
         print(f"[Sociabuzz] Exception chat: {e}")
 
-    return jsonify({
-        "ok": True,
-        "received": supporter_id,
-        "premium_granted": premium_granted,
-        "premium_user_id": premium_user_id,
-    }), 200
+    return jsonify({"ok": True, "received": supporter_id}), 200
 
 
 @app.route("/api/donations")
@@ -1304,7 +1263,7 @@ def _is_admin(access_token):
 
 @app.route("/api/admin/users")
 def admin_users():
-    """Daftar semua user Google + status premium. Admin only."""
+    """Daftar semua user. Admin only."""
     auth_header = request.headers.get("Authorization", "")
     access_token = auth_header.replace("Bearer ", "").strip()
     if not _is_admin(access_token):
@@ -1313,7 +1272,6 @@ def admin_users():
     if not SUPABASE_SERVICE_KEY:
         return jsonify({"error": "Service key tidak dikonfigurasi"}), 500
 
-    # Ambil semua user dari Supabase Auth
     users_resp = requests.get(
         f"{SUPABASE_URL}/auth/v1/admin/users",
         headers=supabase_service_headers(),
@@ -1323,243 +1281,24 @@ def admin_users():
         return jsonify({"error": "Gagal ambil data user", "detail": users_resp.text}), 500
 
     users_data = users_resp.json().get("users", [])
-
-    # Ambil semua data premium
-    prem_resp = requests.get(
-        f"{SUPABASE_URL}/rest/v1/user_premium",
-        headers=supabase_service_headers(),
-        params={"select": "user_id,is_active,expires_at"}
-    )
-    prem_map = {}
-    if prem_resp.ok:
-        for row in prem_resp.json():
-            prem_map[row["user_id"]] = row
-
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
-
     result = []
     for u in users_data:
         uid = u.get("id")
         meta = u.get("user_metadata", {})
-        prem = prem_map.get(uid)
-
-        premium_status = "none"
-        expires_at = None
-        if prem and prem.get("is_active"):
-            exp = prem.get("expires_at")
-            if not exp:
-                premium_status = "lifetime"
-            else:
-                try:
-                    exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00"))
-                    if exp_dt > now:
-                        premium_status = "active"
-                        expires_at = exp
-                    else:
-                        premium_status = "expired"
-                        expires_at = exp
-                except Exception:
-                    premium_status = "active"
-                    expires_at = exp
-
         result.append({
-            "id":            uid,
-            "name":          meta.get("full_name", u.get("email", "")),
-            "email":         u.get("email", ""),
-            "avatar":        meta.get("avatar_url", ""),
-            "provider":      (u.get("app_metadata", {}).get("provider", "email")),
-            "created_at":    u.get("created_at", ""),
-            "last_sign_in":  u.get("last_sign_in_at", ""),
-            "premium":       premium_status,
-            "expires_at":    expires_at,
+            "id":           uid,
+            "name":         meta.get("full_name", u.get("email", "")),
+            "email":        u.get("email", ""),
+            "avatar":       meta.get("avatar_url", ""),
+            "provider":     (u.get("app_metadata", {}).get("provider", "email")),
+            "created_at":   u.get("created_at", ""),
+            "last_sign_in": u.get("last_sign_in_at", ""),
         })
-
-    # Urutkan: premium aktif dulu, lalu by last_sign_in
-    result.sort(key=lambda x: (x["premium"] != "active", x["last_sign_in"] or ""), reverse=False)
+    result.sort(key=lambda x: x["last_sign_in"] or "", reverse=True)
     return jsonify({"users": result, "total": len(result)})
 
 
-@app.route("/api/admin/premium", methods=["POST"])
-def admin_toggle_premium():
-    """Grant/revoke premium langsung dari admin panel."""
-    auth_header = request.headers.get("Authorization", "")
-    access_token = auth_header.replace("Bearer ", "").strip()
-    if not _is_admin(access_token):
-        return jsonify({"error": "Forbidden"}), 403
 
-    data = request.get_json()
-    target_id = data.get("user_id")
-    action = data.get("action", "grant")  # grant / revoke
-
-    from datetime import datetime, timezone, timedelta
-
-    if action == "grant":
-        expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-        payload = {"user_id": target_id, "is_active": True, "expires_at": expires_at}
-        r = requests.post(
-            f"{SUPABASE_URL}/rest/v1/user_premium",
-            headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
-            json=payload
-        )
-    else:
-        r = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/user_premium",
-            headers={**supabase_service_headers(), "Prefer": "return=representation"},
-            params={"user_id": f"eq.{target_id}"},
-            json={"is_active": False}
-        )
-
-    return jsonify({"ok": r.ok, "detail": r.text})
-
-
-@app.route("/api/admin/premium/extend", methods=["POST"])
-def admin_extend_premium():
-    """Extend atau set custom durasi premium."""
-    auth_header = request.headers.get("Authorization", "")
-    access_token = auth_header.replace("Bearer ", "").strip()
-    if not _is_admin(access_token):
-        return jsonify({"error": "Forbidden"}), 403
-
-    data = request.get_json()
-    target_id = data.get("user_id")
-    days = int(data.get("days", 30))  # default 30 hari
-
-    from datetime import datetime, timezone, timedelta
-
-    # Cek apakah sudah punya premium aktif — kalau iya, extend dari expires_at
-    existing = requests.get(
-        f"{SUPABASE_URL}/rest/v1/user_premium",
-        headers=supabase_service_headers(),
-        params={"user_id": f"eq.{target_id}", "select": "is_active,expires_at"}
-    )
-    now = datetime.now(timezone.utc)
-    base = now
-    if existing.ok and existing.json():
-        row = existing.json()[0]
-        if row.get("is_active") and row.get("expires_at"):
-            try:
-                exp = datetime.fromisoformat(row["expires_at"].replace("Z", "+00:00"))
-                if exp > now:
-                    base = exp  # extend dari tanggal expired, bukan dari sekarang
-            except Exception:
-                pass
-
-    expires_at = (base + timedelta(days=days)).isoformat()
-    payload = {"user_id": target_id, "is_active": True, "expires_at": expires_at}
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/user_premium",
-        headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
-        json=payload
-    )
-    return jsonify({"ok": r.ok, "expires_at": expires_at, "days_added": days})
-
-
-@app.route("/api/cron/premium-reminder", methods=["GET", "POST"])
-def cron_premium_reminder():
-    """
-    Endpoint untuk cron-job.org — kirim notifikasi ke live chat
-    untuk user yang premiumnya akan expired dalam 3 hari.
-    Amankan dengan CRON_SECRET di env var.
-    """
-    # Validasi secret key
-    cron_secret = os.environ.get("CRON_SECRET", "")
-    req_secret = request.headers.get("X-Cron-Secret", "") or request.args.get("secret", "")
-    if cron_secret and req_secret != cron_secret:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    from datetime import datetime, timezone, timedelta
-
-    now = datetime.now(timezone.utc)
-    in_3_days = now + timedelta(days=3)
-
-    # Ambil semua premium yang aktif dan expired dalam 3 hari
-    r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/user_premium",
-        headers=supabase_service_headers(),
-        params={
-            "is_active": "eq.true",
-            "expires_at": f"lte.{in_3_days.isoformat()}",
-            "select": "user_id,expires_at"
-        }
-    )
-    if not r.ok:
-        return jsonify({"error": "Gagal ambil data premium"}), 500
-
-    rows = r.json()
-    notified = []
-
-    for row in rows:
-        uid = row["user_id"]
-        exp_str = row["expires_at"]
-        try:
-            exp_dt = datetime.fromisoformat(exp_str.replace("Z", "+00:00"))
-            if exp_dt < now:
-                continue  # sudah expired, skip
-
-            days_left = (exp_dt - now).days
-            hours_left = int((exp_dt - now).total_seconds() / 3600)
-
-            if days_left == 0:
-                time_label = f"{hours_left} jam lagi"
-            else:
-                time_label = f"{days_left} hari lagi"
-
-            # Cek apakah sudah pernah dinotif hari ini (simpan di notif_sent table)
-            notif_key = f"{uid}:{exp_dt.strftime('%Y-%m-%d')}"
-            check = requests.get(
-                f"{SUPABASE_URL}/rest/v1/notif_sent",
-                headers=supabase_service_headers(),
-                params={"key": f"eq.{notif_key}", "select": "key"}
-            )
-            if check.ok and check.json():
-                continue  # sudah dinotif, skip
-
-            # Ambil info user
-            user_resp = requests.get(
-                f"{SUPABASE_URL}/auth/v1/admin/users/{uid}",
-                headers=supabase_service_headers()
-            )
-            user_name = "Member"
-            if user_resp.ok:
-                meta = user_resp.json().get("user_metadata", {})
-                user_name = meta.get("full_name", user_resp.json().get("email", "Member"))
-
-            # Kirim notif ke live chat
-            msg = f"⏰ Reminder: Premium @{user_name} akan berakhir dalam {time_label}! Perpanjang sebelum akses terkunci."
-            requests.post(
-                f"{SUPABASE_URL}/rest/v1/chat_messages",
-                headers={**supabase_service_headers(), "Prefer": "return=representation"},
-                json={
-                    "room_id": "global",
-                    "user_id": "system-reminder",
-                    "user_name": "⏰ Premium Reminder",
-                    "user_avatar": "",
-                    "content": msg,
-                    "is_donation": False,
-                    "reactions": {},
-                }
-            )
-
-            # Catat sudah dinotif
-            requests.post(
-                f"{SUPABASE_URL}/rest/v1/notif_sent",
-                headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates"},
-                json={"key": notif_key, "sent_at": now.isoformat()}
-            )
-
-            notified.append({"user_id": uid, "name": user_name, "expires_in": time_label})
-
-        except Exception as e:
-            print(f"[Cron] Error untuk {uid}: {e}")
-            continue
-
-    return jsonify({
-        "ok": True,
-        "checked": len(rows),
-        "notified": len(notified),
-        "users": notified
-    })
 
 
 
