@@ -67,17 +67,6 @@
   color: #fff;
   border: 2px solid var(--border);
 }
-.profile-premium-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid #f4a261;
-  box-shadow: 0 0 10px rgba(244,162,97,0.4);
-  pointer-events: none;
-  display: none;
-}
-.profile-premium-ring.active { display: block; }
-
 .profile-meta { flex: 1; min-width: 0; }
 .profile-name {
   font-family: var(--font-body);
@@ -109,16 +98,6 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .3px;
-}
-.badge-premium {
-  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(230,111,27,0.15));
-  border: 1px solid rgba(244,162,97,0.4);
-  color: #f4a261;
-}
-.badge-free {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  color: var(--text2);
 }
 .badge-user-id {
   background: rgba(255,255,255,0.03);
@@ -168,51 +147,6 @@
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-}
-
-/* Premium Status */
-.premium-status-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.premium-status-info {}
-.premium-status-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.premium-status-sub {
-  font-size: 12px;
-  color: var(--text2);
-}
-.premium-expires {
-  font-size: 12px;
-  color: #f4a261;
-  font-weight: 600;
-  margin-top: 4px;
-}
-.btn-upgrade {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(230,111,27,0.1));
-  border: 1px solid rgba(244,162,97,0.4);
-  border-radius: var(--radius);
-  color: #f4a261;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: var(--trans);
-  white-space: nowrap;
-}
-.btn-upgrade:hover {
-  background: linear-gradient(135deg, rgba(244,162,97,0.25), rgba(230,111,27,0.2));
-  border-color: rgba(244,162,97,0.7);
 }
 
 /* Watchlist */
@@ -490,7 +424,6 @@
     <div class="profile-header">
       <div class="profile-header-inner">
         <div class="profile-avatar-wrap">
-          <div class="profile-premium-ring" id="premiumRing"></div>
           <img id="profileAvatar" class="profile-avatar" src="" alt="" style="display:none">
           <div id="avatarFallback" class="profile-avatar-fallback" style="display:none">?</div>
         </div>
@@ -498,7 +431,6 @@
           <div class="profile-name" id="profileName">—</div>
           <div class="profile-email" id="profileEmail">—</div>
           <div class="profile-badges">
-            <span class="badge badge-free" id="premiumBadge">● Free</span>
             <span class="badge badge-user-id" id="userIdBadge" title="Klik untuk copy User ID">ID: …</span>
           </div>
         </div>
@@ -506,19 +438,6 @@
     </div>
 
     <div class="profile-grid">
-
-      <!-- Status Premium -->
-      <div class="profile-section">
-        <div class="section-title"><span class="dot"></span>Status Premium</div>
-        <div class="premium-status-box">
-          <div class="premium-status-info">
-            <div class="premium-status-label" id="premiumStatusLabel">Memuat…</div>
-            <div class="premium-status-sub" id="premiumStatusSub"></div>
-            <div class="premium-expires" id="premiumExpiresLabel" style="display:none"></div>
-          </div>
-          <a href="/premium" class="btn-upgrade" id="btnUpgrade">⭐ Upgrade</a>
-        </div>
-      </div>
 
       <!-- Pengaturan Source -->
       <div class="profile-section">
@@ -614,7 +533,7 @@
   <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;max-width:340px;width:90%;text-align:center">
     <div style="font-size:32px;margin-bottom:12px">⚠️</div>
     <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Hapus Akun?</div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Tindakan ini tidak bisa dibatalkan. Semua data termasuk status premium akan dihapus.</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Tindakan ini tidak bisa dibatalkan.</div>
     <div style="display:flex;gap:10px;justify-content:center">
       <button onclick="document.getElementById('deleteModal').style.display='none'" class="btn-logout">Batal</button>
       <button id="btnConfirmDelete" class="btn-delete">Ya, Hapus</button>
@@ -787,53 +706,6 @@
     showToast('Nama disimpan! Refresh halaman lain untuk melihat perubahan.', 'success');
   });
 
-  // ── Premium status ──────────────────────────────────────
-  async function loadPremiumStatus(token) {
-    try {
-      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-      const r = await fetch('/api/premium/status', { headers });
-      const d = await r.json();
-
-      const label = $('premiumStatusLabel');
-      const sub = $('premiumStatusSub');
-      const expLabel = $('premiumExpiresLabel');
-      const badge = $('premiumBadge');
-      const ring = $('premiumRing');
-      const btnUpgrade = $('btnUpgrade');
-
-      if (d.premium) {
-        label.textContent = '⭐ Premium Aktif';
-        label.style.color = '#f4a261';
-        sub.textContent = 'Nikmati semua episode tanpa batas';
-        badge.className = 'badge badge-premium';
-        badge.textContent = '✦ Premium';
-        ring.classList.add('active');
-        btnUpgrade.textContent = '🔁 Perpanjang';
-
-        if (d.expires_at) {
-          const exp = new Date(d.expires_at);
-          expLabel.textContent = 'Berakhir: ' + exp.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-          expLabel.style.display = 'block';
-        } else {
-          expLabel.textContent = '✦ Lifetime';
-          expLabel.style.display = 'block';
-        }
-      } else {
-        const reason = d.reason;
-        if (reason === 'expired') {
-          label.textContent = '⏰ Premium Expired';
-          label.style.color = 'var(--accent)';
-          sub.textContent = 'Perpanjang untuk lanjut nonton';
-        } else {
-          label.textContent = 'Akun Gratis';
-          sub.textContent = 'Episode 1–2 gratis, episode selanjutnya butuh Premium';
-        }
-        badge.className = 'badge badge-free';
-        badge.textContent = '● Free';
-      }
-    } catch(e) {}
-  }
-
   // ── Logout ──────────────────────────────────────────────
   $('btnLogout').addEventListener('click', async function() {
     try {
@@ -942,7 +814,6 @@
     loadWatchlist();
     loadHistory();
     loadCurrentSource();
-    loadPremiumStatus(token);
   }
 
   init();

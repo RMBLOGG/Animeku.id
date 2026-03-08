@@ -235,36 +235,7 @@
   100% { left: 200%; }
 }
 
-.premium-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(255,215,0,0.08));
-  border: 1px solid rgba(212,175,55,0.5);
-  border-radius: 4px;
-  font-size: 8px;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  color: #d4af37;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  vertical-align: middle;
-  margin-left: 4px;
-  box-shadow: 0 0 6px rgba(212,175,55,0.2);
-  position: relative;
-  overflow: hidden;
-}
-.premium-badge::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
-  border-radius: inherit;
-}
-
 .msg-name.is-admin  { color: #ff8c5a !important; }
-.msg-name.is-premium { color: #d4b84a !important; }
 .msg-time {
   font-size: 10px;
   color: var(--text3);
@@ -820,18 +791,6 @@ const ONLINE_TIMEOUT = 60000;  // 60 detik inaktif = offline
 const MAX_MESSAGES   = 100;
 const ADMIN_IDS      = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 
-let premiumUserIds = new Set();
-
-async function loadPremiumUsers() {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_premium?is_active=eq.true&select=user_id`,
-      { headers: { "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` } }
-    );
-    if (r.ok) premiumUserIds = new Set((await r.json()).map(row => row.user_id));
-  } catch(e) {}
-}
-
 // ── STATE ──────────────────────────────────────────────────────
 let currentUser    = null;   // { id, name, avatar, is_anon }
 let replyTo        = null;   // { id, user_name, content }
@@ -864,7 +823,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch(e) { console.error("Gagal cek site_settings:", e); }
 
   initUser();
-  await loadPremiumUsers();
   await loadMessages();
   subscribeRealtime();
   await sendHeartbeat();
@@ -934,10 +892,6 @@ function initUser() {
 
 function isAdmin(userId) {
   return ADMIN_IDS.includes(userId);
-}
-
-function isPremium(userId) {
-  return !isAdmin(userId) && premiumUserIds.has(userId);
 }
 
 // ── SUPABASE HELPERS ───────────────────────────────────────────
@@ -1356,13 +1310,6 @@ function buildMsgEl(msg, isOwn, animate = true) {
     const badge = document.createElement("span");
     badge.className = "admin-badge";
     badge.innerHTML = "★ ADMIN";
-    meta.appendChild(nameEl);
-    meta.appendChild(badge);
-  } else if (!msg.is_anon && isPremium(msg.user_id)) {
-    nameEl.classList.add("is-premium");
-    const badge = document.createElement("span");
-    badge.className = "premium-badge";
-    badge.innerHTML = "◆ PRO";
     meta.appendChild(nameEl);
     meta.appendChild(badge);
   } else {
