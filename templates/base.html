@@ -1607,6 +1607,7 @@ loadEndpointState();
 .fc-msg-name { font-size: 11px; font-weight: 700; color: var(--text2, #8b92a5); }
 .fc-msg-name.is-me { color: #ff8a95; }
 .fc-msg-name.is-admin { color: #f4a261; }
+.fc-msg-name.is-premium { color: #e8c97a; }
 .fc-msg-time { font-size: 9px; color: var(--text3, #555d70); font-family: "JetBrains Mono", monospace; opacity: 0.6; }
 .fc-msg-bubble {
   display: inline-block;
@@ -1623,6 +1624,15 @@ loadEndpointState();
   background: linear-gradient(135deg, #f4a261, #e76f1b);
   border-radius: 3px; font-size: 8px; font-weight: 800;
   color: #000; letter-spacing: 0.5px; margin-left: 2px;
+  vertical-align: middle;
+}
+.fc-premium-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 1px 5px;
+  background: rgba(244,162,97,0.1);
+  border: 1px solid rgba(244,162,97,0.4);
+  border-radius: 3px; font-size: 8px; font-weight: 700;
+  color: #f4a261; letter-spacing: 0.5px; margin-left: 2px;
   vertical-align: middle;
 }
 .fc-msg-system {
@@ -1818,6 +1828,21 @@ const ADMIN_IDS     = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 const MAX_MSGS      = 80;
 const HEARTBEAT_MS  = 20000;
 
+let premiumUserIds = new Set();
+
+async function fcLoadPremiumUsers() {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_premium?is_active=eq.true&select=user_id`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
+    );
+    if (r.ok) {
+      const rows = await r.json();
+      premiumUserIds = new Set(rows.map(row => row.user_id));
+    }
+  } catch(e) {}
+}
+
 let fcUser       = null;
 let fcReplyTo    = null;
 let fcMessages   = [];
@@ -1873,6 +1898,7 @@ async function fcInit() {
 
   // Heartbeat dulu (tulis kehadiran), lalu baru baca online count
   try { await fcHeartbeat(); } catch(e) {}
+  try { await fcLoadPremiumUsers(); } catch(e) {}
   try { await fcLoadOnline(); } catch(e) {}
   setInterval(fcLoadOnline, 25000);
 
@@ -2077,6 +2103,10 @@ function fcAppend(msg, animate) {
   if (ADMIN_IDS.includes(msg.user_id)) {
     nameEl.classList.add("is-admin");
     const badge = document.createElement("span"); badge.className = "fc-admin-badge"; badge.innerHTML = "⭐ ADMIN";
+    meta.appendChild(nameEl); meta.appendChild(badge);
+  } else if (!msg.is_anon && premiumUserIds.has(msg.user_id)) {
+    nameEl.classList.add("is-premium");
+    const badge = document.createElement("span"); badge.className = "fc-premium-badge"; badge.innerHTML = "✦ PREMIUM";
     meta.appendChild(nameEl); meta.appendChild(badge);
   } else { meta.appendChild(nameEl); }
   const timeEl = document.createElement("span"); timeEl.className = "fc-msg-time";
