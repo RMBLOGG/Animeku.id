@@ -942,10 +942,6 @@ def admin():
 def premium():
     return render_template("premium.html")
 
-@app.route("/profile")
-def profile():
-    return render_template("profile.html")
-
 
 # ── API Proxy ──────────────────────────────────────────────────────────────────
 
