@@ -478,7 +478,7 @@
       <div class="profile-header-inner">
         <div class="profile-avatar-wrap">
           <div class="profile-premium-ring" id="premiumRing"></div>
-          <img id="profileAvatar" class="profile-avatar" src="" alt="" onerror="this.style.display='none';document.getElementById('avatarFallback').style.display='flex'">
+          <img id="profileAvatar" class="profile-avatar" src="" alt="" style="display:none">
           <div id="avatarFallback" class="profile-avatar-fallback" style="display:none">?</div>
         </div>
         <div class="profile-meta">
@@ -757,15 +757,26 @@
 
   // ── Display name ────────────────────────────────────────
   function loadDisplayName(defaultName) {
-    const saved = localStorage.getItem('displayName') || defaultName || '';
-    $('displayNameInput').value = saved;
+    // Prioritas: sb_user.name (sumber kebenaran), baru fallback ke displayName
+    try {
+      const u = JSON.parse(localStorage.getItem('sb_user'));
+      if (u && u.name) { $('displayNameInput').value = u.name; return; }
+    } catch(e) {}
+    $('displayNameInput').value = localStorage.getItem('displayName') || defaultName || '';
   }
 
   $('btnSaveName').addEventListener('click', function() {
     const name = $('displayNameInput').value.trim();
     if (!name) { showToast('Nama tidak boleh kosong', 'error'); return; }
+    // Update sb_user supaya navbar & komentar langsung pakai nama baru
+    try {
+      const u = JSON.parse(localStorage.getItem('sb_user')) || {};
+      u.name = name;
+      localStorage.setItem('sb_user', JSON.stringify(u));
+    } catch(e) {}
     localStorage.setItem('displayName', name);
-    showToast('Nama disimpan!', 'success');
+    $('profileName').textContent = name;
+    showToast('Nama disimpan! Refresh halaman lain untuk melihat perubahan.', 'success');
   });
 
   // ── Premium status ──────────────────────────────────────
@@ -897,12 +908,20 @@
     $('profileContent').style.display = 'block';
     $('profileName').textContent = user.name || 'User';
     $('profileEmail').textContent = user.email || '';
-    $('avatarFallback').textContent = (user.name || 'U')[0].toUpperCase();
+    // Avatar — hide fallback default, show only if img gagal load
+    const initial = (user.name || 'U')[0].toUpperCase();
+    $('avatarFallback').textContent = initial;
+    $('avatarFallback').style.display = 'none';
 
     if (user.avatar) {
-      $('profileAvatar').src = user.avatar;
-      $('profileAvatar').style.display = 'block';
+      const img = $('profileAvatar');
+      img.style.display = 'block';
+      img.onload  = function() { img.style.display = 'block'; $('avatarFallback').style.display = 'none'; };
+      img.onerror = function() { img.style.display = 'none';  $('avatarFallback').style.display = 'flex'; };
+      img.removeAttribute('onerror'); // hapus onerror inline di HTML
+      img.src = user.avatar;
     } else {
+      $('profileAvatar').style.display = 'none';
       $('avatarFallback').style.display = 'flex';
     }
 
