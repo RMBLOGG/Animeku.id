@@ -543,6 +543,90 @@ def _norm_paginated(raw, page):
         }
     return {"animes": animes, "pagination": pag_norm}
 
+
+# ── Views & Favorites (Supabase anime_stats) ──────────────────────────────────
+
+def increment_view(slug):
+    """Increment view count untuk slug. Dipanggil di background thread."""
+    try:
+        # Coba pakai RPC function dulu (atomic, recommended)
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/increment_anime_view",
+            headers={**supabase_service_headers(), "Content-Type": "application/json"},
+            json={"p_slug": slug},
+            timeout=2
+        )
+        if not r.ok:
+            # Fallback manual: cek dulu ada atau tidak
+            check = requests.get(
+                f"{SUPABASE_URL}/rest/v1/anime_stats",
+                headers=supabase_headers(),
+                params={"slug": f"eq.{slug}", "select": "slug,views"},
+                timeout=2
+            )
+            if check.ok and check.json():
+                current = check.json()[0].get("views", 0)
+                requests.patch(
+                    f"{SUPABASE_URL}/rest/v1/anime_stats?slug=eq.{slug}",
+                    headers={**supabase_service_headers(), "Content-Type": "application/json"},
+                    json={"views": current + 1},
+                    timeout=2
+                )
+            else:
+                requests.post(
+                    f"{SUPABASE_URL}/rest/v1/anime_stats",
+                    headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates"},
+                    json={"slug": slug, "views": 1, "favorites": 0},
+                    timeout=2
+                )
+    except Exception as e:
+        print(f"[views] increment error for {slug}: {e}")
+
+
+def get_stats_batch(slugs):
+    """Ambil views & favorites untuk banyak slug sekaligus dari Supabase."""
+    if not slugs:
+        return {}
+    try:
+        slug_filter = ",".join(f'"{s}"' for s in slugs)
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_stats",
+            headers=supabase_headers(),
+            params={"slug": f"in.({slug_filter})", "select": "slug,views,favorites"},
+            timeout=3
+        )
+        if r.ok:
+            return {row["slug"]: {"views": row.get("views", 0), "favorites": row.get("favorites", 0)}
+                    for row in r.json()}
+    except Exception as e:
+        print(f"[stats] batch fetch error: {e}")
+    return {}
+
+
+def fmt_count(n):
+    """Format angka jadi '1.234.567'."""
+    try:
+        return f"{int(n):,}".replace(",", ".")
+    except Exception:
+        return ""
+
+
+def attach_stats(animes):
+    """Tempel field views & favorites ke list anime dari Supabase."""
+    if not animes:
+        return animes
+    slugs = [a["slug"] for a in animes if a.get("slug")]
+    stats = get_stats_batch(slugs)
+    result = []
+    for a in animes:
+        s    = stats.get(a.get("slug", ""), {})
+        a    = dict(a)
+        a["views"]     = fmt_count(s["views"])     if s.get("views")     else ""
+        a["favorites"] = fmt_count(s["favorites"]) if s.get("favorites") else ""
+        result.append(a)
+    return result
+
+
 # ── Pages ──────────────────────────────────────────────────────────────────────
 
 @app.route("/manifest.json")
@@ -593,6 +677,11 @@ def home():
             pop_norm = {"animes": norm_list(popular["data"].get("animeList", []))}
         sched = norm_schedule(schedule)
 
+
+    # Attach views & favorites ke section Populer dari Supabase
+    if pop_norm and pop_norm.get("animes"):
+        pop_norm["animes"] = attach_stats(pop_norm["animes"])
+
     return render_template("index.html", data=data, popular=pop_norm,
                            schedule=sched)
 
@@ -641,6 +730,11 @@ def detail(slug):
                     }
                 }
             }
+
+    # Catat view ke Supabase (background thread, tidak blocking)
+    import threading
+    threading.Thread(target=increment_view, args=(slug,), daemon=True).start()
+
     return render_template("detail.html", data=data, slug=slug)
 
 
@@ -981,6 +1075,73 @@ def api_search(keyword):
         if raw and raw.get("data"):
             data = {"animes": norm_list(raw["data"].get("animeList", []))}
     return jsonify(data)
+
+
+
+
+# ── Stats API (Views & Favorites) ─────────────────────────────────────────────
+
+@app.route("/api/stats/favorite", methods=["POST"])
+def api_toggle_favorite():
+    """
+    Dipanggil JS watchlist saat user add/remove favorite.
+    Body: { "slug": "...", "title": "...", "poster": "...", "action": "add"|"remove" }
+    """
+    data   = request.get_json() or {}
+    slug   = data.get("slug", "").strip()
+    action = data.get("action", "add")
+    if not slug:
+        return jsonify({"error": "slug required"}), 400
+    try:
+        check = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_stats",
+            headers=supabase_headers(),
+            params={"slug": f"eq.{slug}", "select": "slug,favorites"},
+            timeout=3
+        )
+        if check.ok and check.json():
+            current = check.json()[0].get("favorites", 0)
+            new_val = max(0, current + (1 if action == "add" else -1))
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/anime_stats?slug=eq.{slug}",
+                headers={**supabase_service_headers(), "Content-Type": "application/json"},
+                json={"favorites": new_val},
+                timeout=3
+            )
+        elif action == "add":
+            requests.post(
+                f"{SUPABASE_URL}/rest/v1/anime_stats",
+                headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates"},
+                json={"slug": slug, "title": data.get("title", ""),
+                      "poster": data.get("poster", ""), "views": 0, "favorites": 1},
+                timeout=3
+            )
+    except Exception as e:
+        print(f"[favorites] toggle error for {slug}: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({"ok": True, "action": action, "slug": slug})
+
+
+@app.route("/api/stats/top")
+def api_stats_top():
+    """Top anime berdasarkan views atau favorites."""
+    order_by = request.args.get("by", "views")
+    limit    = min(int(request.args.get("limit", 10)), 50)
+    if order_by not in ("views", "favorites"):
+        order_by = "views"
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_stats",
+            headers=supabase_headers(),
+            params={"select": "slug,title,poster,views,favorites",
+                    "order": f"{order_by}.desc", "limit": limit},
+            timeout=5
+        )
+        if r.ok:
+            return jsonify({"ok": True, "data": r.json()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({"ok": False}), 500
 
 
 # ── Endpoint Switcher API ──────────────────────────────────────────────────────
