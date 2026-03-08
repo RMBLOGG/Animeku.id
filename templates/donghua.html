@@ -198,6 +198,28 @@
 .dh-tag.ongoing { background: rgba(76,175,125,0.12); color: #4caf7d; border-color: rgba(76,175,125,0.2); }
 .dh-tag.completed { background: rgba(96,165,250,0.12); color: #60a5fa; border-color: rgba(96,165,250,0.2); }
 .dh-tag.ep { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.2); }
+.dh-card-detail-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  text-decoration: none;
+  transition: var(--trans);
+  letter-spacing: 0.5px;
+}
+.dh-card-detail-btn:hover {
+  background: rgba(220,38,38,0.12);
+  border-color: rgba(220,38,38,0.35);
+  color: #f87171;
+}
 .dh-ep-badge {
   position: absolute;
   top: 8px;
@@ -368,18 +390,26 @@
       <h2 class="dh-section-title">Update Terbaru</h2>
       <div class="dh-grid">
         {% for item in data.latest %}
-        <a href="/donghua/episode/{{ item.slug | replace("/", "") }}" class="dh-card">
-          <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
-          {% if item.current_episode %}
-          <div class="dh-ep-badge">{{ item.current_episode }}</div>
-          {% endif %}
+        <div class="dh-card" style="display:block;text-decoration:none">
+          <a href="/donghua/episode/{{ item.slug | replace("/", "") }}" style="display:block;text-decoration:none">
+            <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
+            {% if item.current_episode %}
+            <div class="dh-ep-badge">{{ item.current_episode }}</div>
+            {% endif %}
+          </a>
           <div class="dh-card-body">
             <div class="dh-card-title">{{ item.title | replace(" Subtitle Indonesia", "") | replace(" Sub Indo", "") }}</div>
             <div class="dh-card-meta">
               <span class="dh-tag {{ item.status | lower }}">{{ item.status }}</span>
             </div>
+            {% if item.anime_slug %}
+            <a href="/donghua/anime/{{ item.anime_slug }}" class="dh-card-detail-btn" onclick="event.stopPropagation()">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Detail
+            </a>
+            {% endif %}
           </div>
-        </a>
+        </div>
         {% endfor %}
       </div>
     {% endif %}
@@ -421,7 +451,7 @@
     {% if data and data.items %}
       <div class="dh-grid">
         {% for item in data.items %}
-        <a href="{% if item.get('type','') == 'episode' or 'episode' in item.get('slug','') %}/donghua/episode/{{ item.slug | replace("/", "") }}{% else %}/donghua/anime/{{ item.slug | replace("/", "") }}{% endif %}" class="dh-card">
+        <a href="/donghua/anime/{{ item.slug | replace("/", "") }}" class="dh-card">
           <img class="dh-card-img" src="{{ item.poster }}" alt="{{ item.title }}" loading="lazy" onerror="this.src='/static/img/placeholder.webp'">
           <div class="dh-card-body">
             <div class="dh-card-title">{{ item.title }}</div>
