@@ -632,7 +632,7 @@
   function loadWatchlist() {
     let wl = [];
     try {
-      const raw = localStorage.getItem('watchlist');
+      const raw = localStorage.getItem('animeku_watchlist');
       if (raw) wl = JSON.parse(raw);
       if (!Array.isArray(wl)) wl = [];
     } catch(e) {}
@@ -649,10 +649,10 @@
     grid.className = 'watchlist-grid';
     wl.slice(0, 18).forEach(item => {
       const el = document.createElement('a');
-      el.href = '/anime/' + (item.slug || item.id || '#');
+      el.href = '/anime/' + (item.slug || '#');
       el.className = 'watchlist-item';
       el.innerHTML = `
-        <img src="${item.poster || item.image || ''}" alt="${item.title || ''}" loading="lazy" onerror="this.src=''">
+        <img src="${item.poster || ''}" alt="${item.title || ''}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
         <div class="watchlist-item-overlay"></div>
         <div class="watchlist-item-title">${item.title || ''}</div>
       `;
@@ -661,7 +661,7 @@
 
     if (wl.length > 18) {
       const more = document.createElement('div');
-      more.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;min-height:60px;color:var(--text3);font-size:12px';
+      more.style.cssText = 'display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:var(--bg);border-radius:var(--radius);color:var(--text3);font-size:12px';
       more.textContent = '+' + (wl.length - 18) + ' lagi';
       grid.appendChild(more);
     }
@@ -674,7 +674,7 @@
   function loadHistory() {
     let hist = [];
     try {
-      const raw = localStorage.getItem('watchHistory');
+      const raw = localStorage.getItem('animeku_history');
       if (raw) hist = JSON.parse(raw);
       if (!Array.isArray(hist)) hist = [];
     } catch(e) {}
@@ -685,26 +685,21 @@
       return;
     }
 
-    // Urutkan terbaru dulu, ambil 10
-    hist = hist.slice().reverse().slice(0, 10);
-
     const list = document.createElement('div');
     list.className = 'history-list';
 
-    hist.forEach(item => {
+    hist.slice(0, 10).forEach(item => {
       const el = document.createElement('a');
-      el.href = '/episode/' + (item.episodeSlug || item.slug || '#') + (item.animeSlug ? '?anime=' + item.animeSlug : '');
+      el.href = '/episode/' + (item.epSlug || '#') + '?anime=' + (item.animeSlug || '');
       el.className = 'history-item';
-
-      const timeAgo = item.watchedAt ? relativeTime(item.watchedAt) : '';
-
+      const timeAgoStr = item.watchedAt ? relativeTime(item.watchedAt) : '';
       el.innerHTML = `
-        <img class="history-thumb" src="${item.poster || ''}" alt="${item.animeTitle || ''}" loading="lazy" onerror="this.style.background='var(--bg)'">
+        <img class="history-thumb" src="${item.animePoster || ''}" alt="${item.animeTitle || ''}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
         <div class="history-info">
-          <div class="history-title">${item.animeTitle || item.title || 'Unknown'}</div>
-          <div class="history-ep">${item.episodeName || item.episode || ''}</div>
+          <div class="history-title">${item.animeTitle || 'Unknown'}</div>
+          <div class="history-ep">${item.epName || ''}</div>
         </div>
-        <div class="history-time">${timeAgo}</div>
+        <div class="history-time">${timeAgoStr}</div>
       `;
       list.appendChild(el);
     });
@@ -726,7 +721,7 @@
 
   $('btnClearHistory').addEventListener('click', function() {
     if (!confirm('Hapus semua riwayat tonton?')) return;
-    localStorage.removeItem('watchHistory');
+    localStorage.removeItem('animeku_history');
     loadHistory();
     showToast('Riwayat dihapus', 'success');
   });
