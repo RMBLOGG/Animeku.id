@@ -216,7 +216,24 @@
   margin-left: 3px;
   box-shadow: 0 2px 6px rgba(244,162,97,0.4);
 }
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  background: rgba(244,162,97,0.1);
+  border: 1px solid rgba(244,162,97,0.4);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #f4a261;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 3px;
+}
 .msg-name.is-admin { color: #f4a261 !important; }
+.msg-name.is-premium { color: #e8c97a !important; }
 .msg-time {
   font-size: 10px;
   color: var(--text3);
@@ -772,6 +789,18 @@ const ONLINE_TIMEOUT = 60000;  // 60 detik inaktif = offline
 const MAX_MESSAGES   = 100;
 const ADMIN_IDS      = ["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"];
 
+let premiumUserIds = new Set();
+
+async function loadPremiumUsers() {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_premium?is_active=eq.true&select=user_id`,
+      { headers: { "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` } }
+    );
+    if (r.ok) premiumUserIds = new Set((await r.json()).map(row => row.user_id));
+  } catch(e) {}
+}
+
 // ── STATE ──────────────────────────────────────────────────────
 let currentUser    = null;   // { id, name, avatar, is_anon }
 let replyTo        = null;   // { id, user_name, content }
@@ -804,6 +833,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch(e) { console.error("Gagal cek site_settings:", e); }
 
   initUser();
+  await loadPremiumUsers();
   await loadMessages();
   subscribeRealtime();
   await sendHeartbeat();
@@ -873,6 +903,10 @@ function initUser() {
 
 function isAdmin(userId) {
   return ADMIN_IDS.includes(userId);
+}
+
+function isPremium(userId) {
+  return !isAdmin(userId) && premiumUserIds.has(userId);
 }
 
 // ── SUPABASE HELPERS ───────────────────────────────────────────
@@ -1291,6 +1325,13 @@ function buildMsgEl(msg, isOwn, animate = true) {
     const badge = document.createElement("span");
     badge.className = "admin-badge";
     badge.innerHTML = "⭐ ADMIN";
+    meta.appendChild(nameEl);
+    meta.appendChild(badge);
+  } else if (!msg.is_anon && isPremium(msg.user_id)) {
+    nameEl.classList.add("is-premium");
+    const badge = document.createElement("span");
+    badge.className = "premium-badge";
+    badge.innerHTML = "✦ PREMIUM";
     meta.appendChild(nameEl);
     meta.appendChild(badge);
   } else {
