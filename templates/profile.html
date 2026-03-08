@@ -821,7 +821,8 @@
       await fetch('/auth/logout', { method: 'POST' });
     } catch(e) {}
     // Clear supabase session
-    try { localStorage.removeItem('sb-mafnnqttvkdgqqxczqyt-auth-token'); } catch(e) {}
+    try { localStorage.removeItem('sb_access_token'); } catch(e) {}
+    try { localStorage.removeItem('sb_user'); } catch(e) {}
     showToast('Berhasil logout', 'success');
     setTimeout(() => { window.location.href = '/'; }, 1000);
   });
@@ -854,10 +855,7 @@
   // ── Get token helper ────────────────────────────────────
   function getToken() {
     try {
-      const raw = localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed.access_token || null;
+      return localStorage.getItem('sb_access_token') || null;
     } catch(e) { return null; }
   }
 
@@ -876,14 +874,12 @@
     // Jika tidak ada server session, coba dari localStorage Supabase
     if (!user && token) {
       try {
-        const raw = localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token');
-        const parsed = raw ? JSON.parse(raw) : null;
-        if (parsed && parsed.user) {
-          const u = parsed.user;
+        const u = JSON.parse(localStorage.getItem('sb_user'));
+        if (u) {
           user = {
             id:     u.id,
-            name:   u.user_metadata?.full_name || 'User',
-            avatar: u.user_metadata?.avatar_url || '',
+            name:   u.user_metadata?.full_name || u.name || 'User',
+            avatar: u.user_metadata?.avatar_url || u.avatar || '',
             email:  u.email || '',
           };
         }
