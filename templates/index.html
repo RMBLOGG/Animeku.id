@@ -3,101 +3,84 @@
 
 {% block content %}
 
-<!-- HERO -->
+<!-- BANNER SLIDER -->
 {% if data and data.ongoing %}
-{% set featured = data.ongoing[0] %}
-<section class="hero hero-v2">
-  <div class="hero-backdrop" id="heroBg" style="background-image: url('{{ featured.poster }}')"></div>
-  <div class="hero-overlay"></div>
-
-  <div class="hero-inner container">
-    <div class="hero-poster-wrap">
-      <img src="{{ featured.poster }}" alt="{{ featured.title }}" class="hero-poster-img" id="heroPosterImg">
-      <div class="hero-poster-glow"></div>
-    </div>
-
-    <div class="hero-content">
-      <div class="hero-badge">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-        SEDANG TAYANG
-      </div>
-      <h1 class="hero-title" id="heroTitle">{{ featured.title }}</h1>
-      <div class="hero-meta-row" id="heroMeta">
-        {% if featured.type %}<span class="hero-tag">{{ featured.type }}</span>{% endif %}
-        {% if featured.episode %}<span class="hero-tag accent">{{ featured.episode }}</span>{% endif %}
-        <span class="hero-tag fire">{{ featured.status_or_day }}</span>
-      </div>
-      <p class="hero-desc">Nonton anime sub indo terlengkap & terbaru. Streaming gratis kualitas HD langsung di browser kamu.</p>
-      <div class="hero-actions">
-        <a href="/anime/{{ featured.slug }}" class="btn btn-primary" id="heroLink">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-          Tonton Sekarang
-        </a>
-        <a href="/ongoing" class="btn btn-ghost">Lihat Semua Ongoing</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Dots -->
-  <div class="hero-dots">
-    {% for anime in data.ongoing[:5] %}
-    <button class="hero-dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></button>
-    {% endfor %}
-  </div>
-</section>
-
 <style>
-.hero-dots { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10; }
-.hero-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.35); border:none; cursor:pointer; transition:all 0.3s; padding:0; }
-.hero-dot.active { background:#e53935; width:24px; border-radius:4px; }
-#heroPosterImg { transition: opacity 0.4s ease; }
+.amk-banner-slider{position:relative;overflow:hidden;margin:12px 16px 20px;border-radius:14px;background:var(--bg3)}
+.amk-banner-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.amk-banner-slide{min-width:100%;aspect-ratio:16/8;position:relative;overflow:hidden;display:flex;align-items:center;text-decoration:none;color:#fff;border-radius:14px;background:var(--bg3)}
+.amk-slide-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(3px) brightness(.38);transform:scale(1.08)}
+.amk-slide-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(9,11,15,.85) 0%,rgba(9,11,15,.45) 55%,rgba(9,11,15,.1) 100%);z-index:1}
+.amk-slide-body{position:absolute;inset:0;z-index:2;display:flex;align-items:center;gap:14px;padding:16px}
+.amk-slide-poster{width:76px;height:108px;object-fit:cover;border-radius:10px;flex-shrink:0;box-shadow:0 6px 24px rgba(0,0,0,.75);border:2px solid rgba(230,57,70,.45)}
+.amk-slide-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.amk-slide-badge{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)}
+.amk-slide-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1rem,3.5vw,1.35rem);letter-spacing:.5px;line-height:1.15;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.amk-slide-meta{font-size:10px;color:rgba(255,255,255,.55);font-family:'JetBrains Mono',monospace}
+.amk-slide-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;padding:6px 13px;border-radius:50px;font-size:11px;font-weight:700;width:fit-content;margin-top:2px;transition:background .2s}
+.amk-banner-slide:hover .amk-slide-btn{background:var(--accent2)}
+.amk-banner-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(9,11,15,.6);border:1px solid rgba(255,255,255,.1);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer;backdrop-filter:blur(6px);transition:background .2s}
+.amk-banner-arrow:hover{background:var(--accent);border-color:transparent}
+.amk-arr-left{left:8px}.amk-arr-right{right:8px}
+.amk-banner-dots{display:flex;gap:5px;justify-content:center;padding:8px 0 4px}
+.amk-banner-dot{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);border:none;cursor:pointer;padding:0;transition:all .3s}
+.amk-banner-dot.active{width:20px;background:var(--accent)}
+@media(max-width:400px){.amk-slide-poster{width:62px;height:88px}.amk-banner-arrow{display:none}}
 </style>
 
+<div class="amk-banner-slider">
+  <div class="amk-banner-track" id="amkTrack">
+    {% for anime in data.ongoing[:5] %}
+    <a href="/anime/{{ anime.slug }}" class="amk-banner-slide">
+      <img src="{{ anime.poster }}" alt="" class="amk-slide-bg">
+      <div class="amk-slide-overlay"></div>
+      <div class="amk-slide-body">
+        <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="amk-slide-poster">
+        <div class="amk-slide-info">
+          <div class="amk-slide-badge">
+            {% if loop.index == 1 %}🔥 Trending{% elif loop.index == 2 %}⭐ Populer{% else %}🎌 Unggulan{% endif %}
+          </div>
+          <div class="amk-slide-title">{{ anime.title }}</div>
+          <div class="amk-slide-meta">{{ anime.type or 'Anime' }}{% if anime.episode %} &bull; Ep {{ anime.episode }}{% endif %}</div>
+          <span class="amk-slide-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            Tonton
+          </span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <button class="amk-banner-arrow amk-arr-left" id="amkPrev">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="amk-banner-arrow amk-arr-right" id="amkNext">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+  <div class="amk-banner-dots" id="amkDots">
+    {% for anime in data.ongoing[:5] %}
+    <button class="amk-banner-dot {% if loop.first %}active{% endif %}" data-idx="{{ loop.index0 }}"></button>
+    {% endfor %}
+  </div>
+</div>
+
 <script>
-const heroAnimes = [
-  {% for anime in data.ongoing[:5] %}
-  {
-    poster: "{{ anime.poster }}",
-    title: {{ anime.title | tojson }},
-    type: "{{ anime.type }}",
-    episode: "{{ anime.episode }}",
-    day: "{{ anime.status_or_day }}",
-    slug: "{{ anime.slug }}"
-  }{% if not loop.last %},{% endif %}
-  {% endfor %}
-];
-
-let heroCurrent = 0;
-
-function heroGoTo(n) {
-  heroCurrent = (n + heroAnimes.length) % heroAnimes.length;
-  const a = heroAnimes[heroCurrent];
-  const img = document.getElementById('heroPosterImg');
-
-  img.style.opacity = '0';
-  setTimeout(() => {
-    document.getElementById('heroBg').style.backgroundImage = `url('${a.poster}')`;
-    img.src = a.poster;
-    img.alt = a.title;
-    img.style.opacity = '1';
-  }, 300);
-
-  document.getElementById('heroTitle').textContent = a.title;
-  document.getElementById('heroLink').href = `/anime/${a.slug}`;
-  document.getElementById('heroMeta').innerHTML =
-    (a.type ? `<span class="hero-tag">${a.type}</span>` : '') +
-    (a.episode ? `<span class="hero-tag accent">${a.episode}</span>` : '') +
-    `<span class="hero-tag fire">${a.day}</span>`;
-
-  document.querySelectorAll('.hero-dot').forEach((d, i) => d.classList.toggle('active', i === heroCurrent));
-}
-
-document.querySelectorAll('.hero-dot').forEach(d => {
-  d.addEventListener('click', () => { heroGoTo(+d.dataset.index); resetHeroTimer(); });
-});
-
-let heroTimer = setInterval(() => heroGoTo(heroCurrent + 1), 5000);
-function resetHeroTimer() { clearInterval(heroTimer); heroTimer = setInterval(() => heroGoTo(heroCurrent + 1), 5000); }
+(function(){
+  var track=document.getElementById('amkTrack');
+  var dots=document.querySelectorAll('.amk-banner-dot');
+  var slides=track?track.children.length:0;
+  if(!track||slides===0)return;
+  var cur=0,timer;
+  function goTo(n){cur=(n+slides)%slides;track.style.transform='translateX(-'+cur*100+'%)';dots.forEach(function(d,i){d.classList.toggle('active',i===cur)});}
+  function startTimer(){clearInterval(timer);timer=setInterval(function(){goTo(cur+1);},4500);}
+  document.getElementById('amkNext').addEventListener('click',function(){goTo(cur+1);startTimer();});
+  document.getElementById('amkPrev').addEventListener('click',function(){goTo(cur-1);startTimer();});
+  dots.forEach(function(d){d.addEventListener('click',function(){goTo(+d.dataset.idx);startTimer();});});
+  var sx=0;
+  track.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+  track.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40){goTo(dx<0?cur+1:cur-1);startTimer();}},{passive:true});
+  startTimer();
+})();
 </script>
 {% endif %}
 
