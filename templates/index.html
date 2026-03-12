@@ -35,7 +35,12 @@
       <img src="/static/img/banner.png" alt="Banner Animeku"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;">
     </a>
-    <!-- Slide 2–6: Anime ongoing -->
+    <!-- Slide 2: Banner2 statis -->
+    <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="amk-banner-slide">
+      <img src="/static/img/banner2.png" alt="Banner 2 Animeku"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;">
+    </a>
+    <!-- Slide 3–7: Anime ongoing -->
     {% for anime in data.ongoing[:5] %}
     <a href="/anime/{{ anime.slug }}" class="amk-banner-slide">
       <img src="{{ anime.poster }}" alt="" class="amk-slide-bg">
@@ -65,8 +70,9 @@
   </button>
   <div class="amk-banner-dots" id="amkDots">
     <button class="amk-banner-dot active" data-idx="0"></button>
+    <button class="amk-banner-dot" data-idx="1"></button>
     {% for anime in data.ongoing[:5] %}
-    <button class="amk-banner-dot" data-idx="{{ loop.index }}"></button>
+    <button class="amk-banner-dot" data-idx="{{ loop.index + 1 }}"></button>
     {% endfor %}
   </div>
 </div>
