@@ -30,6 +30,12 @@
 
 <div class="amk-banner-slider">
   <div class="amk-banner-track" id="amkTrack">
+    <!-- Slide 1: Banner statis -->
+    <a href="https://trakteer.id/Dayynimee" target="_blank" rel="noopener" class="amk-banner-slide">
+      <img src="/static/img/banner.png" alt="Banner Animeku"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;">
+    </a>
+    <!-- Slide 2–6: Anime ongoing -->
     {% for anime in data.ongoing[:5] %}
     <a href="/anime/{{ anime.slug }}" class="amk-banner-slide">
       <img src="{{ anime.poster }}" alt="" class="amk-slide-bg">
@@ -58,8 +64,9 @@
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
   <div class="amk-banner-dots" id="amkDots">
+    <button class="amk-banner-dot active" data-idx="0"></button>
     {% for anime in data.ongoing[:5] %}
-    <button class="amk-banner-dot {% if loop.first %}active{% endif %}" data-idx="{{ loop.index0 }}"></button>
+    <button class="amk-banner-dot" data-idx="{{ loop.index }}"></button>
     {% endfor %}
   </div>
 </div>
