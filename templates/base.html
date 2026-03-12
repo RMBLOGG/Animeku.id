@@ -1214,12 +1214,11 @@ loadEndpointState();
       </a>
     </div>
 
-    <!-- Live Chat -->
-    <div class="amk-fab-item" onclick="amkOpenChat();">
-      <span class="amk-fab-label">Live Chat</span>
-      <button class="amk-fab-icon chat" style="position:relative;">
-        <span id="amkChatUnread"></span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <!-- Support Dayynime -->
+    <div class="amk-fab-item" onclick="amkOpenTrakteer(); amkCloseFab();">
+      <span class="amk-fab-label">Support Dayynime</span>
+      <button class="amk-fab-icon chat">
+        <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-icon.png?v=14-05-2025" style="width:20px;height:20px;border-radius:50%;" alt="">
       </button>
     </div>
 
@@ -1256,6 +1255,21 @@ function amkOpenChat() {
   fcToggle();
 }
 
+function amkOpenTrakteer() {
+  var modal = document.getElementById('amkTrModal');
+  var frame = document.getElementById('amkTrFrame');
+  frame.src = '';
+  setTimeout(function() { frame.src = 'https://trakteer.id/v1/Dayynimee/tip/embed/modal'; }, 50);
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function amkCloseTrakteer(e) {
+  if (e && e.target !== document.getElementById('amkTrModal') && e.target !== document.getElementById('amkTrClose')) return;
+  document.getElementById('amkTrFrame').src = '';
+  document.getElementById('amkTrModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 // Tutup kalau tap di luar
 document.addEventListener('click', function(e) {
   var wrap = document.getElementById('amkFabWrap');
@@ -1264,6 +1278,27 @@ document.addEventListener('click', function(e) {
   }
 });
 </script>
+
+<!-- Trakteer Modal -->
+<style>
+#amkTrModal { display:none; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); align-items:flex-end; justify-content:center; }
+#amkTrModal.open { display:flex; }
+#amkTrBox { background:#0e1117; border-radius:20px 20px 0 0; overflow:hidden; width:100%; max-width:480px; height:90vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,0.8); animation:amkTrUp 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+@keyframes amkTrUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+#amkTrHead { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#e63946; flex-shrink:0; }
+#amkTrHead span { font-size:14px; font-weight:700; color:#fff; }
+#amkTrClose { background:rgba(255,255,255,0.2); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+#amkTrFrame { flex:1; border:none; width:100%; height:100%; }
+</style>
+<div id="amkTrModal" onclick="amkCloseTrakteer(event)">
+  <div id="amkTrBox">
+    <div id="amkTrHead">
+      <span>❤️ Support Dayynime</span>
+      <button id="amkTrClose" onclick="amkCloseTrakteer(event)">✕</button>
+    </div>
+    <iframe id="amkTrFrame" src="" allow="payment" loading="lazy"></iframe>
+  </div>
+</div>
 
 <!-- Chat Panel -->
 <div id="fchatPanelWrap">
@@ -1674,3 +1709,6 @@ function fcEsc(str) {
 })();
 </script>
 <!-- ── END FLOATING CHAT WIDGET ──────────────────────────────────── -->
+
+</body>
+</html>
