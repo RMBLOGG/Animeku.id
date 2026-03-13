@@ -88,184 +88,12 @@ body::before{
   .nav-links{display:none}
 }
 
-/* ── HERO ── */
-.hero{
-  min-height:100vh;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
-  padding:80px 24px 60px;
+/* ── PAGE TOP SPACER ── */
+.page-top{
+  height:64px;
 }
 
-/* Animated gradient mesh bg */
-.hero-bg{
-  position:absolute;inset:0;z-index:0;
-  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(230,57,70,0.12) 0%, transparent 60%),
-             radial-gradient(ellipse 50% 40% at 80% 80%, rgba(230,57,70,0.06) 0%, transparent 50%),
-             #07090d;
-}
-.hero-grid{
-  position:absolute;inset:0;z-index:1;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-  background-size:72px 72px;
-  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
-}
-/* floating particles */
-.particles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-.particle{
-  position:absolute;
-  width:2px;height:2px;
-  background:rgba(230,57,70,0.6);
-  border-radius:50%;
-  animation:float-up linear infinite;
-}
-@keyframes float-up{
-  0%{transform:translateY(100vh) translateX(0);opacity:0}
-  10%{opacity:1}
-  90%{opacity:.5}
-  100%{transform:translateY(-100px) translateX(var(--dx));opacity:0}
-}
-
-/* hero content */
-.hero-inner{
-  position:relative;z-index:5;
-  max-width:760px;width:100%;
-  text-align:center;
-}
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(230,57,70,0.1);
-  border:1px solid rgba(230,57,70,0.25);
-  color:var(--red);
-  font-size:11px;font-weight:700;
-  padding:6px 16px;border-radius:20px;
-  font-family:'JetBrains Mono',monospace;
-  letter-spacing:2px;text-transform:uppercase;
-  margin-bottom:28px;
-  opacity:0;animation:fade-up .7s ease .1s forwards;
-}
-.hero-eyebrow-dot{
-  width:6px;height:6px;border-radius:50%;background:var(--red);
-  animation:blink 1.2s ease-in-out infinite;
-}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-
-.hero-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(44px,14vw,108px);
-  letter-spacing:4px;
-  line-height:1;
-  margin-bottom:8px;
-  opacity:0;animation:fade-up .7s ease .25s forwards;
-  white-space:nowrap;
-}
-.hero-title .line2{
-  display:inline;
-  -webkit-text-stroke:1px rgba(230,57,70,0.5);
-  color:transparent;
-}
-.hero-title .acc{color:var(--red)}
-@media(max-width:400px){
-  .hero-title{ font-size:clamp(36px,10vw,52px); letter-spacing:1px; }
-}
-
-.hero-sub{
-  font-family:'JetBrains Mono',monospace;
-  font-size:clamp(10px,2vw,13px);
-  letter-spacing:3px;
-  color:var(--text3);
-  text-transform:uppercase;
-  margin-bottom:32px;
-  opacity:0;animation:fade-up .7s ease .4s forwards;
-  white-space:normal;
-  word-break:break-word;
-}
-
-.hero-desc{
-  font-size:clamp(14px,2.5vw,17px);
-  color:var(--text2);
-  line-height:1.9;
-  max-width:520px;
-  margin:0 auto 40px;
-  font-weight:300;
-  opacity:0;animation:fade-up .7s ease .5s forwards;
-}
-
-.hero-actions{
-  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
-  opacity:0;animation:fade-up .7s ease .65s forwards;
-}
-.btn-watch{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:16px 36px;border-radius:12px;
-  background:var(--red);color:#fff;
-  font-size:16px;font-weight:700;
-  transition:.25s ease;
-  box-shadow:0 6px 28px rgba(230,57,70,0.45);
-  position:relative;overflow:hidden;
-}
-.btn-watch::before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.12),transparent);
-  opacity:0;transition:.2s ease;
-}
-.btn-watch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(230,57,70,0.6)}
-.btn-watch:hover::before{opacity:1}
-.btn-apk{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:15px 28px;border-radius:12px;
-  background:rgba(255,255,255,0.06);color:var(--text);
-  font-size:15px;font-weight:600;
-  border:1px solid var(--border);
-  transition:.25s ease;
-}
-.btn-apk:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);transform:translateY(-2px)}
-
-/* stats row */
-.hero-stats{
-  display:flex;gap:0;justify-content:center;
-  margin-top:48px;
-  opacity:0;animation:fade-up .7s ease .8s forwards;
-  flex-wrap:nowrap;
-  overflow-x:auto;
-  scrollbar-width:none;
-}
-.hero-stats::-webkit-scrollbar{display:none}
-.hero-stat{
-  padding:0 20px;
-  border-right:1px solid var(--border);
-  text-align:center;
-  flex-shrink:0;
-}
-.hero-stat:last-child{border-right:none}
-.hero-stat-num{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(24px,5vw,40px);
-  color:var(--text);
-  letter-spacing:1px;
-  line-height:1;
-}
-.hero-stat-num span{color:var(--red)}
-.hero-stat-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px;color:var(--text3);
-  letter-spacing:1.5px;text-transform:uppercase;
-  margin-top:4px;
-}
-@media(max-width:400px){
-  .hero-stat{padding:0 12px}
-  .hero-stat-num{font-size:22px}
-  .hero-stat-label{font-size:8px;letter-spacing:1px}
-}
-
-/* bottom fade */
-.hero::after{
-  content:"";position:absolute;bottom:0;left:0;right:0;
-  height:160px;
-  background:linear-gradient(to bottom,transparent,var(--bg));
-  z-index:4;pointer-events:none;
-}
 
 /* ── FEATURES ── */
 .features{
@@ -419,9 +247,12 @@ body::before{
 
 /* ── DONASI SECTION ── */
 .donasi{
-  padding:80px 24px;
-  background:var(--bg2);
-  border-top:1px solid var(--border);
+  padding:100px 24px 80px;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(230,57,70,0.08) 0%, transparent 60%),
+    var(--bg2);
+  border-bottom:1px solid var(--border);
+  position:relative;
 }
 .donasi-inner{max-width:1100px;margin:0 auto}
 .donasi-header{margin-bottom:40px}
@@ -600,60 +431,8 @@ body::before{
   </a>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
-  <div class="particles" id="particles"></div>
-
-  <div class="hero-inner">
-    <div class="hero-eyebrow">
-      <span class="hero-eyebrow-dot"></span>
-      Streaming Anime Sub Indo
-    </div>
-
-    <h1 class="hero-title">
-      ANIMEKU<span class="line2"><span class="acc">.</span>ID</span>
-    </h1>
-
-    <p class="hero-sub">Tempatnya wibu sejati &nbsp;//&nbsp; Free &nbsp;•&nbsp; HD &nbsp;•&nbsp; No Ads</p>
-
-    <p class="hero-desc">
-      Nonton anime sub indo lengkap, terbaru, dan berkualitas HD.
-      Gratis selamanya, tanpa iklan, langsung di browser kamu.
-    </p>
-
-    <div class="hero-actions">
-      <a href="/home" class="btn-watch">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-        Mulai Nonton
-      </a>
-      <a href="https://www.mediafire.com/file/w66awqk0t7873go/Animeku.id.apk/file" target="_blank" rel="noopener" class="btn-apk">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7C5.9 2 5 2.9 5 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.83 0-1.5-.67-1.5-1.5S11.17 17 12 17s1.5.67 1.5 1.5S12.83 20 12 20zm5-4H7V4h10v12z"/></svg>
-        Download APK
-      </a>
-    </div>
-
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-num">10000<span>+</span></div>
-        <div class="hero-stat-label">Anime</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">0<span>K</span></div>
-        <div class="hero-stat-label">Biaya</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">0<span>🚫</span></div>
-        <div class="hero-stat-label">Iklan</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">HD<span>+</span></div>
-        <div class="hero-stat-label">Kualitas</div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- PAGE TOP SPACER -->
+<div class="page-top"></div>
 
 <!-- DONASI -->
 <section class="donasi" id="donasi">
@@ -811,25 +590,6 @@ body::before{
 window.addEventListener("scroll", () => {
   document.getElementById("mainNav").classList.toggle("scrolled", window.scrollY > 40);
 });
-
-// ── PARTICLES
-(function() {
-  const container = document.getElementById("particles");
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    p.style.cssText = `
-      left:${Math.random()*100}%;
-      animation-duration:${8 + Math.random()*14}s;
-      animation-delay:${-Math.random()*20}s;
-      --dx:${(Math.random()-0.5)*120}px;
-      width:${1+Math.random()*2}px;
-      height:${1+Math.random()*2}px;
-      opacity:${0.3+Math.random()*0.5};
-    `;
-    container.appendChild(p);
-  }
-})();
 
 // ── SCROLL REVEAL
 const revealEls = document.querySelectorAll(".reveal");
