@@ -1,4 +1,24 @@
 User-agent: *
 Allow: /
+Allow: /home
+Allow: /anime/
+Allow: /episode/
+Allow: /genre/
+Allow: /genres
+Allow: /anime-list
+Allow: /ongoing
+Allow: /completed
+Allow: /movies
+Allow: /popular
+Allow: /schedule
+Allow: /search
 
-Sitemap: https://animeku-id.vercel.app/sitemap.xml
+# Blokir halaman internal / API / debug
+Disallow: /api/
+Disallow: /debug
+Disallow: /debug2
+Disallow: /admin/
+Disallow: /cron/
+Disallow: /api/trakteer/
+
+Sitemap: https://DOMAIN_KAMU.com/sitemap.xml
