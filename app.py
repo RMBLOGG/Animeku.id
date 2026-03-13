@@ -6,22 +6,30 @@ from upstash_redis import Redis
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "animeku-secret-2026")
+
+BYPASS_PATHS = ['/static/', '/api/']
+
+@app.before_request
+def bypass_static():
+    for bp in BYPASS_PATHS:
+        if request.path.startswith(bp):
+            return None
 API_BASE = "https://www.sankavollerei.com"
 
 # ── Endpoint Sources ───────────────────────────────────────────────────────────
 SOURCES = {
     "samehadaku": {
-        "label": "Samehadaku",
+        "label": "Dayynime-v1",
         "prefix": "/anime/samehadaku",
         "type": "samehadaku",
     },
     "animasu": {
-        "label": "Animasu",
+        "label": "Dayynime-v2",
         "prefix": "/anime/animasu",
         "type": "animasu",
     },
     "otakudesu": {
-        "label": "Otakudesu",
+        "label": "Dayynime-v3",
         "prefix": "/anime",
         "type": "otakudesu",
     },
@@ -78,6 +86,7 @@ def inject_active_source():
     return {
         "active_source": src,
         "active_source_label": SOURCES[src]["label"],
+        "all_sources": SOURCES,
     }
 
 SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
@@ -560,13 +569,11 @@ def home():
 
     if source == "animasu":
         raw      = fetch(f"{pfx}/home")
-        pop_raw  = fetch(f"{pfx}/latest")
+        pop_raw  = fetch(f"{pfx}/popular")
         schedule = fetch(f"{pfx}/schedule")
         data     = animasu_norm_home(raw)
-        # populer dari latest animasu
-        pop_norm = animasu_norm_paginated(pop_raw, 1) if pop_raw else None
-        if pop_norm:
-            pop_norm = {"animes": pop_norm.get("animes", [])}
+        # populer dari endpoint /popular animasu (response: {animes: [...]})
+        pop_norm = {"animes": animasu_norm_list(pop_raw.get("animes", []))} if pop_raw and pop_raw.get("animes") else None
         sched    = animasu_norm_schedule(schedule)
     elif source == "otakudesu":
         raw      = fetch(f"{pfx}/home")
@@ -825,7 +832,7 @@ def movies():
     source = get_active_source()
     pfx    = SOURCES[source]["prefix"]
     if source == "animasu":
-        data = animasu_norm_paginated(fetch(f"{pfx}/completed", {"page": page}), int(page))
+        data = animasu_norm_paginated(fetch(f"{pfx}/movies", {"page": page}), int(page))
     elif source == "otakudesu":
         # otakudesu tidak punya endpoint /movies, fallback ke complete-anime
         data = otakudesu_norm_paginated(fetch(f"{pfx}/complete-anime", {"page": page}), int(page))
@@ -1776,15 +1783,128 @@ def debug():
     except Exception as e:
         return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
-@app.route("/sitemap.xml")
-def sitemap():
-    return send_from_directory("static", "sitemap.xml", mimetype="application/xml")
+# ═══════════════════════════════════════════════════════
+# TRAKTEER API
+# ═══════════════════════════════════════════════════════
+TRAKTEER_API_KEY = os.environ.get("TRAKTEER_API_KEY", "")
+TRAKTEER_BASE    = "https://api.trakteer.id/v1/public"
 
+def fetch_trakteer(endpoint, params=None):
+    """Fetch dari Trakteer API dengan cache Redis 5 menit."""
+    cache_key = f"animeku:trakteer:{endpoint}"
+    try:
+        cached = redis.get(cache_key)
+        if cached:
+            return json.loads(cached)
+    except Exception:
+        pass
 
-@app.route("/robots.txt")
-def robots():
-    return send_from_directory("static", "robots.txt", mimetype="text/plain")
+    try:
+        headers = {
+            "key": TRAKTEER_API_KEY,
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+        r = requests.get(f"{TRAKTEER_BASE}/{endpoint}", headers=headers, params=params, timeout=8)
+        data = r.json()
+        try:
+            redis.set(cache_key, json.dumps(data), ex=300)  # cache 5 menit
+        except Exception:
+            pass
+        return data
+    except Exception:
+        return None
 
+@app.route("/api/trakteer/debug")
+def trakteer_debug():
+    """Debug: coba semua kemungkinan endpoint Trakteer."""
+    import traceback
+    try:
+        key = os.environ.get("TRAKTEER_API_KEY", "")
+        if not key:
+            return jsonify({"error": "TRAKTEER_API_KEY tidak diset"})
+        headers = {
+            "key": key,
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+        # Coba semua endpoint yang mungkin
+        # Coba transactions dengan berbagai parameter
+        results = {}
+        test_params = [
+            {},
+            {"limit": 10},
+            {"per_page": 10},
+            {"page": 1, "limit": 10},
+            {"status": "success"},
+            {"status": "paid"},
+            {"type": "tip"},
+        ]
+        for i, params in enumerate(test_params):
+            try:
+                r = requests.get(f"{TRAKTEER_BASE}/transactions", headers=headers, params=params, timeout=5)
+                body = r.json()
+                results[f"try_{i}_{params}"] = {
+                    "status": r.status_code,
+                    "data_count": len(body.get("result",{}).get("data",[])),
+                    "result_keys": list(body.get("result",{}).keys()) if body.get("result") else [],
+                    "preview": str(r.text[:300]),
+                }
+            except Exception as ex:
+                results[f"try_{i}"] = {"error": str(ex)}
+        return jsonify({"key_prefix": key[:6]+"...", "results": results})
+    except Exception as e:
+        return jsonify({"error": str(e), "trace": traceback.format_exc()})
+
+@app.route("/api/trakteer/supporters")
+def trakteer_supporters():
+    """Return 10 supporter terbaru untuk ditampilkan di home."""
+    import traceback
+    try:
+        data = fetch_trakteer("transactions", {"limit": 10})
+        if not data:
+            return jsonify({"ok": False, "supporters": [], "reason": "fetch returned None"})
+
+        items = data.get("result", {}).get("data", []) or data.get("data", []) or []
+        supporters = []
+        for item in items[:10]:
+            supporters.append({
+                "name":    item.get("supporter_name") or item.get("name") or item.get("supporter") or "Anonim",
+                "amount":  item.get("amount_raw") or item.get("amount") or item.get("total_amount") or 0,
+                "unit":    item.get("unit") or item.get("quantity") or 1,
+                "message": item.get("supporter_message") or item.get("message") or item.get("note") or "",
+                "time":    item.get("created_at") or item.get("transaction_time") or item.get("paid_at") or "",
+            })
+        return jsonify({"ok": True, "supporters": supporters})
+    except Exception as e:
+        return jsonify({"ok": False, "supporters": [], "error": str(e), "trace": traceback.format_exc()})
+
+@app.route("/api/trakteer/latest")
+def trakteer_latest():
+    """Return supporter terbaru saja (untuk polling notifikasi)."""
+    import traceback
+    try:
+        data = fetch_trakteer("transactions", {"limit": 1})
+        if not data:
+            return jsonify({"ok": False})
+
+        items = data.get("result", {}).get("data", []) or data.get("data", []) or []
+        if not items:
+            return jsonify({"ok": True, "latest": None})
+
+        item = items[0]
+        return jsonify({
+            "ok": True,
+            "latest": {
+                "id":      item.get("id") or item.get("transaction_id") or "",
+                "name":    item.get("supporter_name") or item.get("name") or "Anonim",
+                "amount":  item.get("amount_raw") or item.get("amount") or 0,
+                "unit":    item.get("unit") or item.get("quantity") or 1,
+                "message": item.get("supporter_message") or item.get("message") or "",
+            }
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
 
 if __name__ == "__main__":
     app.run(debug=True)
