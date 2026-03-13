@@ -6,14 +6,14 @@
 
   <!-- Halaman Utama -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/</loc>
+    <loc>https://animeku-id.vercel.app/</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://DOMAIN_KAMU.com/home</loc>
+    <loc>https://animeku-id.vercel.app/home</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
@@ -21,7 +21,7 @@
 
   <!-- Daftar Anime -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/anime-list</loc>
+    <loc>https://animeku-id.vercel.app/anime-list</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -29,14 +29,14 @@
 
   <!-- Ongoing & Completed -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/ongoing</loc>
+    <loc>https://animeku-id.vercel.app/ongoing</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://DOMAIN_KAMU.com/completed</loc>
+    <loc>https://animeku-id.vercel.app/completed</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -44,7 +44,7 @@
 
   <!-- Movies -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/movies</loc>
+    <loc>https://animeku-id.vercel.app/movies</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -52,7 +52,7 @@
 
   <!-- Popular -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/popular</loc>
+    <loc>https://animeku-id.vercel.app/popular</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -60,7 +60,7 @@
 
   <!-- Jadwal -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/schedule</loc>
+    <loc>https://animeku-id.vercel.app/jadwal</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -68,15 +68,23 @@
 
   <!-- Genre List -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/genres</loc>
+    <loc>https://animeku-id.vercel.app/genres</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
+  <!-- Live Chat -->
+  <url>
+    <loc>https://animeku-id.vercel.app/chat</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>always</changefreq>
+    <priority>0.5</priority>
+  </url>
+
   <!-- Search -->
   <url>
-    <loc>https://DOMAIN_KAMU.com/search</loc>
+    <loc>https://animeku-id.vercel.app/search</loc>
     <lastmod>2026-03-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

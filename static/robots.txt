@@ -21,4 +21,4 @@ Disallow: /admin/
 Disallow: /cron/
 Disallow: /api/trakteer/
 
-Sitemap: https://DOMAIN_KAMU.com/sitemap.xml
+Sitemap: https://animeku-id.vercel.app/sitemap.xml
