@@ -1,4 +1,3 @@
-
 {
   "version": 2,
   "builds": [
@@ -15,6 +14,14 @@
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"
+    },
+    {
+      "src": "/sitemap.xml",
+      "dest": "/static/sitemap.xml"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/static/robots.txt"
     },
     {
       "src": "/(.*)",
