@@ -1,91 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Halaman Utama -->
   <url>
     <loc>https://animeku-id.vercel.app/</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://animeku-id.vercel.app/home</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Daftar Anime -->
   <url>
     <loc>https://animeku-id.vercel.app/anime-list</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Ongoing & Completed -->
   <url>
     <loc>https://animeku-id.vercel.app/ongoing</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://animeku-id.vercel.app/completed</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Movies -->
   <url>
     <loc>https://animeku-id.vercel.app/movies</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Popular -->
   <url>
     <loc>https://animeku-id.vercel.app/popular</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Jadwal -->
   <url>
     <loc>https://animeku-id.vercel.app/jadwal</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
 
-  <!-- Genre List -->
   <url>
     <loc>https://animeku-id.vercel.app/genres</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
-  <!-- Live Chat -->
   <url>
     <loc>https://animeku-id.vercel.app/chat</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>always</changefreq>
     <priority>0.5</priority>
   </url>
 
-  <!-- Search -->
   <url>
     <loc>https://animeku-id.vercel.app/search</loc>
-    <lastmod>2026-03-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
