@@ -1300,56 +1300,6 @@ document.addEventListener('click', function(e) {
   </div>
 </div>
 
-<!-- Chat Panel -->
-<div id="fchatPanelWrap">
-  <div id="fchatPanel">
-    <!-- Header -->
-    <div class="fc-header">
-      <div class="fc-header-icon">💬</div>
-      <div class="fc-header-info">
-        <div class="fc-header-title">LiveChat</div>
-        <div class="fc-header-sub">
-          <div class="fc-live-dot"></div>
-          <span>LIVE</span>
-          &nbsp;·&nbsp;
-          <div class="fc-online-dot"></div>
-          <span id="fcOnlineCount">0 online</span>
-        </div>
-      </div>
-      <button class="fc-close-btn" onclick="fcToggle()" title="Tutup">✕</button>
-    </div>
-
-    <!-- Messages -->
-    <div class="fc-messages" id="fcMessages">
-      <div class="fc-msg-system">Memuat pesan...</div>
-    </div>
-
-    <!-- Reply bar -->
-    <div class="fc-reply-bar" id="fcReplyBar">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6M3 10l6-6"/></svg>
-      <div class="fc-reply-text" id="fcReplyText">Membalas...</div>
-      <span class="fc-reply-close" onclick="fcCancelReply()">×</span>
-    </div>
-
-    <!-- Input -->
-    <div class="fc-input-wrap">
-      <textarea class="fc-input" id="fcInput" placeholder="Tulis pesan..." rows="1" maxlength="500"
-        onkeydown="fcHandleKey(event)" oninput="fcAutoResize(this)"></textarea>
-      <button class="fc-send-btn" id="fcSendBtn" onclick="fcSend()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-    </div>
-
-    <!-- Auth notice -->
-    <div class="fc-auth-notice" id="fcAuthNotice" style="display:none">
-      Chat sebagai anonim · <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">Login</a> untuk tampil dengan nama
-    </div>
-
-    <!-- Scroll button -->
-    <button class="fc-scroll-btn" id="fcScrollBtn" onclick="fcScrollToBottom()">↓</button>
-  </div>
-</div>
-
   <script src="https://pl28904745.effectivegatecpm.com/4a/81/0f/4a810f968812c37a2a95d35a92267fee.js"></script>
   <script src="https://pl28904733.effectivegatecpm.com/d3/28/ea/d328ea64a05b5039d9cce3fa1dd391e6.js"></script>
 
