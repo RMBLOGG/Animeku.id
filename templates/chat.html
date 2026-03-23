@@ -4,7 +4,6 @@
 {% block head %}
 <style>
 /* ── CHAT PAGE ────────────────────────────────── */
-/* chat-page mobile fix added below */
 .chat-page {
   max-width: 900px;
   margin: 0 auto;
@@ -13,10 +12,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-@media (max-width: 700px) {
-  .chat-page { padding: 12px 12px 80px; gap: 12px; }
 }
 
 /* Header */
@@ -116,12 +111,6 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   height: 560px;
-}
-@media (max-width: 700px) {
-  .chat-box {
-    height: calc(100dvh - 340px);
-    min-height: 260px;
-  }
 }
 .chat-messages {
   flex: 1;
@@ -675,6 +664,43 @@
 .scroll-bottom-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
 
 .chat-box-wrap { position: relative; }
+
+/* ── FIX: Donation banner lebih besar & tidak kepotong ── */
+.msg-donation {
+  padding: 14px 16px;
+  border-radius: 14px;
+  align-items: center;
+}
+.donation-icon {
+  font-size: 28px;
+}
+.donation-name {
+  font-size: 14px;
+}
+.donation-amount {
+  font-size: 17px;
+  margin: 4px 0;
+}
+.donation-msg {
+  font-size: 13px;
+  white-space: normal;
+  word-break: break-word;
+}
+.donation-thanks {
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* Mobile: donation toast lebih turun agar tidak nabrak navbar */
+@media (max-width: 700px) {
+  #donationToast {
+    top: 70px;
+    width: 94vw;
+  }
+  .donation-toast-inner {
+    padding: 14px 16px;
+  }
+}
 </style>
 {% endblock %}
 
