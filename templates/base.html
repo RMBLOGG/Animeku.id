@@ -795,7 +795,7 @@ function closeAnnouncement() {
   transform: translateX(-100%);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 8px 0 40px rgba(0,0,0,0.5);
-  overflow: hidden;
+  overflow: clip;
 }
 .sidebar-menu.open {
   transform: translateX(0);
@@ -832,12 +832,17 @@ function closeAnnouncement() {
 .sidebar-body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  min-height: 0;
   padding: 16px 0 32px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 .sidebar-body::-webkit-scrollbar { width: 0; }
+.sidebar-body * { touch-action: pan-y; }
 
 /* User card */
 .sidebar-user-card {
