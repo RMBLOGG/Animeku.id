@@ -637,7 +637,7 @@ function closeAnnouncement() {
           </div>
         </div>
 
-        <button class="hamburger" id="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
       </div>
     </div>
 
@@ -650,357 +650,198 @@ function closeAnnouncement() {
       <div class="search-results" id="searchResults"></div>
     </div>
 
-  </nav>
+    <div class="mobile-menu" id="mobileMenu">
 
-<!-- ── SIDEBAR OVERLAY ──────────────────────────────────────── -->
-<div id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<!-- ── SIDEBAR MENU ─────────────────────────────────────────── -->
-<div class="sidebar-menu" id="mobileMenu">
-
-  <!-- Header Sidebar -->
-  <div class="sidebar-header">
-    <div class="sidebar-logo">
-      <span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span>
-    </div>
-    <button class="sidebar-close" onclick="closeSidebar()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-  </div>
-
-  <div class="sidebar-body">
-
-    <!-- User info (tampil saat sudah login) -->
-    <div id="menuUserInfo" style="display:none">
-      <div class="sidebar-user-card">
-        <img id="menuAvatar" src="" alt="" width="36" height="36" style="border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--accent)">
-        <div style="flex:1;min-width:0">
-          <div id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-        </div>
-        <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
+      <!-- Sidebar Header -->
+      <div class="sb-header">
+        <div class="sb-logo"><span class="logo-a">A</span>NIMEKU<span class="logo-dot">.</span><span class="logo-id">ID</span></div>
       </div>
-    </div>
 
-    <!-- Login (tampil saat belum login) -->
-    <a href="/auth/login" id="menuBtnLogin" class="sidebar-login-btn" style="display:none">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      Login ke Akun
-    </a>
+      <!-- User info (tampil saat sudah login) -->
+      <div id="menuUserInfo" style="display:none;padding:0 12px 4px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+          <img id="menuAvatar" src="" alt="" width="34" height="34" style="border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--accent)">
+          <div style="flex:1;min-width:0">
+            <div id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <button onclick="logoutUser()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;font-size:11px;padding:4px 8px">Logout</button>
+        </div>
+      </div>
 
-    <!-- Live Chat -->
-    <a href="/chat" class="sidebar-live-chat">
-      <span style="position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--accent);border-radius:50%;flex-shrink:0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;background:#4caf7d;border-radius:50%;border:2px solid var(--bg)"></span>
-      </span>
-      Live Chat
-      <span class="sidebar-live-badge">LIVE</span>
-    </a>
+      <!-- Login (tampil saat belum login) -->
+      <a href="/auth/login" id="menuBtnLogin" style="display:none;align-items:center;gap:10px;margin:0 12px 4px;padding:11px 14px;background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.25);border-radius:10px;color:var(--accent);font-weight:600;font-size:14px;text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Login ke Akun
+      </a>
 
-    <div class="sidebar-divider"></div>
+      <!-- Live Chat -->
+      <a href="/chat" style="display:flex;align-items:center;gap:12px;padding:11px 14px;margin:0 12px 4px;background:linear-gradient(135deg,rgba(230,57,70,0.12),rgba(230,57,70,0.04));border:1px solid rgba(230,57,70,0.25);border-radius:10px;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none">
+        <span style="position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--accent);border-radius:50%;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;background:#4caf7d;border-radius:50%;border:2px solid var(--bg)"></span>
+        </span>
+        Live Chat
+        <span style="margin-left:auto;font-size:10px;background:rgba(230,57,70,0.2);color:var(--accent);border-radius:20px;padding:2px 8px;font-weight:600;letter-spacing:.5px">LIVE</span>
+      </a>
 
-    <!-- Label Navigasi -->
-    <div class="sidebar-section-label">Navigasi</div>
+      <div style="height:1px;background:var(--border);margin:8px 12px"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:2px 14px 6px">Navigasi</div>
 
-    <nav class="sidebar-nav">
-      <a href="/home" class="sidebar-nav-item">
+      <a href="/home" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Beranda
       </a>
-      <a href="/ongoing" class="sidebar-nav-item">
+      <a href="/ongoing" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Ongoing
       </a>
-      <a href="/completed" class="sidebar-nav-item">
+      <a href="/completed" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         Completed
       </a>
-      <a href="/movies" class="sidebar-nav-item">
+      <a href="/movies" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
         Movie
       </a>
-      <a href="/popular" class="sidebar-nav-item">
+      <a href="/popular" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Populer
       </a>
-      <a href="/jadwal" class="sidebar-nav-item">
+      <a href="/jadwal" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Jadwal
       </a>
-      <a href="/genres" class="sidebar-nav-item">
+      <a href="/genres" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
         Genre
       </a>
-      <a href="/koleksi" class="sidebar-nav-item">
+      <a href="/koleksi" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         Koleksi
       </a>
-      <a href="/animelist" class="sidebar-nav-item">
+      <a href="/animelist" class="sb-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Anime A-Z
       </a>
-    </nav>
 
-    <div class="sidebar-divider"></div>
+      <div style="height:1px;background:var(--border);margin:8px 12px"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:2px 14px 6px">Dayynime Endpoint</div>
 
-    <!-- Endpoint Switcher -->
-    <div class="sidebar-section-label">Dayynime Endpoint</div>
-    <div class="sidebar-endpoint-group">
-      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'samehadaku'})});if(r.ok)window.location.reload();})();" class="sidebar-ep-btn" id="ep-mob-samehadaku">
+      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'samehadaku'})});if(r.ok)window.location.reload();})();" class="sb-link" id="ep-mob-samehadaku">
         <span style="width:7px;height:7px;border-radius:50%;background:#4caf7d;display:inline-block;flex-shrink:0"></span>
         Dayynime-v1
       </a>
-      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'animasu'})});if(r.ok)window.location.reload();})();" class="sidebar-ep-btn" id="ep-mob-animasu">
+      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'animasu'})});if(r.ok)window.location.reload();})();" class="sb-link" id="ep-mob-animasu">
         <span style="width:7px;height:7px;border-radius:50%;background:#f4a261;display:inline-block;flex-shrink:0"></span>
         Dayynime-v2
       </a>
-      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'otakudesu'})});if(r.ok)window.location.reload();})();" class="sidebar-ep-btn" id="ep-mob-otakudesu">
+      <a href="#" onclick="event.preventDefault();(async()=>{const r=await fetch('/api/source/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'otakudesu'})});if(r.ok)window.location.reload();})();" class="sb-link" id="ep-mob-otakudesu">
         <span style="width:7px;height:7px;border-radius:50%;background:#60a5fa;display:inline-block;flex-shrink:0"></span>
         Dayynime-v3
       </a>
+
+      <div style="height:32px;flex-shrink:0"></div>
     </div>
 
-  </div>
-</div>
+  <!-- Overlay — klik untuk tutup sidebar -->
+  <div id="sbOverlay" onclick="document.getElementById('hamburger').click()"></div>
+
+  </nav>
 
 <style>
-/* ── SIDEBAR OVERLAY ── */
-#sidebarOverlay {
+/* ── Override mobile-menu jadi sidebar ── */
+.mobile-menu {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  max-width: 85vw !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  background: var(--bg2, #0e1117) !important;
+  border-right: 1px solid var(--border) !important;
+  border-top: none !important;
+  z-index: 1600 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1) !important;
+  box-shadow: none !important;
+  visibility: hidden !important;
+}
+.mobile-menu.open {
+  transform: translateX(0) !important;
+  box-shadow: 8px 0 40px rgba(0,0,0,0.6) !important;
+  visibility: visible !important;
+}
+
+/* Overlay */
+#sbOverlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(3px);
-  z-index: 1500;
-  transition: none;
+  background: rgba(0,0,0,0.55);
+  z-index: 1599;
 }
-#sidebarOverlay.active {
-  display: block;
-}
+.mobile-menu.open ~ #sbOverlay,
+#mobileMenu.open + #sbOverlay { display: block; }
 
-/* ── SIDEBAR MENU ── */
-.sidebar-menu {
-  position: fixed;
-  top: 0; left: 0;
-  width: 280px;
-  max-width: 85vw;
-  height: 100%;
-  height: 100dvh;
-  background: var(--bg2, #0e1117);
-  border-right: 1px solid var(--border, rgba(255,255,255,0.07));
-  z-index: 1600;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 8px 0 40px rgba(0,0,0,0.5);
-}
-.sidebar-menu.open {
-  transform: translateX(0);
-}
-
-/* Header */
-.sidebar-header {
+/* Sidebar header */
+.sb-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
-.sidebar-logo {
+.sb-logo {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px;
   letter-spacing: 2px;
-  color: var(--text, #e8eaf0);
-}
-.sidebar-close {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border, rgba(255,255,255,0.07));
-  border-radius: 8px;
-  color: var(--text2, #8b92a5);
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.sidebar-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-
-/* Body scrollable */
-.sidebar-body {
-  flex: 1;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  min-height: 0;
-  padding: 16px 0 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.sidebar-body::-webkit-scrollbar { width: 0; }
-
-/* User card */
-.sidebar-user-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: rgba(255,255,255,0.03);
-  margin: 0 12px 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-
-/* Login btn */
-.sidebar-login-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 12px 4px;
-  padding: 11px 16px;
-  background: rgba(230,57,70,0.1);
-  border: 1px solid rgba(230,57,70,0.25);
-  border-radius: 10px;
-  color: var(--accent, #e63946);
-  font-weight: 600;
-  font-size: 14px;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.sidebar-login-btn:hover { background: rgba(230,57,70,0.18); }
-
-/* Live Chat */
-.sidebar-live-chat {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 20px;
-  background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(230,57,70,0.04));
-  border: 1px solid rgba(230,57,70,0.25);
-  border-radius: 10px;
-  margin: 0 12px;
-  color: var(--accent, #e63946);
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.sidebar-live-chat:hover { background: linear-gradient(135deg, rgba(230,57,70,0.2), rgba(230,57,70,0.08)); }
-.sidebar-live-badge {
-  margin-left: auto;
-  font-size: 10px;
-  background: rgba(230,57,70,0.2);
-  color: var(--accent);
-  border-radius: 20px;
-  padding: 2px 8px;
-  font-weight: 600;
-  letter-spacing: .5px;
-}
-
-/* Divider */
-.sidebar-divider {
-  height: 1px;
-  background: var(--border, rgba(255,255,255,0.07));
-  margin: 8px 12px;
-  flex-shrink: 0;
-}
-
-/* Section label */
-.sidebar-section-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--text3, #555d70);
-  padding: 4px 20px 6px;
+  color: var(--text);
 }
 
 /* Nav links */
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0 8px;
+.sb-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 11px 14px !important;
+  margin: 1px 8px !important;
+  border-radius: 8px !important;
+  color: var(--text2) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  background: none !important;
+  transition: background 0.15s, color 0.15s !important;
 }
-.sidebar-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: 8px;
-  color: var(--text2, #8b92a5);
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.18s;
-  font-family: var(--font-body, 'DM Sans', sans-serif);
+.sb-link:hover {
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--text) !important;
 }
-.sidebar-nav-item:hover {
-  background: rgba(255,255,255,0.05);
-  color: var(--text, #e8eaf0);
-}
-.sidebar-nav-item.active {
-  background: rgba(230,57,70,0.1);
-  color: var(--accent, #e63946);
-}
-.sidebar-nav-item.active svg { stroke: var(--accent, #e63946); }
 
-/* Endpoint group */
-.sidebar-endpoint-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 8px;
-}
-.sidebar-ep-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  color: var(--text2, #8b92a5);
-  font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  border: 1px solid transparent;
-  transition: all 0.18s;
-  font-family: var(--font-body, 'DM Sans', sans-serif);
-}
-.sidebar-ep-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-
-/* Sembunyikan sidebar di desktop */
 @media (min-width: 769px) {
-  .sidebar-menu { display: none !important; }
-  #sidebarOverlay { display: none !important; }
+  .mobile-menu { display: none !important; }
+  #sbOverlay { display: none !important; }
 }
 </style>
 
 <script>
-var _sidebarOpen = false;
-
-function openSidebar() {
-  _sidebarOpen = true;
-  document.getElementById('mobileMenu').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('active');
-  // JANGAN set body overflow:hidden — ini yang block scroll di Android
-}
-function closeSidebar() {
-  _sidebarOpen = false;
-  document.getElementById('mobileMenu').classList.remove('open');
-  var overlay = document.getElementById('sidebarOverlay');
-  overlay.classList.remove('active');
-}
-
-// Tandai nav item aktif
+// Overlay ikut state hamburger — pakai MutationObserver
 (function() {
-  var path = window.location.pathname;
-  document.querySelectorAll('.sidebar-nav-item').forEach(function(item) {
-    var href = item.getAttribute('href');
-    if (href && href !== '#' && (path === href || path.startsWith(href + '/'))) {
-      item.classList.add('active');
-    }
+  var menu = document.getElementById('mobileMenu');
+  var overlay = document.getElementById('sbOverlay');
+  if (!menu || !overlay) return;
+  var obs = new MutationObserver(function() {
+    overlay.style.display = menu.classList.contains('open') ? 'block' : 'none';
   });
+  obs.observe(menu, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
 
@@ -1199,39 +1040,6 @@ function closeSidebar() {
   <!-- ── END MOBILE BOTTOM NAV BAR ─────────────────────────────── -->
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script>
-  // ── Override main.js agar sidebar berfungsi benar ──────────────
-  document.addEventListener('click', function(e) {
-    if (!_sidebarOpen) return;
-    // Kalau klik di dalam sidebar atau di hamburger → jangan tutup
-    var sidebar = document.getElementById('mobileMenu');
-    var ham = document.getElementById('hamburger');
-    if (sidebar && sidebar.contains(e.target)) return;
-    if (ham && ham.contains(e.target)) return;
-    // Klik overlay atau luar → tutup
-    closeSidebar();
-  }, true); // useCapture=true agar jalan sebelum handler lama di main.js
-
-  // Rebind hamburger setelah main.js attach handler-nya
-  (function() {
-    function rebindHam() {
-      var ham = document.getElementById('hamburger');
-      if (!ham) return;
-      var newHam = ham.cloneNode(true); // hapus semua listener lama
-      ham.parentNode.replaceChild(newHam, ham);
-      newHam.addEventListener('click', function(e) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        if (_sidebarOpen) closeSidebar(); else openSidebar();
-      });
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', rebindHam);
-    } else {
-      rebindHam();
-    }
-  })();
-  </script>
   <script>
   function getUser() {
     try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
