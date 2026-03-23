@@ -772,12 +772,10 @@ function closeAnnouncement() {
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(3px);
   z-index: 1500;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: none;
 }
 #sidebarOverlay.active {
   display: block;
-  opacity: 1;
 }
 
 /* ── SIDEBAR MENU ── */
@@ -786,6 +784,7 @@ function closeAnnouncement() {
   top: 0; left: 0;
   width: 280px;
   max-width: 85vw;
+  height: 100%;
   height: 100dvh;
   background: var(--bg2, #0e1117);
   border-right: 1px solid var(--border, rgba(255,255,255,0.07));
@@ -793,9 +792,8 @@ function closeAnnouncement() {
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 8px 0 40px rgba(0,0,0,0.5);
-  overflow: clip;
 }
 .sidebar-menu.open {
   transform: translateX(0);
@@ -831,10 +829,9 @@ function closeAnnouncement() {
 /* Body scrollable */
 .sidebar-body {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+  overscroll-behavior-y: contain;
   min-height: 0;
   padding: 16px 0 32px;
   display: flex;
@@ -842,7 +839,6 @@ function closeAnnouncement() {
   gap: 4px;
 }
 .sidebar-body::-webkit-scrollbar { width: 0; }
-.sidebar-body * { touch-action: pan-y; }
 
 /* User card */
 .sidebar-user-card {
@@ -981,27 +977,25 @@ function closeAnnouncement() {
 </style>
 
 <script>
+var _sidebarOpen = false;
+
 function openSidebar() {
+  _sidebarOpen = true;
   document.getElementById('mobileMenu').classList.add('open');
   document.getElementById('sidebarOverlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  // JANGAN set body overflow:hidden — ini yang block scroll di Android
 }
 function closeSidebar() {
+  _sidebarOpen = false;
   document.getElementById('mobileMenu').classList.remove('open');
   var overlay = document.getElementById('sidebarOverlay');
-  overlay.style.opacity = '0';
-  setTimeout(function() {
-    overlay.classList.remove('active');
-    overlay.style.opacity = '';
-    document.body.style.overflow = '';
-  }, 300);
+  overlay.classList.remove('active');
 }
 
 // Tandai nav item aktif
 (function() {
   var path = window.location.pathname;
-  var items = document.querySelectorAll('.sidebar-nav-item');
-  items.forEach(function(item) {
+  document.querySelectorAll('.sidebar-nav-item').forEach(function(item) {
     var href = item.getAttribute('href');
     if (href && href !== '#' && (path === href || path.startsWith(href + '/'))) {
       item.classList.add('active');
@@ -1206,17 +1200,35 @@ function closeSidebar() {
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
-  // Override hamburger handler dari main.js agar pakai sidebar
-  (function() {
+  // ── Override main.js agar sidebar berfungsi benar ──────────────
+  document.addEventListener('click', function(e) {
+    if (!_sidebarOpen) return;
+    // Kalau klik di dalam sidebar atau di hamburger → jangan tutup
+    var sidebar = document.getElementById('mobileMenu');
     var ham = document.getElementById('hamburger');
-    if (ham) {
-      // Clone untuk hapus semua event listener lama
-      var newHam = ham.cloneNode(true);
+    if (sidebar && sidebar.contains(e.target)) return;
+    if (ham && ham.contains(e.target)) return;
+    // Klik overlay atau luar → tutup
+    closeSidebar();
+  }, true); // useCapture=true agar jalan sebelum handler lama di main.js
+
+  // Rebind hamburger setelah main.js attach handler-nya
+  (function() {
+    function rebindHam() {
+      var ham = document.getElementById('hamburger');
+      if (!ham) return;
+      var newHam = ham.cloneNode(true); // hapus semua listener lama
       ham.parentNode.replaceChild(newHam, ham);
       newHam.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openSidebar();
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        if (_sidebarOpen) closeSidebar(); else openSidebar();
       });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', rebindHam);
+    } else {
+      rebindHam();
     }
   })();
   </script>
