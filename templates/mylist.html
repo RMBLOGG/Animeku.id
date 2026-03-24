@@ -414,7 +414,7 @@ mlSearchIn.addEventListener('input', () => {
       const data = (json.data || []).map(a => ({
         mal_id : a.mal_id,
         title  : a.title,
-        image  : a.images?.jpg?.small_image_url || '/static/img/placeholder.svg',
+        image  : a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '/static/img/placeholder.svg',
         type   : a.type || '?',
         year   : a.year || (a.aired?.prop?.from?.year) || '?',
         score  : a.score || null,
