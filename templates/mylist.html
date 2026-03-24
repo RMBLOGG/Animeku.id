@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+{% block title %}MyList Anime — Buat Listmu! | Animeku.id{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.ml-page { max-width: 620px; margin: 0 auto; padding: 80px 16px 100px; }
+
+/* ── HERO ── */
+.ml-hero { text-align: center; margin-bottom: 28px; }
+.ml-hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(230,57,70,0.12);
+  border: 1.5px solid rgba(230,57,70,0.3);
+  border-radius: 50px; padding: 5px 14px;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  margin-bottom: 14px; letter-spacing: 0.05em;
+}
+.ml-hero h1 {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 7vw, 48px);
+  letter-spacing: 2px; color: var(--text);
+  line-height: 1.1; margin-bottom: 8px;
+}
+.ml-hero h1 span {
+  color: var(--accent);
+  border-bottom: 3px solid var(--accent);
+}
+.ml-hero p { color: var(--text3); font-size: 14px; margin-bottom: 16px; }
+
+/* ── SEARCH ── */
+.ml-search-wrap { position: relative; margin-bottom: 20px; z-index: 100; }
+.ml-search-inner {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ml-search-inner:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(230,57,70,0.12);
+}
+.ml-search-ico { padding: 0 14px; color: var(--text3); flex-shrink: 0; }
+#mlSearchInput {
+  flex: 1; background: transparent; border: none;
+  color: var(--text); padding: 13px 0;
+  font-family: var(--font-body); font-size: 14px; outline: none;
+}
+#mlSearchInput::placeholder { color: var(--text3); }
+
+#mlSearchResults {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius); max-height: 320px; overflow-y: auto;
+  z-index: 999; display: none;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+#mlSearchResults.open { display: block; }
+.ml-result-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+.ml-result-item:last-child { border-bottom: none; }
+.ml-result-item:hover { background: rgba(255,255,255,0.04); }
+.ml-result-item img {
+  width: 36px; height: 50px; object-fit: cover;
+  border-radius: 6px; border: 1px solid var(--border); flex-shrink: 0;
+}
+.ml-ri-info { flex: 1; min-width: 0; }
+.ml-ri-info strong { font-size: 13px; font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.ml-ri-info span { font-size: 11px; color: var(--text3); font-weight: 500; }
+.ml-ri-score { font-size: 12px; color: #fbbf24; flex-shrink: 0; font-weight: 700; }
+.ml-ri-add {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: transform 0.15s, opacity 0.15s;
+}
+.ml-ri-add:hover { transform: scale(1.15); }
+.ml-ri-add.added { background: #4caf7d; cursor: default; }
+.ml-search-msg {
+  padding: 20px; text-align: center;
+  color: var(--text3); font-size: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* ── COUNTER ── */
+.ml-counter-row { display: flex; justify-content: center; margin-bottom: 16px; }
+.ml-counter-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(230,57,70,0.1);
+  border: 1.5px solid rgba(230,57,70,0.25);
+  border-radius: 50px; padding: 7px 20px;
+}
+.ml-counter-num { font-family: var(--font-head); font-size: 20px; color: var(--accent); transition: transform 0.15s; }
+.ml-counter-label { font-size: 13px; color: var(--text3); }
+
+/* ── GRID ── */
+.ml-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 24px;
+}
+.ml-slot {
+  aspect-ratio: 2/3; border-radius: var(--radius);
+  border: 1.5px dashed rgba(255,255,255,0.1);
+  background: var(--card);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px; position: relative; overflow: hidden;
+  transition: all 0.2s; cursor: default;
+}
+.ml-slot:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ml-slot.filled { border: 1.5px solid var(--border); }
+.ml-slot.filled:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+
+.ml-slot-num {
+  font-family: var(--font-head);
+  font-size: 2.2rem; color: rgba(255,255,255,0.06); line-height: 1;
+}
+.ml-slot-hint { font-size: 10px; color: var(--text3); letter-spacing: 0.04em; }
+
+.ml-slot.filled img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ml-slot-ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(9,11,15,0.9) 0%, rgba(9,11,15,0) 55%);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 8px; opacity: 1; cursor: pointer; pointer-events: none;
+}
+.ml-slot.filled .ml-slot-ov { pointer-events: all; }
+.ml-slot-rank {
+  font-size: 9px; color: var(--accent);
+  font-weight: 800; letter-spacing: 0.08em; margin-bottom: 2px;
+  font-family: var(--font-head);
+}
+.ml-slot-title { font-size: 10px; color: #fff; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 700; }
+.ml-slot-hint2 { font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 3px; display: flex; align-items: center; gap: 3px; }
+.ml-slot-del {
+  position: absolute; top: 5px; right: 5px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); border: 1.5px solid rgba(255,255,255,0.2);
+  color: #fff; font-size: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.ml-slot-del:hover { transform: scale(1.15); }
+
+/* ── SAVE CARD ── */
+.ml-save-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.ml-save-head {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; color: var(--text); margin-bottom: 16px; font-size: 15px;
+}
+.ml-save-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--accent); display: flex;
+  align-items: center; justify-content: center;
+  color: #fff; font-size: 12px;
+}
+.ml-field label {
+  display: block; font-size: 11px; color: var(--text3);
+  margin-bottom: 6px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ml-field input {
+  width: 100%; background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text); padding: 10px 14px;
+  border-radius: var(--radius); font-family: var(--font-body);
+  font-size: 14px; outline: none;
+  transition: border-color 0.2s; margin-bottom: 14px;
+}
+.ml-field input:focus { border-color: var(--accent); }
+.ml-field input::placeholder { color: var(--text3); }
+
+.ml-btn-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.ml-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; padding: 10px 18px; border-radius: var(--radius);
+  font-family: var(--font-body); font-weight: 700;
+  font-size: 13px; cursor: pointer; border: none;
+  transition: all 0.15s; text-decoration: none;
+}
+.ml-btn-primary { background: var(--accent); color: #fff; flex: 1; }
+.ml-btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.ml-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.ml-btn-ghost {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border); color: var(--text2); flex: 1;
+}
+.ml-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.ml-hint { text-align: center; font-size: 12px; color: var(--text3); margin-top: 8px; }
+.ml-hint a { color: var(--accent); font-weight: 600; }
+
+/* ── MODAL ── */
+.ml-modal-backdrop {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.ml-modal-backdrop.open { opacity: 1; pointer-events: all; }
+.ml-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+}
+.ml-modal-backdrop.open .ml-modal { transform: translateY(0) scale(1); }
+.ml-modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all 0.15s; z-index: 10;
+}
+.ml-modal-close:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* anime detail modal */
+.ml-modal-banner { width: 100%; height: 160px; position: relative; border-radius: var(--radius-lg) var(--radius-lg) 0 0; overflow: hidden; }
+.ml-modal-banner img { width: 100%; height: 100%; object-fit: cover; object-position: top; filter: brightness(0.5); }
+.ml-modal-banner-grad { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--card) 100%); }
+.ml-modal-banner-rank {
+  position: absolute; top: 12px; left: 12px;
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 800;
+  padding: 3px 12px; border-radius: 20px;
+  font-family: var(--font-head); letter-spacing: 1px;
+}
+
+.ml-modal-body { display: flex; gap: 14px; padding: 0 16px 8px; margin-top: -50px; position: relative; }
+.ml-modal-poster { width: 88px; flex-shrink: 0; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.5); align-self: flex-start; z-index: 1; }
+.ml-modal-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
+.ml-modal-info { flex: 1; min-width: 0; padding-top: 54px; }
+.ml-modal-badge-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+.ml-badge { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 700; }
+.ml-badge-tv { background: rgba(77,171,247,0.2); color: #4dabf7; border: 1px solid rgba(77,171,247,0.3); }
+.ml-badge-movie { background: rgba(204,93,232,0.2); color: #cc5de8; border: 1px solid rgba(204,93,232,0.3); }
+.ml-badge-type { background: rgba(230,57,70,0.2); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
+.ml-badge-airing { background: rgba(76,175,125,0.2); color: #4caf7d; border: 1px solid rgba(76,175,125,0.3); }
+.ml-badge-fin { background: rgba(255,255,255,0.06); color: var(--text3); border: 1px solid var(--border); }
+.ml-modal-title { font-family: var(--font-head); font-size: 18px; letter-spacing: 0.5px; color: var(--text); line-height: 1.2; }
+.ml-modal-title-en { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.ml-modal-stats {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 12px 16px; margin: 8px 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ml-stat { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 55px; }
+.ml-stat-label { font-size: 9px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; font-weight: 700; }
+.ml-stat-val { font-size: 14px; font-weight: 800; color: var(--text); font-family: var(--font-head); }
+.ml-stat-val.gold { color: #fbbf24; }
+
+.ml-modal-lower { padding: 0 16px 16px; }
+.ml-modal-genres { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.ml-genre-tag { font-size: 10px; padding: 3px 10px; border-radius: 20px; background: rgba(230,57,70,0.08); color: var(--accent); border: 1px solid rgba(230,57,70,0.2); font-weight: 600; }
+.ml-synopsis { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.ml-synopsis.expanded { -webkit-line-clamp: unset; }
+.ml-syn-toggle { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; margin-bottom: 12px; font-family: var(--font-body); font-weight: 700; }
+.ml-modal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 12px; margin-bottom: 12px; }
+.ml-meta-item { display: flex; flex-direction: column; gap: 1px; }
+.ml-meta-label { font-size: 9px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+.ml-meta-val { color: var(--text2); font-weight: 600; }
+.ml-watch-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--accent); color: #fff;
+  border-radius: var(--radius); padding: 10px 18px;
+  font-weight: 700; font-size: 13px; text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.ml-watch-link:hover { opacity: 0.88; transform: translateY(-1px); }
+.ml-modal-loading { display: flex; align-items: center; justify-content: center; padding: 48px; color: var(--text3); gap: 10px; font-size: 13px; }
+
+/* Draft modal */
+.ml-draft-modal-inner { padding: 24px; text-align: center; }
+.ml-draft-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3); display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 14px; }
+.ml-draft-title { font-family: var(--font-head); font-size: 20px; margin-bottom: 6px; color: var(--text); }
+.ml-draft-desc { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+.ml-pin-box { background: rgba(230,57,70,0.08); border: 1px solid rgba(230,57,70,0.2); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; }
+.ml-pin-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.ml-pin-val { font-family: var(--font-head); font-size: 28px; letter-spacing: 0.25em; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ml-page">
+
+  <!-- Hero -->
+  <div class="ml-hero">
+    <div class="ml-hero-tag">🎌 アニメリスト</div>
+    <h1>Buat <span>List</span> Animemu!</h1>
+    <p>Kurasi 9 anime yang mendefinisikan seleramu. Simpan & bagikan!</p>
+  </div>
+
+  <!-- Search -->
+  <div class="ml-search-wrap">
+    <div class="ml-search-inner">
+      <div class="ml-search-ico"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <input type="text" id="mlSearchInput" placeholder="Cari judul anime…" autocomplete="off">
+    </div>
+    <div id="mlSearchResults"></div>
+  </div>
+
+  <!-- Counter -->
+  <div class="ml-counter-row">
+    <div class="ml-counter-pill">
+      <span class="ml-counter-num" id="mlCountNum">0</span>
+      <span class="ml-counter-label">/ 9 anime dipilih</span>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="ml-grid" id="mlGrid">
+    {% for i in range(1, 10) %}
+    <div class="ml-slot" id="mlslot-{{ i }}" onclick="mlFocusSearch({{ i - 1 }})">
+      <div class="ml-slot-num">{{ i }}</div>
+      <div class="ml-slot-hint">ketuk untuk tambah</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Save -->
+  <div class="ml-save-card">
+    <div class="ml-save-head">
+      <div class="ml-save-icon"><i class="fa-solid fa-bookmark"></i></div>
+      Simpan Listmu
+    </div>
+    <div class="ml-field">
+      <label>Nama / Username</label>
+      <input type="text" id="mlUsername" placeholder="Masukkan nama kamu…" maxlength="32">
+    </div>
+    <div class="ml-btn-row">
+      <button class="ml-btn ml-btn-ghost" id="mlDraftBtn" onclick="mlSaveDraft()">
+        <i class="fa-solid fa-floppy-disk"></i> Simpan Draft
+      </button>
+    </div>
+    <button class="ml-btn ml-btn-primary" id="mlSaveBtn" disabled onclick="mlSaveList()" style="width:100%">
+      <i class="fa-solid fa-share-nodes"></i> Simpan & Bagikan
+    </button>
+    <p class="ml-hint">Terlihat oleh semua orang di <a href="/mylist/jelajahi">Jelajahi</a> 👀</p>
+    <p class="ml-hint" style="margin-top:6px"><a href="/mylist/drafts"><i class="fa-solid fa-bookmark"></i> Lihat Draft Tersimpan</a></p>
+  </div>
+</div>
+
+<!-- Anime Detail Modal -->
+<div class="ml-modal-backdrop" id="mlModalBackdrop" onclick="if(event.target===this)mlCloseModal()">
+  <div class="ml-modal" id="mlModal">
+    <button class="ml-modal-close" onclick="mlCloseModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="mlModalBody">
+      <div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat detail…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Draft Modal -->
+<div class="ml-modal-backdrop" id="mlDraftBackdrop" onclick="if(event.target===this)mlCloseDraftModal()">
+  <div class="ml-modal" style="max-width:360px">
+    <button class="ml-modal-close" onclick="mlCloseDraftModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="ml-draft-modal-inner">
+      <div class="ml-draft-icon" id="mlDraftIcon">🔑</div>
+      <div class="ml-draft-title" id="mlDraftTitle"></div>
+      <div class="ml-draft-desc" id="mlDraftDesc"></div>
+      <div id="mlDraftContent"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let mlSelected = [], mlTimer, mlTargetSlot = null;
+const mlDetailCache = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  mlRenderGrid();
+  // Load draft dari URL jika ada
+  const p = new URLSearchParams(location.search);
+  if (p.get('draft') && p.get('pin')) mlLoadDraftFromUrl(p.get('draft'), p.get('pin'));
+});
+
+// ── Search ──────────────────────────────────────────────
+const mlSearchIn  = document.getElementById('mlSearchInput');
+const mlSearchRes = document.getElementById('mlSearchResults');
+
+mlSearchIn.addEventListener('input', () => {
+  clearTimeout(mlTimer);
+  const q = mlSearchIn.value.trim();
+  if (!q) { mlSearchRes.classList.remove('open'); return; }
+  mlSearchRes.innerHTML = '<div class="ml-search-msg"><i class="fa-solid fa-spinner fa-spin"></i> Mencari…</div>';
+  mlSearchRes.classList.add('open');
+  mlTimer = setTimeout(async () => {
+    try {
+      const res  = await fetch('/api/search?q=' + encodeURIComponent(q));
+      const data = await res.json();
+      if (!data.length) { mlSearchRes.innerHTML = '<div class="ml-search-msg">😢 Tidak ada hasil</div>'; return; }
+      mlSearchRes.innerHTML = data.map(a => {
+        const added = !!mlSelected.find(s => s.mal_id === a.mal_id);
+        const safe  = JSON.stringify(a).replace(/"/g, '&quot;');
+        return `<div class="ml-result-item">
+          <img src="${a.image}" alt="" loading="lazy">
+          <div class="ml-ri-info"><strong>${a.title}</strong><span>${a.type||'?'} · ${a.year||'?'}</span></div>
+          ${a.score ? `<div class="ml-ri-score">⭐ ${a.score}</div>` : ''}
+          <button class="ml-ri-add ${added?'added':''}" ${added?'disabled':''} onclick="mlAddAnime(${safe})">
+            <i class="fa-solid ${added?'fa-check':'fa-plus'}"></i>
+          </button>
+        </div>`;
+      }).join('');
+    } catch { mlSearchRes.innerHTML = '<div class="ml-search-msg">Gagal memuat</div>'; }
+  }, 450);
+});
+
+document.addEventListener('click', e => { if (!e.target.closest('.ml-search-wrap')) mlSearchRes.classList.remove('open'); });
+
+function mlFocusSearch(idx) {
+  mlTargetSlot = (idx !== undefined) ? idx : null;
+  mlSearchIn.focus();
+  mlSearchIn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Add / Remove ─────────────────────────────────────────
+function mlAddAnime(anime) {
+  if (mlSelected.find(a => a.mal_id === anime.mal_id)) { mlToast('Sudah ditambahkan!', 'error'); return; }
+  if (mlSelected.length >= 9) { mlToast('Maksimal 9 anime!', 'error'); return; }
+  if (mlTargetSlot !== null && mlTargetSlot < 9) {
+    mlSelected.splice(mlTargetSlot, 0, anime);
+    if (mlSelected.length > 9) mlSelected.length = 9;
+  } else {
+    mlSelected.push(anime);
+  }
+  mlTargetSlot = null;
+  mlRenderGrid();
+  mlSearchRes.classList.remove('open');
+  mlSearchIn.value = '';
+  mlToast('+ ' + anime.title);
+}
+
+function mlRemoveAnime(idx, e) {
+  e && e.stopPropagation();
+  mlSelected.splice(idx, 1);
+  mlRenderGrid();
+}
+
+function mlRenderGrid() {
+  const grid = document.getElementById('mlGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 9; i++) {
+    const anime = mlSelected[i - 1];
+    const div = document.createElement('div');
+    div.id = 'mlslot-' + i;
+    if (anime) {
+      div.className = 'ml-slot filled';
+      div.innerHTML = `
+        <img src="${anime.image}" alt="" loading="lazy">
+        <div class="ml-slot-ov" onclick="mlOpenModal(${i-1})">
+          <div class="ml-slot-rank">#${i}</div>
+          <div class="ml-slot-title">${anime.title}</div>
+          <div class="ml-slot-hint2"><i class="fa-solid fa-circle-info"></i> Lihat detail</div>
+        </div>
+        <button class="ml-slot-del" onclick="mlRemoveAnime(${i-1},event)"><i class="fa-solid fa-xmark"></i></button>`;
+    } else {
+      div.className = 'ml-slot';
+      div.innerHTML = `<div class="ml-slot-num">${i}</div><div class="ml-slot-hint">ketuk untuk tambah</div>`;
+      div.onclick = () => mlFocusSearch(i - 1);
+    }
+    grid.appendChild(div);
+  }
+  // Update counter
+  const num = document.getElementById('mlCountNum');
+  num.textContent = mlSelected.length;
+  num.style.transform = 'scale(1.4)';
+  setTimeout(() => num.style.transform = '', 160);
+  document.getElementById('mlSaveBtn').disabled = mlSelected.length === 0;
+}
+
+// ── Modal Detail ─────────────────────────────────────────
+async function mlOpenModal(idx) {
+  const anime = mlSelected[idx]; if (!anime) return;
+  const body = document.getElementById('mlModalBody');
+  body.innerHTML = '<div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat detail…</div>';
+  document.getElementById('mlModalBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const id = anime.mal_id;
+  if (mlDetailCache[id]) { mlRenderModal(mlDetailCache[id], idx); return; }
+  try {
+    const r = await fetch('https://api.jikan.moe/v4/anime/' + id);
+    const j = await r.json();
+    mlDetailCache[id] = j.data;
+    mlRenderModal(j.data, idx);
+  } catch { body.innerHTML = '<div class="ml-modal-loading">Gagal memuat 😢</div>'; }
+}
+
+function mlBadgeClass(type) {
+  if (!type) return 'ml-badge-type';
+  const t = type.toLowerCase();
+  if (t === 'tv') return 'ml-badge-tv';
+  if (t === 'movie') return 'ml-badge-movie';
+  return 'ml-badge-type';
+}
+
+function mlRenderModal(d, idx) {
+  const poster = d.images?.jpg?.large_image_url || '';
+  const genres = [...(d.genres||[]), ...(d.themes||[])].map(g => `<span class="ml-genre-tag">${g.name}</span>`).join('');
+  const synopsis = (d.synopsis || 'Tidak ada sinopsis.').replace('[Written by MAL Rewrite]','').trim();
+  const statusCls = d.airing ? 'ml-badge-airing' : 'ml-badge-fin';
+  document.getElementById('mlModalBody').innerHTML = `
+    <div class="ml-modal-banner">
+      <img src="${poster}" alt="">
+      <div class="ml-modal-banner-grad"></div>
+      <div class="ml-modal-banner-rank">🏆 #${idx+1}</div>
+    </div>
+    <div class="ml-modal-body">
+      <div class="ml-modal-poster"><img src="${poster}" alt=""></div>
+      <div class="ml-modal-info">
+        <div class="ml-modal-badge-row">
+          ${d.type ? `<span class="ml-badge ${mlBadgeClass(d.type)}">${d.type}</span>` : ''}
+          ${d.status ? `<span class="ml-badge ${statusCls}">${d.status}</span>` : ''}
+        </div>
+        <div class="ml-modal-title">${d.title}</div>
+        ${d.title_english && d.title_english !== d.title ? `<div class="ml-modal-title-en">${d.title_english}</div>` : ''}
+      </div>
+    </div>
+    <div class="ml-modal-stats">
+      ${d.score ? `<div class="ml-stat"><span class="ml-stat-label">Score</span><span class="ml-stat-val gold">⭐ ${d.score}</span></div>` : ''}
+      ${d.rank ? `<div class="ml-stat"><span class="ml-stat-label">Rank</span><span class="ml-stat-val">#${d.rank}</span></div>` : ''}
+      ${d.popularity ? `<div class="ml-stat"><span class="ml-stat-label">Populer</span><span class="ml-stat-val">#${d.popularity}</span></div>` : ''}
+      ${d.episodes ? `<div class="ml-stat"><span class="ml-stat-label">Episode</span><span class="ml-stat-val">${d.episodes}</span></div>` : ''}
+    </div>
+    <div class="ml-modal-lower">
+      ${genres ? `<div class="ml-modal-genres">${genres}</div>` : ''}
+      <div class="ml-synopsis" id="mlSynopsis">${synopsis}</div>
+      <button class="ml-syn-toggle" id="mlSynToggle" onclick="mlToggleSyn()">Baca selengkapnya ▾</button>
+      <div class="ml-modal-meta">
+        <div class="ml-meta-item"><span class="ml-meta-label">Tayang</span><span class="ml-meta-val">${d.aired?.string||'—'}</span></div>
+        <div class="ml-meta-item"><span class="ml-meta-label">Durasi</span><span class="ml-meta-val">${d.duration||'—'}</span></div>
+        <div class="ml-meta-item"><span class="ml-meta-label">Studio</span><span class="ml-meta-val">${(d.studios||[]).map(s=>s.name).join(', ')||'—'}</span></div>
+        <div class="ml-meta-item"><span class="ml-meta-label">Sumber</span><span class="ml-meta-val">${d.source||'—'}</span></div>
+      </div>
+      <a href="/search?q=${encodeURIComponent(d.title)}" class="ml-watch-link">
+        <i class="fa-solid fa-play"></i> Tonton di Animeku.ID
+      </a>
+    </div>`;
+}
+function mlToggleSyn() {
+  const el = document.getElementById('mlSynopsis');
+  const btn = document.getElementById('mlSynToggle');
+  el.classList.toggle('expanded');
+  btn.textContent = el.classList.contains('expanded') ? 'Sembunyikan ▴' : 'Baca selengkapnya ▾';
+}
+function mlCloseModal() {
+  document.getElementById('mlModalBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { mlCloseModal(); mlCloseDraftModal(); } });
+
+// ── Save List ────────────────────────────────────────────
+async function mlSaveList() {
+  const username = document.getElementById('mlUsername').value.trim();
+  if (!username) { mlToast('Masukkan nama dulu!', 'error'); return; }
+  const btn = document.getElementById('mlSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan…';
+  try {
+    const res  = await fetch('/api/mylist/save', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, anime_list: mlSelected })
+    });
+    const data = await res.json();
+    if (data.success) {
+      mlToast('Tersimpan! 🎉');
+      setTimeout(() => window.location.href = '/mylist/list/' + data.id, 1000);
+    } else {
+      mlToast(data.error || 'Gagal menyimpan', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Simpan & Bagikan';
+    }
+  } catch {
+    mlToast('Koneksi bermasalah 😢', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Simpan & Bagikan';
+  }
+}
+
+// ── Draft ────────────────────────────────────────────────
+let mlCurDraftId = null, mlCurDraftPin = localStorage.getItem('mla-pin');
+
+function mlOpenDraftModal(icon, title, desc, html) {
+  document.getElementById('mlDraftIcon').textContent = icon;
+  document.getElementById('mlDraftTitle').textContent = title;
+  document.getElementById('mlDraftDesc').textContent = desc;
+  document.getElementById('mlDraftContent').innerHTML = html;
+  document.getElementById('mlDraftBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function mlCloseDraftModal() {
+  document.getElementById('mlDraftBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function mlSaveDraft() {
+  const username = document.getElementById('mlUsername').value.trim();
+  if (!username) { mlToast('Masukkan nama dulu!', 'error'); return; }
+  if (!mlSelected.length) { mlToast('Pilih minimal 1 anime!', 'error'); return; }
+  if (mlCurDraftId && mlCurDraftPin) { await mlUpdateDraft(mlCurDraftId, mlCurDraftPin, username); return; }
+  mlOpenDraftModal('🔑', 'Simpan Draft',
+    'Punya PIN sebelumnya? Masukkan agar draft masuk ke koleksimu. Kosongkan untuk PIN baru.',
+    `<div style="display:flex;flex-direction:column;gap:8px">
+      <input type="text" id="mlPinInput" placeholder="PIN kamu (opsional)" maxlength="6" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-family:var(--font-head);font-size:18px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;outline:none;text-align:center;width:100%;border-top:none;border-left:none;border-right:none">
+      <button class="ml-btn ml-btn-primary" onclick="mlDoSaveDraft()" style="width:100%"><i class="fa-solid fa-floppy-disk"></i> Simpan Draft</button>
+      <button class="ml-btn ml-btn-ghost" onclick="mlCloseDraftModal()" style="width:100%">Batal</button>
+    </div>`
+  );
+  setTimeout(() => { if (mlCurDraftPin) document.getElementById('mlPinInput').value = mlCurDraftPin; }, 100);
+}
+
+async function mlDoSaveDraft() {
+  const username = document.getElementById('mlUsername').value.trim();
+  const title = (mlSelected[0]?.title || 'Draft') + ' & lainnya';
+  mlCloseDraftModal();
+  const btn = document.getElementById('mlDraftBtn');
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    const res = await fetch('/api/mylist/draft/create', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, anime_list: mlSelected, title })
+    });
+    const data = await res.json();
+    if (data.success) {
+      mlCurDraftId = data.id; mlCurDraftPin = data.pin;
+      localStorage.setItem('mla-pin', data.pin);
+      mlOpenDraftModal('✅', 'Draft Tersimpan!', 'Catat PIN ini untuk akses draft dari HP manapun.',
+        `<div class="ml-pin-box"><div class="ml-pin-label">PIN KAMU</div><div class="ml-pin-val">${data.pin}</div></div>
+        <button class="ml-btn ml-btn-primary" style="width:100%" onclick="navigator.clipboard.writeText('${data.pin}').then(()=>mlToast('PIN disalin!'))"><i class="fa-solid fa-copy"></i> Salin PIN</button>
+        <a href="/mylist/drafts" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--accent);font-weight:700">Lihat semua draft →</a>`
+      );
+      mlToast('Draft tersimpan! 📝');
+    } else { mlToast(data.error || 'Gagal simpan draft', 'error'); }
+  } catch { mlToast('Koneksi bermasalah', 'error'); }
+  btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Draft';
+}
+
+async function mlUpdateDraft(id, pin, username) {
+  const btn = document.getElementById('mlDraftBtn');
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    const res = await fetch('/api/mylist/draft/update/' + id, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ pin, username, anime_list: mlSelected })
+    });
+    const data = await res.json();
+    if (data.success) mlToast('Draft diperbarui! ✏️');
+    else mlToast(data.error || 'Gagal update', 'error');
+  } catch { mlToast('Koneksi bermasalah', 'error'); }
+  btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Draft';
+}
+
+async function mlLoadDraftFromUrl(id, pin) {
+  try {
+    const res = await fetch('/api/mylist/draft/list?pin=' + pin);
+    const drafts = await res.json();
+    if (Array.isArray(drafts)) {
+      const draft = drafts.find(d => d.id === id);
+      if (draft) {
+        mlSelected = draft.anime_list || [];
+        mlCurDraftId = id; mlCurDraftPin = pin;
+        localStorage.setItem('mla-pin', pin);
+        document.getElementById('mlUsername').value = draft.username || '';
+        mlRenderGrid();
+        mlToast('Draft dimuat! ✏️');
+        history.replaceState({}, '', '/mylist');
+      }
+    }
+  } catch {}
+}
+
+// ── Toast ────────────────────────────────────────────────
+let mlToastTimer;
+function mlToast(msg, type) {
+  // reuse base.html showToast if available
+  if (window.showToast) { showToast(msg, type || 'success'); return; }
+}
+</script>
+{% endblock %}

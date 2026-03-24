@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block title %}Jelajahi List Anime — Animeku.id{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.mle-page { max-width: 1000px; margin: 0 auto; padding: 80px 16px 100px; }
+
+.mle-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.mle-header h1 { font-family: var(--font-head); font-size: clamp(26px, 5vw, 40px); letter-spacing: 2px; color: var(--text); }
+.mle-header h1 span { color: var(--accent); }
+.mle-header p { color: var(--text3); font-size: 13px; margin-top: 4px; }
+.mle-live-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.3);
+  border-radius: 50px; padding: 5px 14px;
+  font-size: 12px; font-weight: 700; color: #4caf7d;
+}
+.mle-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf7d; animation: mleBlink 1.8s infinite; }
+@keyframes mleBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* Grid */
+.mle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+.mle-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  cursor: pointer; transition: all 0.2s; display: block;
+  animation: mlePop 0.3s ease forwards; opacity: 0;
+}
+.mle-card:hover { border-color: rgba(230,57,70,0.35); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+@keyframes mlePop { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+.mle-card-mosaic { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; aspect-ratio: 16/9; background: var(--bg2); border-bottom: 1px solid var(--border); overflow: hidden; }
+.mle-card-mosaic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.mle-card:hover .mle-card-mosaic img { transform: scale(1.05); }
+.mle-card-mosaic .mle-empty { background: var(--bg3); }
+
+.mle-card-body { padding: 12px 14px; }
+.mle-card-user { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.mle-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+.mle-avatar:nth-child(3n+2) { background: #4dabf7; }
+.mle-card-meta { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.mle-card-titles { font-size: 12px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Skeleton */
+.mle-skel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.mle-skel-sq { aspect-ratio: 16/9; background: var(--bg2); animation: mleSkel 1.5s infinite; }
+.mle-skel-body { padding: 12px 14px; }
+.mle-skel-line { height: 12px; background: var(--bg2); border-radius: 4px; margin-bottom: 8px; animation: mleSkel 1.5s infinite; }
+.mle-skel-line.s { width: 60%; }
+@keyframes mleSkel { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.mle-empty-state { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text3); }
+.mle-empty-emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+
+.mle-load-more { text-align: center; padding: 24px 0; display: none; }
+.mle-btn-load {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text2); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font-body);
+}
+.mle-btn-load:hover { border-color: var(--accent); color: var(--text); }
+
+.mle-btn-create {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; background: var(--accent); color: #fff;
+  border-radius: var(--radius); font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: opacity 0.2s;
+}
+.mle-btn-create:hover { opacity: 0.88; }
+
+/* ── MODAL ── */
+.ml-modal-backdrop {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.ml-modal-backdrop.open { opacity: 1; pointer-events: all; }
+.ml-modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); width: 100%; max-width: 580px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); position: relative;
+}
+.ml-modal-backdrop.open .ml-modal { transform: translateY(0) scale(1); }
+.ml-modal-close {
+  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
+  border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; transition: all 0.15s; z-index: 10;
+}
+.ml-modal-close:hover { background: var(--accent); color: #fff; }
+
+/* List header in modal */
+.mle-modal-header {
+  background: linear-gradient(135deg, rgba(230,57,70,0.4), rgba(100,40,130,0.4));
+  border-bottom: 1px solid var(--border);
+  padding: 20px; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.mle-modal-avatar { width: 48px; height: 48px; border-radius: 12px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.mle-modal-username { font-family: var(--font-head); font-size: 22px; letter-spacing: 1px; color: var(--text); margin-bottom: 4px; }
+.mle-modal-meta { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; }
+
+/* Anime grid in modal */
+.mle-modal-anime-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 14px; }
+.mle-modal-anime-item {
+  aspect-ratio: 2/3; border-radius: var(--radius); overflow: hidden;
+  position: relative; cursor: pointer; border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.mle-modal-anime-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); border-color: rgba(230,57,70,0.4); }
+.mle-modal-anime-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mle-mai-ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(9,11,15,0.9) 0%, transparent 55%);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 7px;
+}
+.mle-mai-rank { background: var(--accent); color: #fff; font-size: 9px; font-weight: 800; padding: 1px 7px; border-radius: 20px; display: inline-block; margin-bottom: 3px; width: fit-content; font-family: var(--font-head); letter-spacing: 0.5px; }
+.mle-mai-title { font-size: 10px; color: #fff; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Anime detail panel */
+.mle-detail-panel { display: none; padding: 0 14px 16px; border-top: 1px solid var(--border); margin-top: 8px; }
+.mle-detail-panel.open { display: block; }
+.mle-back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--text3);
+  cursor: pointer; padding: 8px 0; background: none; border: none;
+  transition: color 0.2s; font-family: var(--font-body);
+}
+.mle-back-btn:hover { color: var(--accent); }
+.mle-adp-body { display: flex; gap: 14px; margin: 8px 0 12px; }
+.mle-adp-poster { width: 80px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.mle-adp-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
+.mle-adp-info { flex: 1; min-width: 0; }
+.mle-adp-title { font-family: var(--font-head); font-size: 16px; color: var(--text); line-height: 1.2; margin-bottom: 4px; }
+.mle-adp-title-en { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
+.mle-adp-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+.ml-badge { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 700; }
+.ml-badge-tv { background: rgba(77,171,247,0.2); color: #4dabf7; border: 1px solid rgba(77,171,247,0.3); }
+.ml-badge-movie { background: rgba(204,93,232,0.2); color: #cc5de8; border: 1px solid rgba(204,93,232,0.3); }
+.ml-badge-type { background: rgba(230,57,70,0.2); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
+.ml-badge-airing { background: rgba(76,175,125,0.2); color: #4caf7d; border: 1px solid rgba(76,175,125,0.3); }
+.ml-badge-fin { background: rgba(255,255,255,0.06); color: var(--text3); border: 1px solid var(--border); }
+.mle-adp-stats { display: flex; gap: 8px; flex-wrap: wrap; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 10px; }
+.ml-stat { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 55px; }
+.ml-stat-label { font-size: 9px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; font-weight: 700; }
+.ml-stat-val { font-size: 14px; font-weight: 800; color: var(--text); font-family: var(--font-head); }
+.ml-stat-val.gold { color: #fbbf24; }
+.mle-adp-genres { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+.mle-genre-tag { font-size: 10px; padding: 3px 10px; border-radius: 20px; background: rgba(230,57,70,0.08); color: var(--accent); border: 1px solid rgba(230,57,70,0.2); font-weight: 600; }
+.mle-adp-synopsis { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.mle-adp-synopsis.expanded { -webkit-line-clamp: unset; }
+.mle-syn-toggle { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; margin-bottom: 10px; font-family: var(--font-body); font-weight: 700; }
+.mle-adp-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; font-size: 12px; margin-bottom: 10px; }
+.mle-meta-item { display: flex; flex-direction: column; gap: 1px; }
+.mle-meta-label { font-size: 9px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+.mle-meta-val { color: var(--text2); font-weight: 600; }
+.mle-watch-link { display: inline-flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; border-radius: var(--radius); padding: 9px 16px; font-weight: 700; font-size: 13px; text-decoration: none; transition: opacity 0.2s; }
+.mle-watch-link:hover { opacity: 0.88; }
+.ml-modal-loading { display: flex; align-items: center; justify-content: center; padding: 48px; color: var(--text3); gap: 10px; font-size: 13px; }
+
+.mle-modal-footer { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
+.mle-open-list { display: inline-flex; align-items: center; gap: 7px; background: rgba(77,171,247,0.12); border: 1px solid rgba(77,171,247,0.3); color: #4dabf7; border-radius: var(--radius); padding: 9px 16px; font-weight: 700; font-size: 13px; text-decoration: none; transition: opacity 0.2s; }
+.mle-open-list:hover { opacity: 0.88; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mle-page">
+  <div class="mle-header">
+    <div>
+      <h1>Jelajahi <span>List</span> 🎌</h1>
+      <p>Lihat kurasi anime favorit orang lain</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="mle-live-pill"><div class="mle-live-dot"></div> Live</div>
+      <a href="/mylist" class="mle-btn-create"><i class="fa-solid fa-plus"></i> Buat Listku</a>
+    </div>
+  </div>
+
+  <div class="mle-grid" id="mleGrid">
+    {% for i in range(8) %}
+    <div class="mle-skel">
+      <div class="mle-skel-sq"></div>
+      <div class="mle-skel-body">
+        <div class="mle-skel-line"></div>
+        <div class="mle-skel-line s"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mle-load-more" id="mleLoadMore">
+    <button class="mle-btn-load" id="mleLoadMoreBtn"><i class="fa-solid fa-rotate"></i> Muat lagi</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="ml-modal-backdrop" id="mleModalBackdrop" onclick="if(event.target===this)mleCloseModal()">
+  <div class="ml-modal">
+    <button class="ml-modal-close" onclick="mleCloseModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="mleModalBody"><div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat…</div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let mlePage = 1, mleBusy = false;
+const mleListCache = {}, mleDetailCache = {};
+
+function mleAgo(d) {
+  const m = Math.floor((Date.now() - new Date(d)) / 60000);
+  if (m < 1) return 'baru saja';
+  if (m < 60) return m + ' menit lalu';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' jam lalu';
+  return Math.floor(h / 24) + ' hari lalu';
+}
+
+function mleCard(item) {
+  const list = item.anime_list || [];
+  const cells = Array.from({length: 9}, (_, i) =>
+    list[i] ? `<img src="${list[i].image}" alt="" loading="lazy">` : '<div class="mle-empty"></div>'
+  ).join('');
+  const titles = list.slice(0, 4).map(a => a.title).join(', ');
+  const init = (item.username || '?').charAt(0).toUpperCase();
+  return `<div class="mle-card" onclick="mleOpenModal('${item.id}')">
+    <div class="mle-card-mosaic">${cells}</div>
+    <div class="mle-card-body">
+      <div class="mle-card-user"><div class="mle-avatar">${init}</div>${item.username}</div>
+      <div class="mle-card-meta"><i class="fa-regular fa-clock"></i> ${mleAgo(item.created_at)} · ${list.length} anime</div>
+      <div class="mle-card-titles">${titles}${list.length > 4 ? '…' : ''}</div>
+    </div>
+  </div>`;
+}
+
+async function mleLoad() {
+  if (mleBusy) return; mleBusy = true;
+  try {
+    const res  = await fetch('/api/mylist/lists?page=' + mlePage);
+    const data = await res.json();
+    const grid = document.getElementById('mleGrid');
+    if (mlePage === 1) grid.innerHTML = '';
+    if (!data.length && mlePage === 1) {
+      grid.innerHTML = `<div class="mle-empty-state"><span class="mle-empty-emoji">🎌</span><p style="color:var(--text2);font-size:14px;margin-bottom:14px">Belum ada list — jadilah yang pertama!</p><a href="/mylist" class="mle-btn-create"><i class="fa-solid fa-plus"></i> Buat Listku</a></div>`;
+      return;
+    }
+    grid.innerHTML += data.map(mleCard).join('');
+    document.getElementById('mleLoadMore').style.display = data.length === 12 ? 'block' : 'none';
+  } catch {}
+  mleBusy = false;
+}
+
+document.getElementById('mleLoadMoreBtn').addEventListener('click', () => { mlePage++; mleLoad(); });
+mleLoad();
+
+// ── List Modal ──────────────────────────────────────────
+async function mleOpenModal(id) {
+  const body = document.getElementById('mleModalBody');
+  body.innerHTML = '<div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat list…</div>';
+  document.getElementById('mleModalBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (mleListCache[id]) { mleRenderListModal(mleListCache[id]); return; }
+  try {
+    const res  = await fetch('/api/mylist/list/' + id);
+    const data = await res.json();
+    mleListCache[id] = data;
+    mleRenderListModal(data);
+  } catch { body.innerHTML = '<div class="ml-modal-loading">Gagal memuat 😢</div>'; }
+}
+
+function mleRenderListModal(data) {
+  const list  = data.anime_list || [];
+  const init  = (data.username || '?').charAt(0).toUpperCase();
+  const items = list.map((a, i) =>
+    `<div class="mle-modal-anime-item" onclick="mleOpenDetail(${i},'${data.id}')">
+      <img src="${a.image}" alt="" loading="lazy">
+      <div class="mle-mai-ov">
+        <div class="mle-mai-rank">#${i+1}</div>
+        <div class="mle-mai-title">${a.title}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('mleModalBody').innerHTML = `
+    <div class="mle-modal-header">
+      <div class="mle-modal-avatar">${init}</div>
+      <div class="mle-modal-username">List ${data.username} 🎌</div>
+      <div class="mle-modal-meta"><i class="fa-regular fa-clock"></i> ${mleAgo(data.created_at)} <span style="background:rgba(255,255,255,0.1);padding:2px 10px;border-radius:20px">${list.length} anime</span></div>
+    </div>
+    <div class="mle-modal-anime-grid" id="mleAnimeGrid">${items}</div>
+    <div class="mle-detail-panel" id="mleDetailPanel"></div>
+    <div class="mle-modal-footer">
+      <a href="/mylist/list/${data.id}" class="mle-open-list"><i class="fa-solid fa-expand"></i> Lihat Halaman Penuh</a>
+    </div>`;
+}
+
+// ── Anime Detail ────────────────────────────────────────
+async function mleOpenDetail(idx, listId) {
+  const data  = mleListCache[listId]; if (!data) return;
+  const anime = data.anime_list[idx]; if (!anime) return;
+  const panel = document.getElementById('mleDetailPanel');
+  panel.classList.add('open');
+  panel.innerHTML = `<button class="mle-back-btn" onclick="mleCloseDetail()"><i class="fa-solid fa-arrow-left"></i> Kembali ke list</button><div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat…</div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const id = anime.mal_id;
+  if (mleDetailCache[id]) { mleRenderDetail(mleDetailCache[id], idx, listId); return; }
+  try {
+    const r = await fetch('https://api.jikan.moe/v4/anime/' + id);
+    const j = await r.json();
+    mleDetailCache[id] = j.data;
+    mleRenderDetail(j.data, idx, listId);
+  } catch { panel.innerHTML = `<button class="mle-back-btn" onclick="mleCloseDetail()"><i class="fa-solid fa-arrow-left"></i> Kembali</button><p style="color:var(--text3);font-size:13px;padding:12px 0">Gagal memuat 😢</p>`; }
+}
+
+function mleBadgeClass(type) {
+  if (!type) return 'ml-badge-type';
+  const t = type.toLowerCase();
+  if (t === 'tv') return 'ml-badge-tv';
+  if (t === 'movie') return 'ml-badge-movie';
+  return 'ml-badge-type';
+}
+
+function mleRenderDetail(d, idx, listId) {
+  const panel   = document.getElementById('mleDetailPanel');
+  const poster  = d.images?.jpg?.large_image_url || '';
+  const genres  = [...(d.genres||[]), ...(d.themes||[])].map(g => `<span class="mle-genre-tag">${g.name}</span>`).join('');
+  const synopsis = (d.synopsis || 'Tidak ada sinopsis.').replace('[Written by MAL Rewrite]','').trim();
+  const statusCls = d.airing ? 'ml-badge-airing' : 'ml-badge-fin';
+  panel.innerHTML = `
+    <button class="mle-back-btn" onclick="mleCloseDetail()"><i class="fa-solid fa-arrow-left"></i> Kembali ke list</button>
+    <div class="mle-adp-body">
+      <div class="mle-adp-poster"><img src="${poster}" alt=""></div>
+      <div class="mle-adp-info">
+        <div class="mle-adp-badges">
+          ${d.type ? `<span class="ml-badge ${mleBadgeClass(d.type)}">${d.type}</span>` : ''}
+          ${d.status ? `<span class="ml-badge ${statusCls}">${d.status}</span>` : ''}
+        </div>
+        <div class="mle-adp-title">${d.title}</div>
+        ${d.title_english && d.title_english !== d.title ? `<div class="mle-adp-title-en">${d.title_english}</div>` : ''}
+      </div>
+    </div>
+    <div class="mle-adp-stats">
+      ${d.score ? `<div class="ml-stat"><span class="ml-stat-label">Score</span><span class="ml-stat-val gold">⭐ ${d.score}</span></div>` : ''}
+      ${d.rank ? `<div class="ml-stat"><span class="ml-stat-label">Rank</span><span class="ml-stat-val">#${d.rank}</span></div>` : ''}
+      ${d.popularity ? `<div class="ml-stat"><span class="ml-stat-label">Populer</span><span class="ml-stat-val">#${d.popularity}</span></div>` : ''}
+      ${d.episodes ? `<div class="ml-stat"><span class="ml-stat-label">Episode</span><span class="ml-stat-val">${d.episodes}</span></div>` : ''}
+    </div>
+    ${genres ? `<div class="mle-adp-genres">${genres}</div>` : ''}
+    <div class="mle-adp-synopsis" id="mleAdpSyn">${synopsis}</div>
+    <button class="mle-syn-toggle" id="mleAdpSynToggle" onclick="mleToggleSyn()">Baca selengkapnya ▾</button>
+    <div class="mle-adp-meta">
+      <div class="mle-meta-item"><span class="mle-meta-label">Tayang</span><span class="mle-meta-val">${d.aired?.string||'—'}</span></div>
+      <div class="mle-meta-item"><span class="mle-meta-label">Durasi</span><span class="mle-meta-val">${d.duration||'—'}</span></div>
+      <div class="mle-meta-item"><span class="mle-meta-label">Studio</span><span class="mle-meta-val">${(d.studios||[]).map(s=>s.name).join(', ')||'—'}</span></div>
+      <div class="mle-meta-item"><span class="mle-meta-label">Sumber</span><span class="mle-meta-val">${d.source||'—'}</span></div>
+    </div>
+    <a href="/search?q=${encodeURIComponent(d.title)}" class="mle-watch-link"><i class="fa-solid fa-play"></i> Tonton di Animeku.ID</a>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function mleToggleSyn() {
+  const el = document.getElementById('mleAdpSyn');
+  const btn = document.getElementById('mleAdpSynToggle');
+  el.classList.toggle('expanded');
+  btn.textContent = el.classList.contains('expanded') ? 'Sembunyikan ▴' : 'Baca selengkapnya ▾';
+}
+function mleCloseDetail() {
+  const panel = document.getElementById('mleDetailPanel');
+  panel.classList.remove('open'); panel.innerHTML = '';
+  document.getElementById('mleAnimeGrid')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function mleCloseModal() {
+  document.getElementById('mleModalBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') mleCloseModal(); });
+</script>
+{% endblock %}

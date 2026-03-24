@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Draft Saya — Animeku.id{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.mld-page { max-width: 680px; margin: 0 auto; padding: 80px 16px 100px; }
+.mld-back { display: inline-flex; align-items: center; gap: 7px; color: var(--text2); font-size: 13px; font-weight: 700; background: var(--card); border: 1px solid var(--border); padding: 7px 14px; border-radius: var(--radius); text-decoration: none; transition: all 0.2s; margin-bottom: 24px; }
+.mld-back:hover { border-color: var(--accent); color: var(--text); }
+.mld-title { font-family: var(--font-head); font-size: 28px; letter-spacing: 1.5px; color: var(--text); margin-bottom: 20px; }
+
+/* PIN Card */
+.mld-pin-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 20px; text-align: center; margin-bottom: 20px; }
+.mld-pin-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.25); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 14px; }
+.mld-pin-card h2 { font-family: var(--font-head); font-size: 20px; letter-spacing: 1px; color: var(--text); margin-bottom: 6px; }
+.mld-pin-card p { color: var(--text3); font-size: 13px; margin-bottom: 16px; }
+.mld-pin-wrap { display: flex; gap: 8px; max-width: 320px; margin: 0 auto; }
+.mld-pin-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text); padding: 11px 14px; border-radius: var(--radius); font-family: var(--font-head); font-size: 18px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; outline: none; text-align: center; transition: border-color 0.2s; }
+.mld-pin-input:focus { border-color: var(--accent); }
+.mld-pin-input::placeholder { font-size: 13px; letter-spacing: 0.05em; color: var(--text3); }
+.mld-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 700; font-family: var(--font-body); cursor: pointer; border: none; transition: all 0.15s; }
+.mld-btn-primary { background: var(--accent); color: #fff; }
+.mld-btn-primary:hover { opacity: 0.88; }
+.mld-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text2); }
+.mld-btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+/* Draft list */
+.mld-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.mld-list-header h3 { font-family: var(--font-head); font-size: 18px; letter-spacing: 1px; color: var(--text); }
+.mld-pin-badge { background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.25); border-radius: 50px; padding: 4px 12px; font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; }
+
+.mld-drafts { display: flex; flex-direction: column; gap: 12px; }
+.mld-draft-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.2s; }
+.mld-draft-card:hover { border-color: rgba(230,57,70,0.3); }
+.mld-draft-strip { display: flex; gap: 3px; height: 80px; overflow: hidden; }
+.mld-draft-strip img { flex: 1; object-fit: cover; display: block; }
+.mld-draft-body { padding: 12px 14px; }
+.mld-draft-name { font-weight: 700; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+.mld-draft-meta { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+.mld-draft-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.mld-draft-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-decoration: none; border: none; font-family: var(--font-body); }
+.mld-draft-edit { background: rgba(77,171,247,0.12); color: #4dabf7; border: 1px solid rgba(77,171,247,0.25); }
+.mld-draft-edit:hover { background: rgba(77,171,247,0.2); }
+.mld-draft-publish { background: rgba(76,175,125,0.12); color: #4caf7d; border: 1px solid rgba(76,175,125,0.25); }
+.mld-draft-publish:hover { background: rgba(76,175,125,0.2); }
+.mld-draft-delete { background: rgba(230,57,70,0.1); color: var(--accent); border: 1px solid rgba(230,57,70,0.25); }
+.mld-draft-delete:hover { background: rgba(230,57,70,0.2); }
+
+.mld-empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+.mld-empty p { font-size: 14px; color: var(--text2); margin-bottom: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mld-page">
+  <a href="/mylist" class="mld-back"><i class="fa-solid fa-arrow-left"></i> Buat List</a>
+  <div class="mld-title">📑 Draft Saya</div>
+
+  <!-- PIN Input -->
+  <div class="mld-pin-card" id="mldPinCard">
+    <div class="mld-pin-icon">🔑</div>
+    <h2>Masukkan PIN</h2>
+    <p>Masukkan PIN yang kamu terima saat menyimpan draft.</p>
+    <div class="mld-pin-wrap">
+      <input type="text" class="mld-pin-input" id="mldPinInput" placeholder="Masukkan PIN…" maxlength="6">
+      <button class="mld-btn mld-btn-primary" onclick="mldLoadDrafts()"><i class="fa-solid fa-key"></i> Cari</button>
+    </div>
+  </div>
+
+  <!-- Draft List -->
+  <div id="mldDraftSection" style="display:none">
+    <div class="mld-list-header">
+      <h3>Draft Tersimpan</h3>
+      <span class="mld-pin-badge" id="mldActivePinBadge"></span>
+    </div>
+    <div class="mld-drafts" id="mldDraftList"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let mldCurrentPin = localStorage.getItem('mla-pin') || '';
+if (mldCurrentPin) {
+  document.getElementById('mldPinInput').value = mldCurrentPin;
+  mldLoadDrafts();
+}
+
+document.getElementById('mldPinInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') mldLoadDrafts();
+});
+
+function mldAgo(d) {
+  const m = Math.floor((Date.now()-new Date(d))/60000);
+  if (m<1) return 'baru saja';
+  if (m<60) return m+' menit lalu';
+  const h=Math.floor(m/60);
+  if (h<24) return h+' jam lalu';
+  return Math.floor(h/24)+' hari lalu';
+}
+
+async function mldLoadDrafts() {
+  const pin = document.getElementById('mldPinInput').value.trim().toUpperCase();
+  if (!pin || pin.length < 4) { if (window.showToast) showToast('Masukkan PIN yang valid!', 'error'); return; }
+  mldCurrentPin = pin;
+  localStorage.setItem('mla-pin', pin);
+  try {
+    const res   = await fetch('/api/mylist/draft/list?pin=' + pin);
+    const drafts = await res.json();
+    if (!Array.isArray(drafts) || !drafts.length) {
+      document.getElementById('mldDraftSection').style.display = 'block';
+      document.getElementById('mldActivePinBadge').textContent = 'PIN: ' + pin;
+      document.getElementById('mldDraftList').innerHTML = `<div class="mld-empty"><p>Tidak ada draft dengan PIN ini 😢</p><a href="/mylist" class="mld-btn mld-btn-primary"><i class="fa-solid fa-plus"></i> Buat List Baru</a></div>`;
+      return;
+    }
+    document.getElementById('mldDraftSection').style.display = 'block';
+    document.getElementById('mldActivePinBadge').textContent = 'PIN: ' + pin;
+    document.getElementById('mldDraftList').innerHTML = drafts.map(d => {
+      const list = d.anime_list || [];
+      const imgs = list.slice(0, 5).map(a => `<img src="${a.image}" alt="" loading="lazy">`).join('');
+      return `<div class="mld-draft-card">
+        <div class="mld-draft-strip">${imgs}</div>
+        <div class="mld-draft-body">
+          <div class="mld-draft-name">${d.username} — ${d.title || 'Draft'}</div>
+          <div class="mld-draft-meta"><i class="fa-regular fa-clock"></i> ${mldAgo(d.updated_at || d.created_at)} · ${list.length} anime</div>
+          <div class="mld-draft-actions">
+            <a href="/mylist?draft=${d.id}&pin=${pin}" class="mld-draft-btn mld-draft-edit"><i class="fa-solid fa-pen"></i> Edit</a>
+            <button class="mld-draft-btn mld-draft-publish" onclick="mldPublish('${d.id}')"><i class="fa-solid fa-share-nodes"></i> Publish</button>
+            <button class="mld-draft-btn mld-draft-delete" onclick="mldDelete('${d.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch { if (window.showToast) showToast('Gagal memuat draft', 'error'); }
+}
+
+async function mldPublish(id) {
+  if (!confirm('Publish draft ini ke Jelajahi?')) return;
+  try {
+    const res = await fetch('/api/mylist/draft/publish/' + id, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ pin: mldCurrentPin })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (window.showToast) showToast('Berhasil dipublish! 🎉', 'success');
+      setTimeout(() => window.location.href = '/mylist/list/' + data.id, 1000);
+    } else { if (window.showToast) showToast(data.error || 'Gagal publish', 'error'); }
+  } catch { if (window.showToast) showToast('Koneksi bermasalah', 'error'); }
+}
+
+async function mldDelete(id) {
+  if (!confirm('Hapus draft ini?')) return;
+  try {
+    const res = await fetch('/api/mylist/draft/delete/' + id + '?pin=' + mldCurrentPin, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) { if (window.showToast) showToast('Draft dihapus.', 'success'); mldLoadDrafts(); }
+    else { if (window.showToast) showToast(data.error || 'Gagal hapus', 'error'); }
+  } catch { if (window.showToast) showToast('Koneksi bermasalah', 'error'); }
+}
+</script>
+{% endblock %}
