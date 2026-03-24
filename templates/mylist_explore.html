@@ -303,21 +303,10 @@ function mleRenderListModal(data) {
 }
 
 // ── Anime Detail ────────────────────────────────────────
-async function mleOpenDetail(idx, listId) {
+function mleOpenDetail(idx, listId) {
   const data  = mleListCache[listId]; if (!data) return;
   const anime = data.anime_list[idx]; if (!anime) return;
-  const panel = document.getElementById('mleDetailPanel');
-  panel.classList.add('open');
-  panel.innerHTML = `<button class="mle-back-btn" onclick="mleCloseDetail()"><i class="fa-solid fa-arrow-left"></i> Kembali ke list</button><div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat…</div>`;
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  const id = anime.mal_id;
-  if (mleDetailCache[id]) { mleRenderDetail(mleDetailCache[id], idx, listId); return; }
-  try {
-    const r = await fetch('https://api.jikan.moe/v4/anime/' + id);
-    const j = await r.json();
-    mleDetailCache[id] = j.data;
-    mleRenderDetail(j.data, idx, listId);
-  } catch { panel.innerHTML = `<button class="mle-back-btn" onclick="mleCloseDetail()"><i class="fa-solid fa-arrow-left"></i> Kembali</button><p style="color:var(--text3);font-size:13px;padding:12px 0">Gagal memuat 😢</p>`; }
+  window.location.href = '/rekomendasi/anime/' + anime.mal_id;
 }
 
 function mleBadgeClass(type) {

@@ -500,20 +500,9 @@ function mlRenderGrid() {
 }
 
 // ── Modal Detail ─────────────────────────────────────────
-async function mlOpenModal(idx) {
+function mlOpenModal(idx) {
   const anime = mlSelected[idx]; if (!anime) return;
-  const body = document.getElementById('mlModalBody');
-  body.innerHTML = '<div class="ml-modal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat detail…</div>';
-  document.getElementById('mlModalBackdrop').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  const id = anime.mal_id;
-  if (mlDetailCache[id]) { mlRenderModal(mlDetailCache[id], idx); return; }
-  try {
-    const r = await fetch('https://api.jikan.moe/v4/anime/' + id);
-    const j = await r.json();
-    mlDetailCache[id] = j.data;
-    mlRenderModal(j.data, idx);
-  } catch { body.innerHTML = '<div class="ml-modal-loading">Gagal memuat 😢</div>'; }
+  window.location.href = '/rekomendasi/anime/' + anime.mal_id;
 }
 
 function mlBadgeClass(type) {
