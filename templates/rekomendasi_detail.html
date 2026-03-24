@@ -329,7 +329,7 @@
     const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
     const mainChars = (chars || []).filter(c => c.role === 'Main');
     const supChars  = (chars || []).filter(c => c.role === 'Supporting');
-    const allChars  = [...mainChars, ...supChars].slice(0, 12);
+    const allChars  = [...mainChars, ...supChars];
 
     const searchSlug = encodeURIComponent(a.title);
 
