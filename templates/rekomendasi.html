@@ -1,491 +1,887 @@
 {% extends "base.html" %}
-{% block title %}Detail Anime — Animeku.id{% endblock %}
+{% block title %}Rekomendasi Anime — Animeku.id{% endblock %}
 
 {% block head %}
 <style>
-.rd-page { max-width: 1000px; margin: 0 auto; padding: 80px 16px 80px; }
+/* ── PAGE LAYOUT ── */
+.rek-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 16px 60px;
+}
 
-/* ── HERO ── */
-.rd-hero {
-  position: relative;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: 28px;
+/* ── HEADER ── */
+.rek-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.rek-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 6vw, 44px);
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.rek-header h1 span { color: var(--accent); }
+.rek-header p {
+  color: var(--text3);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ── FORM SUBMIT ── */
+.rek-form-card {
   background: var(--card);
   border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 36px;
 }
-.rd-hero-backdrop {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center top;
-  filter: blur(28px) brightness(0.2) saturate(1.4);
-  transform: scale(1.1);
-  z-index: 0;
-}
-.rd-hero-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 24px;
-  padding: 28px;
-  align-items: flex-start;
-}
-.rd-poster {
-  width: 150px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-  border: 2px solid rgba(255,255,255,0.08);
-}
-.rd-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
-
-.rd-meta { flex: 1; min-width: 0; }
-.rd-title {
-  font-family: var(--font-head);
-  font-size: clamp(22px, 5vw, 36px);
-  letter-spacing: 1px;
+.rek-form-title {
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text);
-  line-height: 1.15;
-  margin-bottom: 4px;
-}
-.rd-title-alt { font-size: 13px; color: var(--text3); margin-bottom: 14px; font-style: italic; }
-
-.rd-stats-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.rd-stat {
+  margin: 0 0 16px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: var(--text2);
-  background: rgba(255,255,255,0.05);
+  gap: 8px;
+}
+.rek-form-title svg { color: var(--accent); }
+
+.rek-search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.rek-search-wrap input {
+  width: 100%;
+  background: var(--bg2);
   border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius);
+  padding: 12px 16px 12px 42px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
 }
-.rd-stat.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+.rek-search-wrap input:focus { border-color: var(--accent); }
+.rek-search-wrap .search-ico {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  pointer-events: none;
+}
+.rek-anime-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  z-index: 200;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: none;
+}
+.rek-sug-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rek-sug-item:hover { background: rgba(255,255,255,0.05); }
+.rek-sug-item img {
+  width: 36px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.rek-sug-info { flex: 1; min-width: 0; }
+.rek-sug-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rek-sug-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
 
-.rd-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.rd-genre-tag {
-  padding: 4px 12px;
-  border-radius: 20px;
+.rek-selected-anime {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg2);
+  border: 1px solid rgba(230,57,70,0.3);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.rek-selected-anime.show { display: flex; }
+.rek-selected-anime img {
+  width: 44px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.rek-selected-info { flex: 1; min-width: 0; }
+.rek-selected-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.rek-selected-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.rek-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.rek-remove-btn:hover { color: var(--accent); }
+
+.rek-textarea {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+.rek-textarea:focus { border-color: var(--accent); }
+.rek-textarea::placeholder { color: var(--text3); }
+
+.rek-form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.rek-char-count {
   font-size: 12px;
-  font-weight: 600;
-  background: rgba(230,57,70,0.1);
-  border: 1px solid rgba(230,57,70,0.25);
-  color: #e63946;
+  color: var(--text3);
+  flex: 1;
 }
-
-.rd-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.rd-btn-watch {
+.rek-submit-btn {
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 10px 20px;
   background: var(--accent);
   color: #fff;
+  border: none;
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 700;
   font-family: var(--font-body);
-  text-decoration: none;
+  cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
 }
-.rd-btn-watch:hover { opacity: 0.85; transform: translateY(-1px); }
-.rd-btn-back {
+.rek-submit-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.rek-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── LOGIN NOTICE ── */
+.rek-login-notice {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(230,57,70,0.08);
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 12px;
+}
+.rek-login-notice a { color: var(--accent); font-weight: 600; }
+
+/* ── FILTER BAR ── */
+.rek-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.rek-filter-bar::-webkit-scrollbar { display: none; }
+.rek-filter-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  background: rgba(255,255,255,0.06);
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
   border: 1px solid var(--border);
+  background: var(--card);
   color: var(--text2);
-  border-radius: var(--radius);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   font-family: var(--font-body);
-  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s;
 }
-.rd-btn-back:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-
-/* ── RANKING ── */
-.rd-ranking-row {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 4px 0 8px;
-  scrollbar-width: none;
-  margin-bottom: 24px;
+.rek-filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.rek-filter-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
-.rd-ranking-row::-webkit-scrollbar { display: none; }
-.rd-rank-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-size: 13px;
+.rek-count-badge {
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 11px;
 }
-.rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
-.rd-rank-label { color: var(--text3); font-size: 11px; }
 
-/* ── SECTIONS ── */
-.rd-section {
+/* ── POST CARDS ── */
+.rek-list { display: flex; flex-direction: column; gap: 16px; }
+
+.rek-post {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 16px;
-  animation: rdFadeUp 0.4s ease both;
-}
-@keyframes rdFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
-
-.rd-section-title {
-  font-family: var(--font-head);
-  font-size: 18px;
-  letter-spacing: 1.5px;
-  color: var(--accent);
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Synopsis */
-.rd-synopsis {
-  font-size: 14px;
-  color: var(--text2);
-  line-height: 1.85;
-  position: relative;
   overflow: hidden;
-  max-height: 120px;
-  transition: max-height 0.4s ease;
+  transition: border-color 0.2s, transform 0.2s;
+  animation: rekFadeIn 0.4s ease both;
 }
-.rd-synopsis.expanded { max-height: 9999px; }
-.rd-synopsis-fade {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 50px;
-  background: linear-gradient(to bottom, transparent, var(--card));
-  pointer-events: none;
-  transition: opacity 0.3s;
+@keyframes rekFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.rd-synopsis.expanded .rd-synopsis-fade { opacity: 0; }
-.rd-read-more {
-  margin-top: 10px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
+.rek-post:hover { border-color: rgba(230,57,70,0.3); transform: translateY(-2px); }
 
-/* Info grid */
-.rd-info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media(max-width:500px) { .rd-info-grid { grid-template-columns: 1fr; } }
-.rd-info-item {}
-.rd-info-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
-.rd-info-value { font-size: 14px; color: var(--text2); }
-.rd-info-value a { color: var(--accent); }
-
-/* Characters */
-.rd-chars-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-@media(min-width:600px) { .rd-chars-grid { grid-template-columns: repeat(3, 1fr); } }
-
-.rd-char-card {
+.rek-post-inner {
   display: flex;
-  gap: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 8px;
-  align-items: center;
-  transition: border-color 0.2s;
-}
-.rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
-.rd-char-img {
-  width: 44px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 6px;
-  flex-shrink: 0;
-  background: var(--border);
-}
-.rd-char-info { flex: 1; min-width: 0; }
-.rd-char-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rd-char-role { font-size: 11px; color: var(--text3); }
-.rd-va-wrap { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
-.rd-va-img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; background: var(--border); }
-.rd-va-name { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* Trailer */
-.rd-trailer-wrap {
-  position: relative;
-  padding-bottom: 56.25%;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--bg);
-}
-.rd-trailer-wrap iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
+  gap: 0;
 }
 
-/* Loading */
-.rd-loading {
+/* Upvote sidebar */
+.rek-upvote {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
+  justify-content: flex-start;
+  padding: 16px 12px;
+  gap: 4px;
+  min-width: 52px;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+}
+.rek-upvote-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--text3);
-  gap: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s, transform 0.15s;
+  line-height: 1;
 }
-.rd-spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: rdSpin 0.8s linear infinite;
+.rek-upvote-btn:hover { color: var(--accent); transform: translateY(-2px); }
+.rek-upvote-btn.voted { color: var(--accent); }
+.rek-upvote-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text2);
+  line-height: 1;
 }
-@keyframes rdSpin { to { transform: rotate(360deg); } }
+.rek-upvote-btn.voted + .rek-upvote-count { color: var(--accent); }
 
-/* Error */
-.rd-error {
+/* Main content */
+.rek-post-content { flex: 1; padding: 16px; min-width: 0; }
+
+.rek-post-anime {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.rek-post-anime img {
+  width: 52px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.rek-post-anime-info { flex: 1; min-width: 0; }
+.rek-post-anime-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rek-post-anime-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.rek-post-anime-title a:hover { color: var(--accent); }
+.rek-post-anime-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.rek-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.rek-badge-genre {
+  background: rgba(230,57,70,0.12);
+  color: #e63946;
+  border: 1px solid rgba(230,57,70,0.2);
+}
+.rek-badge-score {
+  background: rgba(250,204,21,0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(250,204,21,0.2);
+}
+.rek-badge-ep {
+  background: rgba(139,146,165,0.12);
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+
+.rek-post-reason {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+
+.rek-post-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rek-post-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.rek-post-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.rek-post-avatar-ph {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.rek-post-time { margin-left: auto; font-size: 11px; color: var(--text3); }
+
+/* Delete btn */
+.rek-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+.rek-delete-btn:hover { background: rgba(230,57,70,0.1); color: var(--accent); border-color: rgba(230,57,70,0.3); }
+
+/* ── EMPTY STATE ── */
+.rek-empty {
   text-align: center;
   padding: 60px 20px;
   color: var(--text3);
 }
-.rd-error h3 { color: var(--text2); font-size: 16px; margin-bottom: 8px; }
+.rek-empty svg { margin-bottom: 16px; opacity: 0.3; }
+.rek-empty h3 { font-size: 16px; color: var(--text2); margin: 0 0 8px; }
+.rek-empty p { font-size: 13px; margin: 0; }
 
-@media(max-width: 600px) {
-  .rd-hero-inner { flex-direction: column; align-items: center; text-align: center; }
-  .rd-poster { width: 120px; }
-  .rd-stats-row, .rd-genres, .rd-actions { justify-content: center; }
+/* ── TOAST ── */
+#rekToast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#rekToast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── SKELETON ── */
+.rek-skeleton {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  animation: rekSkeletonPulse 1.5s ease-in-out infinite;
+}
+@keyframes rekSkeletonPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+.rek-sk-line {
+  height: 12px;
+  background: var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="rd-page" id="rdPage">
-  <div class="rd-loading" id="rdLoading">
-    <div class="rd-spinner"></div>
-    <span>Memuat data anime...</span>
+<div class="rek-page">
+
+  <!-- Header -->
+  <div class="rek-header">
+    <h1>Rekomendasi <span>Anime</span></h1>
+    <p>Bagikan anime favorit kamu kepada sesama weeb! 🎌</p>
   </div>
+
+  <!-- Form Submit -->
+  <div class="rek-form-card">
+    <div class="rek-form-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Rekomendasikan Anime
+    </div>
+
+    <!-- Login notice (tampil kalau belum login) -->
+    <div class="rek-login-notice" id="rekLoginNotice">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Harus <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">login</a> dulu untuk submit rekomendasi.</span>
+    </div>
+
+    <!-- Cari anime -->
+    <div class="rek-search-wrap" id="rekSearchWrap">
+      <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="rekSearchInput" placeholder="Cari judul anime... (contoh: Attack on Titan)" autocomplete="off">
+      <div class="rek-anime-suggestions" id="rekSuggestions"></div>
+    </div>
+
+    <!-- Anime terpilih -->
+    <div class="rek-selected-anime" id="rekSelectedAnime">
+      <img id="rekSelImg" src="" alt="">
+      <div class="rek-selected-info">
+        <div class="rek-selected-title" id="rekSelTitle"></div>
+        <div class="rek-selected-meta" id="rekSelMeta"></div>
+      </div>
+      <button class="rek-remove-btn" onclick="rekClearSelected()" title="Hapus pilihan">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Alasan rekomendasi -->
+    <textarea class="rek-textarea" id="rekReason" placeholder="Kenapa kamu rekomendasikan anime ini? Ceritain sedikit..." maxlength="500" oninput="rekUpdateCount(this)"></textarea>
+
+    <div class="rek-form-row">
+      <span class="rek-char-count" id="rekCharCount">0 / 500 karakter</span>
+      <button class="rek-submit-btn" id="rekSubmitBtn" onclick="rekSubmit()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Kirim
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="rek-filter-bar">
+    <button class="rek-filter-btn active" onclick="rekFilter('terbaru', this)">
+      🕐 Terbaru
+    </button>
+    <button class="rek-filter-btn" onclick="rekFilter('terpopuler', this)">
+      🔥 Terpopuler
+    </button>
+    <button class="rek-filter-btn" onclick="rekFilter('mine', this)">
+      👤 Punya Saya
+    </button>
+  </div>
+
+  <!-- List rekomendasi -->
+  <div class="rek-list" id="rekList">
+    <!-- Skeleton loading -->
+    <div class="rek-skeleton">
+      <div class="rek-sk-line" style="width:60%;height:16px;margin-bottom:12px"></div>
+      <div class="rek-sk-line" style="width:100%"></div>
+      <div class="rek-sk-line" style="width:80%"></div>
+      <div class="rek-sk-line" style="width:40%;margin-top:16px"></div>
+    </div>
+    <div class="rek-skeleton">
+      <div class="rek-sk-line" style="width:55%;height:16px;margin-bottom:12px"></div>
+      <div class="rek-sk-line" style="width:100%"></div>
+      <div class="rek-sk-line" style="width:70%"></div>
+      <div class="rek-sk-line" style="width:45%;margin-top:16px"></div>
+    </div>
+  </div>
+
 </div>
+
+<!-- Toast -->
+<div id="rekToast"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-(async function() {
-  // Ambil mal_id dari URL: /rekomendasi/anime/12345
-  const malId = window.location.pathname.split('/').pop();
-  const page  = document.getElementById('rdPage');
+// ── State ──────────────────────────────────────────────────────────
+const SB_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+const TABLE   = "anime_rekomendasi";
 
-  if (!malId || isNaN(malId)) {
-    page.innerHTML = `<div class="rd-error"><h3>ID tidak valid</h3><p><a href="/rekomendasi" style="color:var(--accent)">← Kembali</a></p></div>`;
-    return;
+let rekUser       = null;
+let rekSelected   = null; // anime yg dipilih dari Jikan
+let rekSugCache   = {}; // cache anime data by mal_id
+let rekFilter_cur = 'terbaru';
+let rekData       = [];
+let rekSugTimer   = null;
+let rekVoted      = JSON.parse(localStorage.getItem('rek_voted') || '[]');
+
+// ── Init ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Cek login state
+  try {
+    const raw = localStorage.getItem('sb_user');
+    if (raw) rekUser = JSON.parse(raw);
+  } catch(e) {}
+
+  if (!rekUser) {
+    document.getElementById('rekLoginNotice').style.display = 'flex';
+    document.getElementById('rekSubmitBtn').disabled = true;
   }
+
+  // Search input
+  const inp = document.getElementById('rekSearchInput');
+  inp.addEventListener('input', () => {
+    clearTimeout(rekSugTimer);
+    const q = inp.value.trim();
+    if (q.length < 2) { rekHideSug(); return; }
+    rekSugTimer = setTimeout(() => rekSearchJikan(q), 400);
+  });
+  inp.addEventListener('blur', () => setTimeout(rekHideSug, 200));
+
+  // Load posts
+  await rekLoadPosts();
+});
+
+// ── Search Jikan ───────────────────────────────────────────────────
+async function rekSearchJikan(q) {
+  const sug = document.getElementById('rekSuggestions');
+  sug.style.display = 'block';
+  sug.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text3)">Mencari...</div>';
+  try {
+    const res  = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=8&sfw=true`);
+    const json = await res.json();
+    const items = json.data || [];
+    if (!items.length) {
+      sug.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text3)">Tidak ditemukan.</div>';
+      return;
+    }
+    rekSugCache = {};
+    sug.innerHTML = items.map(a => {
+      const img   = a.images?.jpg?.small_image_url || '/static/img/placeholder.svg';
+      const score = a.score ? `⭐ ${a.score}` : '';
+      const eps   = a.episodes ? `${a.episodes} Ep` : a.type || '';
+      rekSugCache[a.mal_id] = a;
+      return `<div class="rek-sug-item" onclick="rekSelectAnime(${a.mal_id})">
+        <img src="${img}" alt="" onerror="this.src='/static/img/placeholder.svg'">
+        <div class="rek-sug-info">
+          <div class="rek-sug-title">${rekEsc(a.title)}</div>
+          <div class="rek-sug-meta">${[score, eps, a.year || ''].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    sug.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text3)">Gagal ambil data.</div>';
+  }
+}
+
+function rekHideSug() {
+  document.getElementById('rekSuggestions').style.display = 'none';
+}
+
+function rekSelectAnime(malId) {
+  rekSelected = rekSugCache[malId] || null;
+  if (!rekSelected) { rekToast('Pilih anime dari daftar!', 'error'); return; }
+  const a = rekSelected;
+  const img = a.images?.jpg?.image_url || a.images?.jpg?.small_image_url || '/static/img/placeholder.svg';
+  document.getElementById('rekSelImg').src = img;
+  document.getElementById('rekSelTitle').textContent = a.title;
+  const meta = [
+    a.score ? `⭐ ${a.score}` : '',
+    a.episodes ? `${a.episodes} Ep` : '',
+    a.year || '',
+    a.type || '',
+  ].filter(Boolean).join(' · ');
+  document.getElementById('rekSelMeta').textContent = meta;
+  document.getElementById('rekSelectedAnime').classList.add('show');
+  document.getElementById('rekSearchInput').value = a.title;
+  rekHideSug();
+}
+
+function rekClearSelected() {
+  rekSelected = null;
+  document.getElementById('rekSelectedAnime').classList.remove('show');
+  document.getElementById('rekSearchInput').value = '';
+}
+
+// ── Submit ─────────────────────────────────────────────────────────
+async function rekSubmit() {
+  if (!rekUser) { rekToast('Login dulu yaa! 🔐', 'error'); return; }
+  if (!rekSelected) { rekToast('Pilih anime dulu!', 'error'); return; }
+  const reason = document.getElementById('rekReason').value.trim();
+  if (!reason || reason.length < 10) { rekToast('Tuliskan alasan minimal 10 karakter.', 'error'); return; }
+
+  const btn = document.getElementById('rekSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  const a   = rekSelected;
+  const img = a.images?.jpg?.image_url || a.images?.jpg?.small_image_url || '';
+  const payload = {
+    mal_id:      a.mal_id,
+    anime_title: a.title,
+    anime_img:   img,
+    anime_score: a.score ? String(a.score) : '',
+    anime_eps:   a.episodes ? String(a.episodes) : '',
+    anime_type:  a.type || '',
+    anime_year:  a.year ? String(a.year) : '',
+    genres:      (a.genres || []).map(g => g.name).slice(0, 3).join(', '),
+    reason:      reason,
+    user_id:     rekUser.id,
+    user_name:   rekUser.name || 'User',
+    user_avatar: rekUser.avatar || '',
+    upvotes:     0,
+  };
 
   try {
-    // Fetch paralel: detail + characters
-    const [resDetail, resChars] = await Promise.all([
-      fetch(`https://api.jikan.moe/v4/anime/${malId}`),
-      fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`)
-    ]);
-
-    const { data: a } = await resDetail.json();
-    const { data: chars } = await resChars.json();
-
-    if (!a) throw new Error('Not found');
-
-    // Update page title
-    document.title = `${a.title} — Animeku.id`;
-
-    const poster  = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
-    const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
-    const mainChars = (chars || []).filter(c => c.role === 'Main');
-    const supChars  = (chars || []).filter(c => c.role === 'Supporting');
-    const allChars  = [...mainChars, ...supChars].slice(0, 12);
-
-    const searchSlug = encodeURIComponent(a.title);
-
-    page.innerHTML = `
-      <!-- Back -->
-      <div style="margin-bottom:16px">
-        <a href="javascript:history.back()" class="rd-btn-back" style="display:inline-flex">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          Kembali
-        </a>
-      </div>
-
-      <!-- Hero -->
-      <div class="rd-hero">
-        <div class="rd-hero-backdrop" style="background-image:url('${poster}')"></div>
-        <div class="rd-hero-inner">
-          <div class="rd-poster">
-            <img src="${poster}" alt="${esc(a.title)}" onerror="this.src='/static/img/placeholder.svg'">
-          </div>
-          <div class="rd-meta">
-            <h1 class="rd-title">${esc(a.title)}</h1>
-            ${a.title_japanese ? `<div class="rd-title-alt">${esc(a.title_japanese)}</div>` : ''}
-
-            <div class="rd-stats-row">
-              ${a.score ? `<span class="rd-stat score">⭐ ${a.score} <span style="font-size:11px;opacity:.6">/ 10</span></span>` : ''}
-              ${a.scored_by ? `<span class="rd-stat">❤️ ${(a.scored_by/1000).toFixed(0)}k votes</span>` : ''}
-              ${a.episodes ? `<span class="rd-stat">▶ ${a.episodes} Ep</span>` : ''}
-              ${a.duration ? `<span class="rd-stat">⏱ ${a.duration.replace(' per ep','')}</span>` : ''}
-              ${a.type ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
-              ${a.status ? `<span class="rd-stat" style="color:${a.airing ? '#4caf7d' : 'var(--text2)'}">${esc(a.status)}</span>` : ''}
-            </div>
-
-            <div class="rd-genres">
-              ${genres.map(g => `<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
-            </div>
-
-            <div class="rd-actions">
-              <a href="/search?q=${searchSlug}" class="rd-btn-watch">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-                Tonton di Animeku
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Ranking -->
-      ${a.rank || a.popularity ? `
-      <div class="rd-ranking-row">
-        ${a.rank ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-label">Ranked</span></div>` : ''}
-        ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-label">Populer</span></div>` : ''}
-        ${a.members ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-label">Members</span></div>` : ''}
-        ${a.favorites ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.favorites/1000).toFixed(0)}k</span><span class="rd-rank-label">Favorit</span></div>` : ''}
-      </div>` : ''}
-
-      <!-- Synopsis -->
-      ${a.synopsis ? `
-      <div class="rd-section" style="animation-delay:0.05s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Sinopsis
-        </div>
-        <div class="rd-synopsis" id="rdSynopsis">
-          ${esc(a.synopsis)}
-          <div class="rd-synopsis-fade"></div>
-        </div>
-        <span class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
-          Baca selengkapnya <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
-        </span>
-      </div>` : ''}
-
-      <!-- Information -->
-      <div class="rd-section" style="animation-delay:0.1s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Informasi
-        </div>
-        <div class="rd-info-grid">
-          ${a.status ? infoItem('Status', `<span style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</span>`) : ''}
-          ${a.season && a.year ? infoItem('Season', `${esc(a.season.charAt(0).toUpperCase()+a.season.slice(1))} ${a.year}`) : ''}
-          ${a.source ? infoItem('Source', esc(a.source)) : ''}
-          ${a.rating ? infoItem('Rating', esc(a.rating)) : ''}
-          ${a.aired?.string ? infoItem('Tayang', esc(a.aired.string)) : ''}
-          ${a.broadcast?.string ? infoItem('Jadwal', esc(a.broadcast.string)) : ''}
-          ${a.studios?.length ? infoItem('Studio', a.studios.map(s=>`<a href="/search?q=${encodeURIComponent(s.name)}">${esc(s.name)}</a>`).join(', ')) : ''}
-          ${a.producers?.length ? infoItem('Producer', a.producers.slice(0,3).map(p=>esc(p.name)).join(', ')) : ''}
-        </div>
-      </div>
-
-      <!-- Characters -->
-      ${allChars.length ? `
-      <div class="rd-section" style="animation-delay:0.15s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Karakter
-        </div>
-        <div class="rd-chars-grid">
-          ${allChars.map(c => {
-            const charImg = c.character?.images?.jpg?.image_url || '';
-            const va = (c.voice_actors || []).find(v => v.language === 'Japanese');
-            const vaImg = va?.person?.images?.jpg?.image_url || '';
-            const vaName = va?.person?.name || '';
-            return `
-            <div class="rd-char-card">
-              <img class="rd-char-img" src="${charImg || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
-              <div class="rd-char-info">
-                <div class="rd-char-name">${esc(c.character?.name || '')}</div>
-                <div class="rd-char-role">${esc(c.role || '')}</div>
-                ${vaName ? `
-                <div class="rd-va-wrap">
-                  ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
-                  <span class="rd-va-name">${esc(vaName)}</span>
-                </div>` : ''}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>` : ''}
-
-      <!-- Trailer -->
-      ${a.trailer?.embed_url ? `
-      <div class="rd-section" style="animation-delay:0.2s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-          Trailer
-        </div>
-        <div class="rd-trailer-wrap">
-          <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
-        </div>
-      </div>` : ''}
-    `;
-
+    const res = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_ANON,
+        Authorization: `Bearer ${SB_ANON}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || res.statusText);
+    }
+    const [post] = await res.json();
+    rekData.unshift(post);
+    rekRenderList(rekData);
+    rekToast('Rekomendasi berhasil dikirim! 🎉');
+    rekClearSelected();
+    document.getElementById('rekReason').value = '';
+    rekUpdateCount(document.getElementById('rekReason'));
   } catch(e) {
-    document.getElementById('rdLoading')?.remove();
-    page.innerHTML += `<div class="rd-error">
-      <h3>Gagal memuat data</h3>
-      <p style="margin-bottom:16px">Cek koneksi internet kamu.</p>
-      <a href="/rekomendasi" style="color:var(--accent)">← Kembali ke Rekomendasi</a>
+    rekToast('Gagal kirim: ' + (e.message || 'coba lagi'), 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim';
+}
+
+// ── Load Posts ─────────────────────────────────────────────────────
+async function rekLoadPosts() {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/${TABLE}?order=created_at.desc&limit=50`,
+      { headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}` } }
+    );
+    if (!res.ok) throw new Error('fetch failed');
+    rekData = await res.json();
+    rekRenderList(rekData);
+  } catch(e) {
+    document.getElementById('rekList').innerHTML = `
+      <div class="rek-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <h3>Gagal memuat</h3>
+        <p>Cek koneksi internet kamu.</p>
+      </div>`;
+  }
+}
+
+// ── Filter ─────────────────────────────────────────────────────────
+function rekFilter(mode, btn) {
+  rekFilter_cur = mode;
+  document.querySelectorAll('.rek-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  let filtered = [...rekData];
+  if (mode === 'terpopuler') {
+    filtered.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0));
+  } else if (mode === 'mine') {
+    if (!rekUser) { rekToast('Login dulu yaa! 🔐', 'error'); return; }
+    filtered = filtered.filter(p => p.user_id === rekUser?.id);
+  } else {
+    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+  rekRenderList(filtered);
+}
+
+// ── Render ─────────────────────────────────────────────────────────
+function rekRenderList(posts) {
+  const list = document.getElementById('rekList');
+  if (!posts.length) {
+    list.innerHTML = `
+      <div class="rek-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <h3>Belum ada rekomendasi</h3>
+        <p>Jadilah yang pertama merekomendasikan anime! 🎌</p>
+      </div>`;
+    return;
+  }
+  list.innerHTML = posts.map((p, i) => {
+    const voted    = rekVoted.includes(p.id);
+    const isOwn    = rekUser && p.user_id === rekUser.id;
+    const timeStr  = rekFmtTime(p.created_at);
+    const genres   = (p.genres || '').split(',').filter(Boolean).slice(0, 3);
+    const searchUrl = p.mal_id ? `/rekomendasi/anime/${p.mal_id}` : `/search?q=${encodeURIComponent(p.anime_title)}`;
+
+    return `
+    <div class="rek-post" id="rekpost-${p.id}" style="animation-delay:${i * 0.05}s;cursor:pointer" onclick="if(!event.target.closest('button,a'))window.location.href='${searchUrl}'">
+      <div class="rek-post-inner">
+        <!-- Upvote -->
+        <div class="rek-upvote">
+          <button class="rek-upvote-btn ${voted ? 'voted' : ''}" onclick="rekUpvote('${p.id}', this)" title="Upvote">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="${voted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+          <span class="rek-upvote-count" id="uvc-${p.id}">${p.upvotes || 0}</span>
+        </div>
+        <!-- Content -->
+        <div class="rek-post-content">
+          <div class="rek-post-anime">
+            <img src="${rekEsc(p.anime_img || '')}" alt="${rekEsc(p.anime_title)}" onerror="this.src='/static/img/placeholder.svg'">
+            <div class="rek-post-anime-info">
+              <div class="rek-post-anime-title">
+                <a href="${searchUrl}">${rekEsc(p.anime_title)}</a>
+              </div>
+              <div class="rek-post-anime-badges">
+                ${p.anime_score ? `<span class="rek-badge rek-badge-score">⭐ ${rekEsc(p.anime_score)}</span>` : ''}
+                ${p.anime_eps   ? `<span class="rek-badge rek-badge-ep">${rekEsc(p.anime_eps)} Ep</span>` : ''}
+                ${genres.map(g => `<span class="rek-badge rek-badge-genre">${rekEsc(g.trim())}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="rek-post-reason">${rekEsc(p.reason)}</div>
+          <div class="rek-post-footer">
+            <div class="rek-post-user">
+              ${p.user_avatar
+                ? `<img src="${rekEsc(p.user_avatar)}" class="rek-post-avatar" alt="" onerror="this.style.display='none'">`
+                : `<div class="rek-post-avatar-ph">${(p.user_name || '?')[0].toUpperCase()}</div>`
+              }
+              <span>${rekEsc(p.user_name || 'User')}</span>
+            </div>
+            ${isOwn ? `<button class="rek-delete-btn" onclick="rekDelete('${p.id}')">Hapus</button>` : ''}
+            <span class="rek-post-time">${timeStr}</span>
+          </div>
+        </div>
+      </div>
     </div>`;
-  }
+  }).join('');
+}
 
-  function infoItem(label, val) {
-    return `<div class="rd-info-item"><div class="rd-info-label">${label}</div><div class="rd-info-value">${val}</div></div>`;
-  }
-  function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-})();
+// ── Upvote ─────────────────────────────────────────────────────────
+async function rekUpvote(id, btn) {
+  if (!rekUser) { rekToast('Login dulu untuk upvote! 🔐', 'error'); return; }
+  if (rekVoted.includes(id)) { rekToast('Sudah diupvote!'); return; }
 
-function rdToggleSyn() {
-  const el  = document.getElementById('rdSynopsis');
-  const arr = document.getElementById('rdSynArrow');
-  const btn = document.getElementById('rdReadMore');
-  const open = el.classList.toggle('expanded');
-  arr.style.transform = open ? 'rotate(180deg)' : '';
-  btn.childNodes[0].textContent = open ? 'Sembunyikan ' : 'Baca selengkapnya ';
+  // Optimistic update
+  const countEl = document.getElementById('uvc-' + id);
+  const cur = parseInt(countEl.textContent) || 0;
+  countEl.textContent = cur + 1;
+  btn.classList.add('voted');
+  btn.querySelector('svg').setAttribute('fill', 'currentColor');
+
+  rekVoted.push(id);
+  localStorage.setItem('rek_voted', JSON.stringify(rekVoted));
+
+  try {
+    await fetch(`${SB_URL}/rest/v1/rpc/increment_rek_upvote`, {
+      method: 'POST',
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row_id: id }),
+    });
+  } catch(e) {}
+}
+
+// ── Delete ─────────────────────────────────────────────────────────
+async function rekDelete(id) {
+  if (!confirm('Hapus rekomendasi ini?')) return;
+  try {
+    const token = localStorage.getItem('sb_access_token') || SB_ANON;
+    await fetch(`${SB_URL}/rest/v1/${TABLE}?id=eq.${id}&user_id=eq.${rekUser.id}`, {
+      method: 'DELETE',
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${token}` },
+    });
+    rekData = rekData.filter(p => p.id !== id);
+    rekRenderList(rekData);
+    rekToast('Rekomendasi dihapus.');
+  } catch(e) {
+    rekToast('Gagal menghapus.', 'error');
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
+function rekUpdateCount(el) {
+  document.getElementById('rekCharCount').textContent = `${el.value.length} / 500 karakter`;
+}
+
+function rekEsc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function rekFmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'baru saja';
+  if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+  if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+  if (diff < 2592000) return Math.floor(diff/86400) + ' hari lalu';
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+}
+
+let rekToastTimer;
+function rekToast(msg, type) {
+  const el = document.getElementById('rekToast');
+  el.textContent = (type === 'error' ? '⚠️ ' : '✅ ') + msg;
+  el.style.borderColor = type === 'error' ? 'rgba(230,57,70,0.4)' : 'rgba(76,175,125,0.4)';
+  el.classList.add('show');
+  clearTimeout(rekToastTimer);
+  rekToastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 </script>
 {% endblock %}
