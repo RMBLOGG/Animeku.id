@@ -567,6 +567,19 @@ function closeAnnouncement() {
               Anime A-Z
             </a>
             <div class="nav-more-divider"></div>
+            <a href="/mylist" class="nav-more-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              MyList
+            </a>
+            <a href="/mylist/jelajahi" class="nav-more-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              Explore MyList
+            </a>
+            <a href="/mylist/drafts" class="nav-more-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              Draf MyList
+            </a>
+            <div class="nav-more-divider"></div>
             <a href="/chat" class="nav-more-item nav-more-live">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               Live Chat
@@ -674,6 +687,21 @@ function closeAnnouncement() {
         <a href="/animelist">Anime A-Z</a>
       </div>
 
+      <!-- MyList section -->
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <a href="#" onclick="event.preventDefault();var d=document.getElementById('mobMylistDropdown');var open=d.style.display==='flex';d.style.display=open?'none':'flex';document.getElementById('mobMylistArrow').style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:10px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          MyList
+        </span>
+        <svg id="mobMylistArrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5;transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+      </a>
+      <div id="mobMylistDropdown" style="display:none;flex-direction:column;padding:0 0 4px 28px;gap:0">
+        <a href="/mylist">Buat MyList</a>
+        <a href="/mylist/jelajahi">Explore</a>
+        <a href="/mylist/drafts">Draf</a>
+      </div>
+
       <!-- Live Chat - di luar menu, desain khusus -->
       <a href="/chat" style="display:flex;align-items:center;gap:10px;padding:11px 16px;margin:4px 0;background:linear-gradient(135deg,rgba(230,57,70,0.15),rgba(230,57,70,0.05));border:1px solid rgba(230,57,70,0.3);border-radius:10px;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none">
         <span style="position:relative;display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--accent);border-radius:50%;flex-shrink:0">
@@ -749,6 +777,7 @@ function closeAnnouncement() {
         <a href="/genres">Genre</a>
         <a href="/koleksi">Koleksi</a>
       <a href="/animelist">Anime A-Z</a>
+      <a href="/mylist">MyList</a>
       </div>
 <!--       <p class="footer-credit">Data dari <strong>Animasu</strong> via API Sanka Vollerei.</p> -->
     </div>
@@ -783,6 +812,12 @@ function closeAnnouncement() {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </span>
       <span class="mob-nav-label">Koleksi</span>
+    </a>
+    <a href="/mylist" class="mob-nav-item" data-page="mylist">
+      <span class="mob-nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </span>
+      <span class="mob-nav-label">MyList</span>
     </a>
     <!-- Login/User item — diisi JS -->
     <a href="/auth/login" class="mob-nav-item" id="mobNavAuthItem" data-page="login">
