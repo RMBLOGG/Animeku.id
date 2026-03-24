@@ -27,6 +27,30 @@
   border-bottom: 3px solid var(--accent);
 }
 .ml-hero p { color: var(--text3); font-size: 14px; margin-bottom: 16px; }
+.ml-login-notice {
+  display: none; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: rgba(230,57,70,0.08);
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: var(--radius);
+  font-size: 13px; color: var(--text2);
+  margin-bottom: 16px;
+}
+.ml-login-notice a { color: var(--accent); font-weight: 600; }
+.ml-login-overlay {
+  position: relative;
+}
+.ml-login-overlay-block {
+  display: none;
+  position: absolute; inset: 0; z-index: 10;
+  background: rgba(9,11,15,0.65);
+  backdrop-filter: blur(3px);
+  border-radius: var(--radius);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+  font-size: 13px; color: var(--text3);
+  cursor: default;
+}
 .ml-hero-btns {
   display: flex; justify-content: center; gap: 8px; margin-top: 4px;
 }
@@ -338,6 +362,12 @@
     </div>
   </div>
 
+  <!-- Login Notice -->
+  <div class="ml-login-notice" id="mlLoginNotice">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Harus <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">login</a> dulu untuk membuat MyList.</span>
+  </div>
+
   <!-- Search -->
   <div class="ml-search-wrap">
     <div class="ml-search-inner">
@@ -418,6 +448,23 @@ let mlSelected = [], mlTimer, mlTargetSlot = null;
 const mlDetailCache = {};
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Cek login state
+  let mlUser = null;
+  try { const raw = localStorage.getItem('sb_user'); if (raw) mlUser = JSON.parse(raw); } catch(e) {}
+
+  if (!mlUser) {
+    document.getElementById('mlLoginNotice').style.display = 'flex';
+    // Disable search input
+    document.getElementById('mlSearchInput').disabled = true;
+    document.getElementById('mlSearchInput').placeholder = 'Login dulu untuk mencari anime…';
+    // Disable save & draft buttons
+    document.getElementById('mlSaveBtn').disabled = true;
+    document.getElementById('mlDraftBtn').disabled = true;
+    // Disable slot click
+    document.getElementById('mlGrid').style.pointerEvents = 'none';
+    document.getElementById('mlGrid').style.opacity = '0.4';
+  }
+
   mlRenderGrid();
   // Load draft dari URL jika ada
   const p = new URLSearchParams(location.search);
