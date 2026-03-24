@@ -312,13 +312,15 @@
 
   try {
     // Fetch paralel: detail + characters
-    const [resDetail, resChars] = await Promise.all([
+    const [resDetail, resChars, resStaff] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
-      fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`)
+      fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`),
+      fetch(`https://api.jikan.moe/v4/anime/${malId}/staff`)
     ]);
 
     const { data: a } = await resDetail.json();
     const { data: chars } = await resChars.json();
+    const { data: staff } = await resStaff.json();
 
     if (!a) throw new Error('Not found');
 
@@ -443,6 +445,30 @@
                   ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
                   <span class="rd-va-name">${esc(vaName)}</span>
                 </div>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Staff -->
+      ${staff && staff.length ? `
+      <div class="rd-section" style="animation-delay:0.2s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          STAF
+        </div>
+        <div class="rd-chars-grid">
+          ${staff.map(s => {
+            const img = s.person?.images?.jpg?.image_url || '';
+            const name = s.person?.name || '';
+            const positions = (s.positions || []).join(', ');
+            return `
+            <div class="rd-char-card">
+              <img class="rd-char-img" src="${img || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+              <div class="rd-char-info">
+                <div class="rd-char-name">${esc(name)}</div>
+                <div class="rd-char-role">${esc(positions)}</div>
               </div>
             </div>`;
           }).join('')}
