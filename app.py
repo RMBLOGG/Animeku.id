@@ -936,6 +936,176 @@ def koleksi():
     return render_template("koleksi.html")
 
 
+@app.route("/rekomendasi")
+def rekomendasi():
+    return render_template("rekomendasi.html")
+
+@app.route("/rekomendasi/anime/<int:mal_id>")
+def rekomendasi_detail(mal_id):
+    return render_template("rekomendasi_detail.html", mal_id=mal_id)
+
+# ── MyList Anime ───────────────────────────────────────────────────────────────
+
+@app.route("/mylist")
+def mylist():
+    return render_template("mylist.html")
+
+@app.route("/mylist/jelajahi")
+def mylist_explore():
+    return render_template("mylist_explore.html")
+
+@app.route("/mylist/list/<list_id>")
+def mylist_view(list_id):
+    return render_template("mylist_view.html", list_id=list_id)
+
+@app.route("/mylist/drafts")
+def mylist_drafts():
+    return render_template("mylist_drafts.html")
+
+# ── MyList API ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/mylist/save", methods=["POST"])
+def mylist_save():
+    body = request.json
+    username   = (body.get("username") or "").strip()
+    anime_list = body.get("anime_list", [])
+    if not username:
+        return jsonify({"error": "Username wajib diisi"}), 400
+    if not anime_list:
+        return jsonify({"error": "Pilih minimal 1 anime"}), 400
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/anime_lists",
+        headers={**supabase_headers(), "Prefer": "return=representation"},
+        json={"username": username, "anime_list": anime_list},
+        timeout=10
+    )
+    if r.status_code in (200, 201):
+        return jsonify({"success": True, "id": r.json()[0]["id"]})
+    return jsonify({"error": r.text}), 500
+
+@app.route("/api/mylist/lists")
+def mylist_get_lists():
+    page   = int(request.args.get("page", 1))
+    limit  = 12
+    offset = (page - 1) * limit
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_lists?select=*&order=created_at.desc&limit={limit}&offset={offset}",
+        headers=supabase_headers(), timeout=10
+    )
+    return jsonify(r.json())
+
+@app.route("/api/mylist/list/<list_id>")
+def mylist_get_list(list_id):
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_lists?id=eq.{list_id}&select=*",
+        headers=supabase_headers(), timeout=10
+    )
+    data = r.json()
+    if data:
+        return jsonify(data[0])
+    return jsonify({"error": "Not found"}), 404
+
+@app.route("/api/mylist/draft/create", methods=["POST"])
+def mylist_draft_create():
+    import random, string
+    body = request.json
+    username   = (body.get("username") or "").strip()
+    anime_list = body.get("anime_list", [])
+    title      = (body.get("title") or "Draft baru").strip()
+    if not username:
+        return jsonify({"error": "Username wajib"}), 400
+    pin = ""
+    for _ in range(5):
+        pin = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        chk = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_drafts?pin=eq.{pin}&select=id",
+            headers=supabase_headers(), timeout=10
+        )
+        if not chk.json():
+            break
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts",
+        headers={**supabase_headers(), "Prefer": "return=representation"},
+        json={"username": username, "anime_list": anime_list, "title": title, "pin": pin},
+        timeout=10
+    )
+    if r.status_code in (200, 201):
+        return jsonify({"success": True, "id": r.json()[0]["id"], "pin": pin})
+    return jsonify({"error": r.text}), 500
+
+@app.route("/api/mylist/draft/list")
+def mylist_draft_list():
+    pin = request.args.get("pin", "").strip().upper()
+    if not pin:
+        return jsonify({"error": "PIN wajib"}), 400
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?pin=eq.{pin}&select=*&order=updated_at.desc",
+        headers=supabase_headers(), timeout=10
+    )
+    data = r.json()
+    return jsonify(data if isinstance(data, list) else [])
+
+@app.route("/api/mylist/draft/update/<draft_id>", methods=["POST"])
+def mylist_draft_update(draft_id):
+    body = request.json
+    pin  = (body.get("pin") or "").strip().upper()
+    if not pin:
+        return jsonify({"error": "PIN wajib"}), 400
+    chk = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?id=eq.{draft_id}&pin=eq.{pin}&select=id",
+        headers=supabase_headers(), timeout=10
+    )
+    if not chk.json():
+        return jsonify({"error": "PIN salah"}), 403
+    update_data = {k: body[k] for k in ["anime_list", "username", "title"] if k in body}
+    r = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?id=eq.{draft_id}",
+        headers=supabase_headers(), json=update_data, timeout=10
+    )
+    return jsonify({"success": True}) if r.status_code in (200, 201, 204) else (jsonify({"error": r.text}), 500)
+
+@app.route("/api/mylist/draft/delete/<draft_id>", methods=["DELETE"])
+def mylist_draft_delete(draft_id):
+    pin = request.args.get("pin", "").strip().upper()
+    if not pin:
+        return jsonify({"error": "PIN wajib"}), 400
+    chk = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?id=eq.{draft_id}&pin=eq.{pin}&select=id",
+        headers=supabase_headers(), timeout=10
+    )
+    if not chk.json():
+        return jsonify({"error": "PIN salah"}), 403
+    r = requests.delete(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?id=eq.{draft_id}",
+        headers=supabase_headers(), timeout=10
+    )
+    return jsonify({"success": True}) if r.status_code in (200, 204) else (jsonify({"error": r.text}), 500)
+
+@app.route("/api/mylist/draft/publish/<draft_id>", methods=["POST"])
+def mylist_draft_publish(draft_id):
+    body = request.json
+    pin  = (body.get("pin") or "").strip().upper()
+    if not pin:
+        return jsonify({"error": "PIN wajib"}), 400
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/anime_drafts?id=eq.{draft_id}&pin=eq.{pin}&select=*",
+        headers=supabase_headers(), timeout=10
+    )
+    drafts = r.json()
+    if not drafts:
+        return jsonify({"error": "PIN salah"}), 403
+    d  = drafts[0]
+    r2 = requests.post(
+        f"{SUPABASE_URL}/rest/v1/anime_lists",
+        headers={**supabase_headers(), "Prefer": "return=representation"},
+        json={"username": d["username"], "anime_list": d["anime_list"]},
+        timeout=10
+    )
+    if r2.status_code in (200, 201):
+        return jsonify({"success": True, "id": r2.json()[0]["id"]})
+    return jsonify({"error": r2.text}), 500
+
+
 @app.route("/chat")
 def chat():
     return render_template("chat.html")
