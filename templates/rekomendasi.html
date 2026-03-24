@@ -611,7 +611,7 @@ async function rekSearchJikan(q) {
       const score = a.score ? `⭐ ${a.score}` : '';
       const eps   = a.episodes ? `${a.episodes} Ep` : a.type || '';
       rekSugCache[a.mal_id] = a;
-      return `<div class="rek-sug-item" onclick="rekSelectAnime(${a.mal_id})">`
+      return `<div class="rek-sug-item" onclick="rekSelectAnime(${a.mal_id})">
         <img src="${img}" alt="" onerror="this.src='/static/img/placeholder.svg'">
         <div class="rek-sug-info">
           <div class="rek-sug-title">${rekEsc(a.title)}</div>
