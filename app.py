@@ -936,6 +936,15 @@ def koleksi():
     return render_template("koleksi.html")
 
 
+@app.route("/rekomendasi")
+def rekomendasi():
+    return render_template("rekomendasi.html")
+
+@app.route("/rekomendasi/anime/<int:mal_id>")
+def rekomendasi_detail(mal_id):
+    return render_template("rekomendasi_detail.html", mal_id=mal_id)
+
+
 @app.route("/chat")
 def chat():
     return render_template("chat.html")
