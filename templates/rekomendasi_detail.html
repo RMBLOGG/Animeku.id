@@ -206,37 +206,44 @@
 
 /* Characters */
 .rd-chars-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
 }
-@media(min-width:600px) { .rd-chars-grid { grid-template-columns: repeat(3, 1fr); } }
+.rd-chars-grid::-webkit-scrollbar { display: none; }
 
 .rd-char-card {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px;
-  align-items: center;
+  padding: 10px 8px;
   transition: border-color 0.2s;
+  flex-shrink: 0;
+  width: 100px;
+  text-align: center;
 }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
 .rd-char-img {
-  width: 44px;
-  height: 56px;
+  width: 64px;
+  height: 80px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   flex-shrink: 0;
   background: var(--border);
 }
-.rd-char-info { flex: 1; min-width: 0; }
-.rd-char-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rd-char-role { font-size: 11px; color: var(--text3); }
-.rd-va-wrap { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
-.rd-va-img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; background: var(--border); }
-.rd-va-name { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rd-char-info { width: 100%; min-width: 0; }
+.rd-char-name { font-size: 11px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
+.rd-char-role { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.rd-va-wrap { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
+.rd-va-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; background: var(--border); flex-shrink: 0; }
+.rd-va-name { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
 
 /* Trailer */
 .rd-trailer-wrap {
