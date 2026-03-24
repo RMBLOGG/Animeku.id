@@ -409,14 +409,22 @@ mlSearchIn.addEventListener('input', () => {
   mlSearchRes.classList.add('open');
   mlTimer = setTimeout(async () => {
     try {
-      const res  = await fetch('/api/search/' + encodeURIComponent(q));
-      const data = await res.json();
+      const res  = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=10&sfw=true`);
+      const json = await res.json();
+      const data = (json.data || []).map(a => ({
+        mal_id : a.mal_id,
+        title  : a.title,
+        image  : a.images?.jpg?.small_image_url || '/static/img/placeholder.svg',
+        type   : a.type || '?',
+        year   : a.year || (a.aired?.prop?.from?.year) || '?',
+        score  : a.score || null,
+      }));
       if (!data.length) { mlSearchRes.innerHTML = '<div class="ml-search-msg">😢 Tidak ada hasil</div>'; return; }
       mlSearchRes.innerHTML = data.map(a => {
         const added = !!mlSelected.find(s => s.mal_id === a.mal_id);
         const safe  = JSON.stringify(a).replace(/"/g, '&quot;');
         return `<div class="ml-result-item">
-          <img src="${a.image}" alt="" loading="lazy">
+          <img src="${a.image}" alt="" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
           <div class="ml-ri-info"><strong>${a.title}</strong><span>${a.type||'?'} · ${a.year||'?'}</span></div>
           ${a.score ? `<div class="ml-ri-score">⭐ ${a.score}</div>` : ''}
           <button class="ml-ri-add ${added?'added':''}" ${added?'disabled':''} onclick="mlAddAnime(${safe})">
