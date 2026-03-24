@@ -409,7 +409,7 @@ mlSearchIn.addEventListener('input', () => {
   mlSearchRes.classList.add('open');
   mlTimer = setTimeout(async () => {
     try {
-      const res  = await fetch('/api/search?q=' + encodeURIComponent(q));
+      const res  = await fetch('/api/search/' + encodeURIComponent(q));
       const data = await res.json();
       if (!data.length) { mlSearchRes.innerHTML = '<div class="ml-search-msg">😢 Tidak ada hasil</div>'; return; }
       mlSearchRes.innerHTML = data.map(a => {
