@@ -327,8 +327,8 @@
 
     const poster  = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
     const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
-    const mainChars = (chars || []).filter(c => c.role === 'Main').slice(0, 6);
-    const supChars  = (chars || []).filter(c => c.role === 'Supporting').slice(0, 6);
+    const mainChars = (chars || []).filter(c => c.role === 'Main');
+    const supChars  = (chars || []).filter(c => c.role === 'Supporting');
     const allChars  = [...mainChars, ...supChars].slice(0, 12);
 
     const searchSlug = encodeURIComponent(a.title);
