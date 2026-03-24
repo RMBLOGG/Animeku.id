@@ -559,6 +559,7 @@ const TABLE   = "anime_rekomendasi";
 
 let rekUser       = null;
 let rekSelected   = null; // anime yg dipilih dari Jikan
+let rekSugCache   = {}; // cache anime data by mal_id
 let rekFilter_cur = 'terbaru';
 let rekData       = [];
 let rekSugTimer   = null;
@@ -604,11 +605,13 @@ async function rekSearchJikan(q) {
       sug.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text3)">Tidak ditemukan.</div>';
       return;
     }
+    rekSugCache = {};
     sug.innerHTML = items.map(a => {
       const img   = a.images?.jpg?.small_image_url || '/static/img/placeholder.svg';
       const score = a.score ? `⭐ ${a.score}` : '';
       const eps   = a.episodes ? `${a.episodes} Ep` : a.type || '';
-      return `<div class="rek-sug-item" onclick="rekSelectAnime(${JSON.stringify(JSON.stringify(a)).slice(1,-1)})">
+      rekSugCache[a.mal_id] = a;
+      return `<div class="rek-sug-item" onclick="rekSelectAnime(${a.mal_id})">`
         <img src="${img}" alt="" onerror="this.src='/static/img/placeholder.svg'">
         <div class="rek-sug-info">
           <div class="rek-sug-title">${rekEsc(a.title)}</div>
@@ -625,13 +628,9 @@ function rekHideSug() {
   document.getElementById('rekSuggestions').style.display = 'none';
 }
 
-function rekSelectAnime(jsonStr) {
-  try {
-    rekSelected = JSON.parse(jsonStr);
-  } catch(e) {
-    // fallback: already parsed object passed as string
-    rekSelected = jsonStr;
-  }
+function rekSelectAnime(malId) {
+  rekSelected = rekSugCache[malId] || null;
+  if (!rekSelected) { rekToast('Pilih anime dari daftar!', 'error'); return; }
   const a = rekSelected;
   const img = a.images?.jpg?.image_url || a.images?.jpg?.small_image_url || '/static/img/placeholder.svg';
   document.getElementById('rekSelImg').src = img;
