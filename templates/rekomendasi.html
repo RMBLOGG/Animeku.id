@@ -770,7 +770,7 @@ function rekRenderList(posts) {
     const searchUrl = p.mal_id ? `/rekomendasi/anime/${p.mal_id}` : `/search?q=${encodeURIComponent(p.anime_title)}`;
 
     return `
-    <div class="rek-post" id="rekpost-${p.id}" style="animation-delay:${i * 0.05}s">
+    <div class="rek-post" id="rekpost-${p.id}" style="animation-delay:${i * 0.05}s;cursor:pointer" onclick="if(!event.target.closest('button,a'))window.location.href='${searchUrl}'">
       <div class="rek-post-inner">
         <!-- Upvote -->
         <div class="rek-upvote">
