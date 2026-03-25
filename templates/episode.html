@@ -568,7 +568,10 @@
   <div class="kb-row"><span class="kb-key">?</span><span class="kb-desc">Tutup panel ini</span></div>
 </div>
 <!-- KB TOAST -->
-<div id="kbToast"></div>(btn, quality) {
+<div id="kbToast"></div>
+
+<script>
+function selectQuality(btn, quality) {
   // Highlight tombol resolusi aktif
   document.querySelectorAll('#qualityTabs .server-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -820,18 +823,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
-
-<!-- KEYBOARD HINT PANEL -->
-<div id="kbHint">
-  <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;font-family:var(--font-mono,monospace)">KEYBOARD SHORTCUTS</div>
-  <div class="kb-row"><span class="kb-key">N</span><span class="kb-desc">Episode berikutnya</span></div>
-  <div class="kb-row"><span class="kb-key">P</span><span class="kb-desc">Episode sebelumnya</span></div>
-  <div class="kb-row"><span class="kb-key">F</span><span class="kb-desc">Fullscreen player</span></div>
-  <div class="kb-row"><span class="kb-key">?</span><span class="kb-desc">Tutup panel ini</span></div>
-  <div style="margin-top:6px;font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--font-mono,monospace)">Tekan ? untuk toggle</div>
-</div>
-<!-- KB TOAST -->
-<div id="kbToast"></div>
 
 <!-- KOMENTAR -->
 <div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
