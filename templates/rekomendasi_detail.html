@@ -4,193 +4,225 @@
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ── PAGE ── */
-.rd-page { max-width: 900px; margin: 0 auto; padding: 0 0 80px; }
+/* ══════════════════════════════════════════
+   PAGE
+══════════════════════════════════════════ */
+.rd-page { max-width: 1100px; margin: 0 auto; padding: 0 0 80px; }
 
-/* ── HERO BACKDROP ── */
+/* ══════════════════════════════════════════
+   BACKDROP
+══════════════════════════════════════════ */
 .rd-backdrop-wrap {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  margin-bottom: 0;
+  position: relative; width: 100%;
+  height: 260px; overflow: hidden;
 }
+@media(min-width:768px) { .rd-backdrop-wrap { height: 320px; } }
 .rd-backdrop-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  filter: blur(22px) brightness(0.25) saturate(1.6);
-  transform: scale(1.12);
+  object-fit: cover; object-position: center top;
+  filter: blur(20px) brightness(0.22) saturate(1.5);
+  transform: scale(1.1);
 }
 .rd-backdrop-grad {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(9,11,15,0.2) 0%, rgba(9,11,15,0.5) 60%, var(--bg) 100%);
+  background: linear-gradient(to bottom, rgba(9,11,15,0.1) 0%, rgba(9,11,15,0.55) 65%, var(--bg) 100%);
 }
 .rd-back-btn {
   position: absolute; top: 16px; left: 16px; z-index: 10;
   display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(8px);
-  color: var(--text2); font-size: 13px; font-weight: 600;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px); color: var(--text2);
+  font-size: 13px; font-weight: 600;
   padding: 7px 14px; border-radius: 50px;
   text-decoration: none; transition: all 0.2s;
 }
-.rd-back-btn:hover { color: var(--text); background: rgba(0,0,0,0.7); }
+.rd-back-btn:hover { color: var(--text); background: rgba(0,0,0,0.75); }
 
-/* ── POSTER CENTER ── */
-.rd-poster-center {
-  display: flex; justify-content: center;
-  margin-top: -110px;
+/* ══════════════════════════════════════════
+   HERO BODY  (poster left | info right — desktop)
+══════════════════════════════════════════ */
+.rd-hero-body {
+  display: flex;
+  gap: 0;
+  padding: 0 16px;
+  margin-top: -130px;
   position: relative; z-index: 2;
-  margin-bottom: 20px;
+  align-items: flex-end;
 }
-.rd-poster-img {
-  width: 150px;
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  border: 3px solid rgba(255,255,255,0.08);
-  aspect-ratio: 2/3; object-fit: cover;
-  display: block;
+@media(min-width:768px) {
+  .rd-hero-body { margin-top: -160px; padding: 0 28px; align-items: flex-end; }
 }
 
-/* ── TITLE BLOCK ── */
-.rd-title-block {
-  text-align: center;
-  padding: 0 16px 20px;
+/* Poster */
+.rd-poster-col { flex-shrink: 0; }
+.rd-poster-img {
+  display: block;
+  width: 130px;
+  border-radius: 12px;
+  box-shadow: 0 16px 50px rgba(0,0,0,0.85);
+  border: 2px solid rgba(255,255,255,0.08);
+  aspect-ratio: 2/3; object-fit: cover;
 }
+@media(min-width:768px) { .rd-poster-img { width: 180px; border-radius: 14px; } }
+
+/* Info col */
+.rd-info-col {
+  flex: 1; min-width: 0;
+  padding: 0 0 12px 16px;
+}
+@media(min-width:768px) { .rd-info-col { padding: 0 0 16px 24px; } }
+
 .rd-title {
   font-family: var(--font-head);
-  font-size: clamp(28px, 7vw, 48px);
-  letter-spacing: 2px;
-  color: var(--text);
-  line-height: 1.1;
-  margin-bottom: 6px;
+  font-size: clamp(22px, 4vw, 42px);
+  letter-spacing: 1.5px; color: var(--text);
+  line-height: 1.1; margin-bottom: 4px;
 }
-.rd-title-alt {
-  font-size: 14px; color: var(--text3);
-  margin-bottom: 16px;
-}
+.rd-title-alt { font-size: 13px; color: var(--text3); margin-bottom: 12px; }
 
-/* ── STATS PILLS ROW ── */
 .rd-stats-row {
-  display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 8px; margin-bottom: 14px;
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
 }
 .rd-stat {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 12px; border-radius: 50px;
-  font-size: 13px; font-weight: 600;
-  background: var(--card); border: 1px solid var(--border);
+  padding: 5px 11px; border-radius: 50px;
+  font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
   color: var(--text2);
 }
-.rd-stat.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
-.rd-stat.votes { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
-.rd-stat.members { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+.rd-stat i { font-size: 11px; }
+.rd-stat.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.07); }
+.rd-stat.votes { color: #f87171; border-color: rgba(248,113,113,0.25); background: rgba(248,113,113,0.07); }
+.rd-stat.members { color: #60a5fa; border-color: rgba(96,165,250,0.25); background: rgba(96,165,250,0.07); }
 
-/* ── GENRES ── */
 .rd-genres {
-  display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 8px; margin-bottom: 20px; padding: 0 16px;
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
 }
 .rd-genre-tag {
-  padding: 5px 14px; border-radius: 50px;
-  font-size: 13px; font-weight: 600;
+  padding: 4px 12px; border-radius: 50px;
+  font-size: 12px; font-weight: 600;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text2);
-  transition: all 0.15s;
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--text2); transition: all 0.15s;
 }
 .rd-genre-tag:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── ACTION BUTTONS ── */
-.rd-actions {
-  display: flex; justify-content: center; gap: 10px;
-  padding: 0 16px 24px; flex-wrap: wrap;
-}
+.rd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .rd-btn-watch {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 11px 24px; background: var(--accent); color: #fff;
-  border-radius: var(--radius); font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; background: var(--accent); color: #fff;
+  border-radius: var(--radius); font-size: 13px; font-weight: 700;
   font-family: var(--font-body); text-decoration: none;
-  transition: opacity 0.2s, transform 0.15s;
-  border: none; cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s; border: none; cursor: pointer;
 }
 .rd-btn-watch:hover { opacity: 0.88; transform: translateY(-1px); }
 .rd-btn-secondary {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 11px 18px;
-  background: rgba(255,255,255,0.05);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 16px; background: rgba(255,255,255,0.05);
   border: 1px solid var(--border); color: var(--text2);
-  border-radius: var(--radius); font-size: 14px; font-weight: 600;
+  border-radius: var(--radius); font-size: 13px; font-weight: 600;
   font-family: var(--font-body); text-decoration: none;
   transition: all 0.2s; cursor: pointer;
 }
 .rd-btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text); }
 
-/* ── DIVIDER ── */
-.rd-divider { height: 1px; background: var(--border); margin: 0 16px 20px; }
+/* ══════════════════════════════════════════
+   MAIN CONTENT LAYOUT (desktop: info left, sidebar right)
+══════════════════════════════════════════ */
+.rd-content {
+  display: flex; flex-direction: column;
+  gap: 16px; padding: 20px 16px 0;
+}
+@media(min-width:768px) {
+  .rd-content { flex-direction: row; align-items: flex-start; padding: 24px 28px 0; gap: 20px; }
+  .rd-main    { flex: 1; min-width: 0; }
+  .rd-sidebar { width: 280px; flex-shrink: 0; }
+}
 
-/* ── SECTIONS ── */
-.rd-section { padding: 0 16px; margin-bottom: 24px; }
+/* ══════════════════════════════════════════
+   SECTIONS
+══════════════════════════════════════════ */
+.rd-section { margin-bottom: 20px; }
 .rd-section-head {
   display: flex; align-items: center; gap: 8px;
-  margin-bottom: 14px; padding-bottom: 10px;
+  margin-bottom: 12px; padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
 .rd-section-title {
   font-family: var(--font-head);
-  font-size: 22px; letter-spacing: 1.5px;
-  color: var(--accent);
+  font-size: 20px; letter-spacing: 1.5px; color: var(--accent);
 }
 .rd-section-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  animation: rdFadeUp 0.4s ease both;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  animation: rdFadeUp 0.35s ease both;
 }
-@keyframes rdFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+@keyframes rdFadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
 
-/* ── INFORMATION GRID ── */
+/* ══════════════════════════════════════════
+   INFORMATION GRID
+══════════════════════════════════════════ */
 .rd-info-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
 }
+@media(max-width:480px) { .rd-info-grid { grid-template-columns: 1fr; } }
 .rd-info-item {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 0; border-bottom: 1px solid var(--border);
 }
 .rd-info-item:nth-last-child(-n+2) { border-bottom: none; }
+@media(max-width:480px) {
+  .rd-info-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .rd-info-item:last-child { border-bottom: none; }
+}
 .rd-info-label {
   font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--text3); font-weight: 700; margin-bottom: 5px;
+  color: var(--text3); font-weight: 700; margin-bottom: 4px;
 }
-.rd-info-value { font-size: 14px; color: var(--text2); font-weight: 500; }
+.rd-info-value { font-size: 13px; color: var(--text2); font-weight: 500; }
 .rd-info-value.green { color: #4caf7d; }
 .rd-info-value a { color: var(--accent); text-decoration: none; }
 
-/* ── ALT TITLES ── */
-.rd-alt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Studios tag */
+.rd-studio-tag {
+  display: inline-block; font-size: 11px;
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); margin: 2px 2px 0 0;
+}
+.rd-more-tag {
+  display: inline-block; font-size: 11px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.25);
+  color: var(--accent); margin: 2px 0 0;
+}
+
+/* ══════════════════════════════════════════
+   ALT TITLES
+══════════════════════════════════════════ */
+.rd-alt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .rd-alt-chip {
-  padding: 5px 12px; border-radius: 8px;
+  padding: 4px 11px; border-radius: 8px;
   font-size: 12px; color: var(--text2);
   background: var(--bg2); border: 1px solid var(--border);
 }
 
-/* ── RANKING ── */
+/* ══════════════════════════════════════════
+   RANKING
+══════════════════════════════════════════ */
 .rd-rank-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .rd-rank-item {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 10px 14px;
-  font-size: 13px;
+  border-radius: var(--radius); padding: 9px 14px; font-size: 13px;
 }
-.rd-rank-trophy { font-size: 16px; }
+.rd-rank-trophy { font-size: 15px; }
 .rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
-.rd-rank-desc { color: var(--text3); font-size: 12px; }
+.rd-rank-desc { color: var(--text3); font-size: 11px; }
 
-/* ── SYNOPSIS ── */
+/* ══════════════════════════════════════════
+   SYNOPSIS
+══════════════════════════════════════════ */
 .rd-synopsis {
   font-size: 14px; color: var(--text2); line-height: 1.85;
   position: relative; overflow: hidden;
@@ -208,116 +240,145 @@
   margin-top: 14px; flex-wrap: wrap;
 }
 .rd-read-more {
-  color: var(--text3); font-size: 13px; font-weight: 700;
-  cursor: pointer; background: none; border: none;
-  padding: 0; font-family: var(--font-body);
+  color: var(--text3); font-size: 12px; font-weight: 700;
+  cursor: pointer; background: none; border: none; padding: 0;
+  font-family: var(--font-body);
   display: inline-flex; align-items: center; gap: 4px;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  transition: color 0.15s;
+  letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.15s;
 }
 .rd-read-more:hover { color: var(--text2); }
 .rd-btn-translate {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: var(--radius);
-  background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3);
+  padding: 6px 13px; border-radius: var(--radius);
+  background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.3);
   color: var(--accent); font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: var(--font-body);
-  transition: all 0.15s;
+  cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
 }
 .rd-btn-translate:hover { background: rgba(230,57,70,0.2); }
 .rd-btn-copy {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: var(--radius);
+  padding: 6px 13px; border-radius: var(--radius);
   background: rgba(255,255,255,0.05); border: 1px solid var(--border);
   color: var(--text2); font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: var(--font-body);
-  transition: all 0.15s;
+  cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
 }
 .rd-btn-copy:hover { background: rgba(255,255,255,0.1); }
 
-/* ── CHARACTERS & STAFF — horizontal scroll 2 rows ── */
-.rd-hscroll-wrap {
+/* ══════════════════════════════════════════
+   CHARACTERS — horizontal scroll, 2 rows (mobile) / 4-col grid (desktop)
+══════════════════════════════════════════ */
+/* Mobile: 2-row horizontal scroll */
+.rd-chars-scroll {
   display: grid;
-  grid-template-columns: repeat(2, calc(50% - 8px));
-  gap: 10px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  gap: 8px;
   overflow-x: auto;
   padding-bottom: 8px;
   scrollbar-width: none;
-  /* force 2-column layout that scrolls */
-  grid-auto-flow: column;
-  grid-template-rows: repeat(2, auto);
 }
-.rd-hscroll-wrap::-webkit-scrollbar { display: none; }
+.rd-chars-scroll::-webkit-scrollbar { display: none; }
+
+/* Desktop: 4-col normal grid */
+@media(min-width:768px) {
+  .rd-chars-scroll {
+    display: grid;
+    grid-auto-flow: unset;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: unset;
+    overflow-x: unset;
+  }
+}
 
 .rd-char-card {
   display: flex; gap: 0;
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden;
-  min-width: 220px;
+  min-width: 200px;
   transition: border-color 0.2s;
 }
+@media(min-width:768px) { .rd-char-card { min-width: unset; } }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
 .rd-char-img {
-  width: 72px; height: 96px;
-  object-fit: cover; flex-shrink: 0;
-  background: var(--border);
+  width: 64px; height: 86px;
+  object-fit: cover; flex-shrink: 0; background: var(--border);
 }
 .rd-char-body {
-  flex: 1; min-width: 0; padding: 10px 12px;
+  flex: 1; min-width: 0; padding: 8px 10px;
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .rd-char-name {
-  font-size: 13px; font-weight: 700; color: var(--text);
+  font-size: 12px; font-weight: 700; color: var(--text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rd-char-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.rd-va-row {
-  display: flex; align-items: center; gap: 6px; margin-top: 8px;
-}
+.rd-char-role { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.rd-va-row { display: flex; align-items: center; gap: 5px; margin-top: 7px; }
 .rd-va-img {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%;
   object-fit: cover; flex-shrink: 0; background: var(--border);
 }
 .rd-va-info { min-width: 0; }
 .rd-va-name {
-  font-size: 11px; font-weight: 600; color: var(--text2);
+  font-size: 10px; font-weight: 600; color: var(--text2);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rd-va-lang { font-size: 9px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
+.rd-va-lang { font-size: 9px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; }
 
-/* ── STAFF (same horizontal scroll) ── */
+/* ══════════════════════════════════════════
+   STAFF — same layout as chars
+══════════════════════════════════════════ */
+.rd-staff-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.rd-staff-scroll::-webkit-scrollbar { display: none; }
+@media(min-width:768px) {
+  .rd-staff-scroll {
+    display: grid;
+    grid-auto-flow: unset;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: unset;
+    overflow-x: unset;
+  }
+}
 .rd-staff-card {
   display: flex; gap: 10px; align-items: center;
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 12px 14px;
-  min-width: 220px;
-  transition: border-color 0.2s;
+  border-radius: var(--radius); padding: 10px 12px;
+  min-width: 200px; transition: border-color 0.2s;
 }
+@media(min-width:768px) { .rd-staff-card { min-width: unset; } }
 .rd-staff-card:hover { border-color: rgba(230,57,70,0.2); }
 .rd-staff-img {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   object-fit: cover; flex-shrink: 0; background: var(--border);
 }
-.rd-staff-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.rd-staff-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .rd-staff-noimg {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: var(--bg3); border: 1px solid var(--border);
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 9px; color: var(--text3); font-weight: 700; letter-spacing: 0.03em; text-align: center;
+  font-size: 9px; color: var(--text3); font-weight: 700; text-align: center;
 }
+.rd-staff-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.rd-staff-role { font-size: 10px; color: var(--text3); margin-top: 2px; }
 
-/* ── TRAILER ── */
+/* ══════════════════════════════════════════
+   TRAILER
+══════════════════════════════════════════ */
 .rd-trailer-wrap {
   position: relative; padding-bottom: 56.25%;
-  border-radius: var(--radius); overflow: hidden;
-  background: var(--bg);
+  border-radius: var(--radius); overflow: hidden; background: var(--bg);
 }
-.rd-trailer-wrap iframe {
-  position: absolute; inset: 0; width: 100%; height: 100%; border: none;
-}
+.rd-trailer-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
 
-/* ── LOADING / ERROR ── */
+/* ══════════════════════════════════════════
+   LOADING / ERROR
+══════════════════════════════════════════ */
 .rd-loading {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; padding: 100px 20px; gap: 14px; color: var(--text3);
@@ -330,14 +391,6 @@
 @keyframes rdSpin { to { transform: rotate(360deg); } }
 .rd-error { text-align: center; padding: 80px 20px; color: var(--text3); }
 .rd-error h3 { color: var(--text2); margin-bottom: 8px; }
-
-@media(max-width: 480px) {
-
-  .rd-info-grid { grid-template-columns: 1fr; }
-  .rd-info-item:last-child { border-bottom: none; }
-  .rd-info-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
-  .rd-info-item:last-child { border-bottom: none; }
-}
 </style>
 {% endblock %}
 
@@ -361,254 +414,273 @@
     return;
   }
 
-  let allChars = [], allStaff = [];
   try {
     const [resDetail, resChars, resStaff] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
       fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`),
       fetch(`https://api.jikan.moe/v4/anime/${malId}/staff`),
     ]);
-
-    const { data: a }      = await resDetail.json();
-    const { data: chars }  = await resChars.json();
-    const { data: staff }  = await resStaff.json();
+    const { data: a }     = await resDetail.json();
+    const { data: chars } = await resChars.json();
+    const { data: staff } = await resStaff.json();
 
     if (!a) throw new Error('Not found');
     document.title = `${a.title} — Animeku.id`;
 
-    const poster   = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
-    const genres   = [...(a.genres||[]), ...(a.themes||[])].slice(0, 8);
-    const altTitles = (a.titles||[]).filter(t => t.type !== 'Default' && t.title !== a.title).map(t => t.title).filter(Boolean).slice(0, 6);
+    const poster    = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
+    const genres    = [...(a.genres||[]), ...(a.themes||[])].slice(0, 8);
+    const altTitles = (a.titles||[]).filter(t => t.type !== 'Default' && t.title !== a.title).map(t => t.title).filter(Boolean).slice(0, 8);
+    const allChars  = [...(chars||[])].sort((x,y)=>(x.role==='Main'?0:1)-(y.role==='Main'?0:1)).slice(0,40);
+    const allStaff  = (staff||[]).slice(0, 24);
+    const studios   = (a.studios||[]);
 
-    // Sort chars: Main first
-    allChars = [...(chars||[])].sort((x,y) => (x.role==='Main'?0:1)-(y.role==='Main'?0:1));
-    allStaff = (staff||[]).slice(0, 20);
-
-    function renderChars() {
-      document.getElementById('rdCharsGrid').innerHTML = allChars.slice(0, 40).map(c => {
-        const img   = c.character?.images?.jpg?.image_url || '';
-        const va    = (c.voice_actors||[]).find(v => v.language === 'Japanese');
-        const vaImg = va?.person?.images?.jpg?.image_url || '';
-        const vaName = va?.person?.name || '';
-        return `<div class="rd-char-card">
-          <img class="rd-char-img" src="${img||'/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
-          <div class="rd-char-body">
-            <div>
-              <div class="rd-char-name">${esc(c.character?.name||'')}</div>
-              <div class="rd-char-role">${esc(c.role||'')}</div>
-            </div>
-            ${vaName ? `<div class="rd-va-row">
-              ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
-              <div class="rd-va-info">
-                <div class="rd-va-name">${esc(vaName)}</div>
-                <div class="rd-va-lang">Japanese</div>
-              </div>
-            </div>` : ''}
-          </div>
-        </div>`;
-      }).join('');
+    /* ── helpers ── */
+    function infoItem(label, val) {
+      return `<div class="rd-info-item"><div class="rd-info-label">${label}</div><div class="rd-info-value">${val}</div></div>`;
+    }
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    /* ── chars HTML ── */
+    const charsHTML = allChars.map(c => {
+      const img   = c.character?.images?.jpg?.image_url || '';
+      const va    = (c.voice_actors||[]).find(v => v.language === 'Japanese');
+      const vaImg = va?.person?.images?.jpg?.image_url || '';
+      const vaName = va?.person?.name || '';
+      return `<div class="rd-char-card">
+        <img class="rd-char-img" src="${img||'/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+        <div class="rd-char-body">
+          <div>
+            <div class="rd-char-name">${esc(c.character?.name||'')}</div>
+            <div class="rd-char-role">${esc(c.role||'')}</div>
+          </div>
+          ${vaName ? `<div class="rd-va-row">
+            ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
+            <div class="rd-va-info">
+              <div class="rd-va-name">${esc(vaName)}</div>
+              <div class="rd-va-lang">Japanese</div>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    /* ── staff HTML ── */
+    const staffHTML = allStaff.map(s => {
+      const img   = s.person?.images?.jpg?.image_url || '';
+      const roles = (s.positions||[]).join(', ');
+      return `<div class="rd-staff-card">
+        ${img
+          ? `<img class="rd-staff-img" src="${img}" alt="" onerror="this.style.display='none'" loading="lazy">`
+          : `<div class="rd-staff-noimg">NO<br>IMG</div>`}
+        <div>
+          <div class="rd-staff-name">${esc(s.person?.name||'')}</div>
+          <div class="rd-staff-role">${esc(roles)}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    /* ── studios with +more tag ── */
+    const studioTags = studios.length
+      ? studios.slice(0,3).map(s=>`<span class="rd-studio-tag">${esc(s.name)}</span>`).join('')
+        + (studios.length > 3 ? `<span class="rd-more-tag">+${studios.length-3} more</span>` : '')
+      : '—';
+
+    /* ── render ── */
     page.innerHTML = `
       <!-- Backdrop -->
       <div class="rd-backdrop-wrap">
         <img class="rd-backdrop-img" src="${poster}" alt="">
         <div class="rd-backdrop-grad"></div>
         <a href="javascript:history.back()" class="rd-back-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          Kembali
+          <i class="fa-solid fa-arrow-left"></i> Kembali
         </a>
       </div>
 
-      <!-- Poster -->
-      <div class="rd-poster-center">
-        <img class="rd-poster-img" src="${poster}" alt="${esc(a.title)}" onerror="this.src='/static/img/placeholder.svg'">
-      </div>
-
-      <!-- Title -->
-      <div class="rd-title-block">
-        <h1 class="rd-title">${esc(a.title)}</h1>
-        ${a.title_english && a.title_english !== a.title ? `<div class="rd-title-alt">${esc(a.title_english)}</div>` : ''}
-
-        <div class="rd-stats-row">
-          ${a.score    ? `<span class="rd-stat score"><i class="fa-solid fa-star"></i> Avg: ${a.score}</span>` : ''}
-          ${a.scored_by? `<span class="rd-stat votes"><i class="fa-solid fa-heart"></i> ${a.scored_by.toLocaleString()}</span>` : ''}
-          ${a.members  ? `<span class="rd-stat members"><i class="fa-solid fa-chart-bar"></i> ${a.members.toLocaleString()}</span>` : ''}
-          ${a.type     ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
-          ${a.episodes ? `<span class="rd-stat"><i class="fa-solid fa-play"></i> ${a.episodes} Eps</span>` : ''}
-          ${a.duration ? `<span class="rd-stat"><i class="fa-regular fa-clock"></i> ${a.duration.replace(' per ep','')}</span>` : ''}
+      <!-- Hero body: poster + title/stats -->
+      <div class="rd-hero-body">
+        <div class="rd-poster-col">
+          <img class="rd-poster-img" src="${poster}" alt="${esc(a.title)}" onerror="this.src='/static/img/placeholder.svg'">
         </div>
+        <div class="rd-info-col">
+          <h1 class="rd-title">${esc(a.title)}</h1>
+          ${a.title_english && a.title_english !== a.title ? `<div class="rd-title-alt">${esc(a.title_english)}</div>` : ''}
 
-        <div class="rd-genres">
-          ${genres.map(g=>`<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
-        </div>
-
-        <div class="rd-actions">
-          <a href="/search?q=${encodeURIComponent(a.title)}" class="rd-btn-watch">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-            Tonton di Animeku
-          </a>
-          <button class="rd-btn-secondary" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin!'))">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            Salin Link
-          </button>
-        </div>
-      </div>
-
-      <div class="rd-divider"></div>
-
-      <!-- Information -->
-      <div class="rd-section" style="animation-delay:0.05s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <div class="rd-section-title">Information</div>
-        </div>
-        <div class="rd-section-card">
-          <div class="rd-info-grid">
-            ${a.status   ? infoItem('Status', `<span class="${a.airing?'green':''}">${esc(a.status)}</span>`) : ''}
-            ${a.season && a.year ? infoItem('Season', `${esc(a.season[0].toUpperCase()+a.season.slice(1))} ${a.year}`) : (a.year ? infoItem('Year', a.year) : '')}
-            ${a.source   ? infoItem('Source', esc(a.source)) : ''}
-            ${a.country  ? infoItem('Country', esc(a.country)) : infoItem('Country','Japan')}
-            ${a.studios?.length ? infoItem('Studios', a.studios.map(s=>esc(s.name)).join(', ')) : ''}
-            ${a.rating   ? infoItem('Rating', esc(a.rating)) : ''}
-            ${a.aired?.string ? infoItem('Tayang', esc(a.aired.string)) : ''}
-            ${a.broadcast?.string ? infoItem('Jadwal', esc(a.broadcast.string)) : ''}
+          <div class="rd-stats-row">
+            ${a.score     ? `<span class="rd-stat score"><i class="fa-solid fa-star"></i> Avg: ${a.score}</span>` : ''}
+            ${a.scored_by ? `<span class="rd-stat votes"><i class="fa-solid fa-heart"></i> ${a.scored_by.toLocaleString()}</span>` : ''}
+            ${a.members   ? `<span class="rd-stat members"><i class="fa-solid fa-chart-bar"></i> ${a.members.toLocaleString()}</span>` : ''}
+            ${a.type      ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
+            ${a.episodes  ? `<span class="rd-stat"><i class="fa-solid fa-play"></i> ${a.episodes} Eps</span>` : ''}
+            ${a.duration  ? `<span class="rd-stat"><i class="fa-regular fa-clock"></i> ${a.duration.replace(' per ep','')}</span>` : ''}
           </div>
-        </div>
-      </div>
 
-      <!-- Alt Titles -->
-      ${altTitles.length ? `
-      <div class="rd-section" style="animation-delay:0.08s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
-          <div class="rd-section-title">Alternative Titles</div>
-        </div>
-        <div class="rd-alt-chips">
-          ${altTitles.map(t=>`<span class="rd-alt-chip">${esc(t)}</span>`).join('')}
-        </div>
-      </div>` : ''}
-
-      <!-- Ranking -->
-      ${(a.rank||a.popularity) ? `
-      <div class="rd-section" style="animation-delay:0.1s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <div class="rd-section-title">Ranking</div>
-        </div>
-        <div class="rd-rank-grid">
-          ${a.rank       ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-trophy" style="color:#fbbf24"></i></span><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-desc">Highest Rated</span></div>` : ''}
-          ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-fire" style="color:#f97316"></i></span><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-desc">Most Popular</span></div>` : ''}
-          ${a.favorites  ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-heart" style="color:#f43f5e"></i></span><span class="rd-rank-num">${(a.favorites/1000).toFixed(1)}k</span><span class="rd-rank-desc">Favorit</span></div>` : ''}
-          ${a.members    ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-users" style="color:#60a5fa"></i></span><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-desc">Members</span></div>` : ''}
-        </div>
-      </div>` : ''}
-
-      <!-- Synopsis -->
-      ${a.synopsis ? `
-      <div class="rd-section" style="animation-delay:0.12s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <div class="rd-section-title">Synopsis</div>
-        </div>
-        <div class="rd-section-card">
-          <div class="rd-synopsis" id="rdSynopsis">
-            ${esc(a.synopsis).replace('[Written by MAL Rewrite]','')}
-            <div class="rd-synopsis-fade"></div>
+          <div class="rd-genres">
+            ${genres.map(g=>`<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
           </div>
-          <div class="rd-syn-actions">
-            <button class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
-              READ MORE
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <button class="rd-btn-translate" id="rdTransBtn" onclick="rdTranslate()">
-              <i class="fa-solid fa-language"></i> Terjemahkan (ID)
-            </button>
-            <button class="rd-btn-copy" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin!'))">
+
+          <div class="rd-actions">
+            <a href="/search?q=${encodeURIComponent(a.title)}" class="rd-btn-watch">
+              <i class="fa-solid fa-play"></i> Tonton di Animeku
+            </a>
+            <button class="rd-btn-secondary" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin!'))">
               <i class="fa-solid fa-link"></i> Salin Link
             </button>
           </div>
         </div>
-      </div>` : ''}
+      </div>
 
-      <!-- Characters -->
-      ${allChars.length ? `
-      <div class="rd-section" style="animation-delay:0.14s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <div class="rd-section-title">Characters</div>
-        </div>
-        <div class="rd-hscroll-wrap" id="rdCharsGrid"></div>
-      </div>` : ''}
+      <!-- Main content -->
+      <div class="rd-content">
+        <!-- Left / Main -->
+        <div class="rd-main">
 
-      <!-- Staff -->
-      ${allStaff.length ? `
-      <div class="rd-section" style="animation-delay:0.16s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-          <div class="rd-section-title">Staff</div>
-        </div>
-        <div class="rd-hscroll-wrap">
-          ${allStaff.map(s => {
-            const img = s.person?.images?.jpg?.image_url || '';
-            const roles = (s.positions||[]).join(', ');
-            return `<div class="rd-staff-card">
-              ${img
-                ? `<img class="rd-staff-img" src="${img}" alt="" onerror="this.style.display='none'" loading="lazy">`
-                : `<div class="rd-staff-noimg">NO<br>IMG</div>`}
-              <div>
-                <div class="rd-staff-name">${esc(s.person?.name||'')}</div>
-                <div class="rd-staff-role">${esc(roles)}</div>
+          <!-- Information -->
+          <div class="rd-section" style="animation-delay:0.05s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-shield-halved" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Information</div>
+            </div>
+            <div class="rd-section-card">
+              <div class="rd-info-grid">
+                ${a.status    ? infoItem('Status', `<span class="${a.airing?'green':''}">${esc(a.status)}</span>`) : ''}
+                ${a.season && a.year ? infoItem('Season', `${esc(a.season[0].toUpperCase()+a.season.slice(1))} ${a.year}`) : (a.year ? infoItem('Year', a.year) : '')}
+                ${a.source    ? infoItem('Source', esc(a.source)) : ''}
+                ${infoItem('Country', 'Japan')}
+                ${studios.length ? infoItem('Studios', studioTags) : ''}
+                ${a.rating    ? infoItem('Rating', esc(a.rating)) : ''}
+                ${a.aired?.string ? infoItem('Aired', esc(a.aired.string)) : ''}
+                ${a.score     ? infoItem('Mean Score', `${Math.round(a.score*10)}%`) : ''}
               </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>` : ''}
-
-      <!-- Trailer -->
-      ${a.trailer?.embed_url ? `
-      <div class="rd-section" style="animation-delay:0.18s">
-        <div class="rd-section-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M5 3l14 9-14 9V3z"/></svg>
-          <div class="rd-section-title">Trailer</div>
-        </div>
-        <div class="rd-section-card">
-          <div class="rd-trailer-wrap">
-            <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+            </div>
           </div>
-        </div>
-      </div>` : ''}
+
+          <!-- Alt Titles -->
+          ${altTitles.length ? `
+          <div class="rd-section" style="animation-delay:0.08s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-list-ul" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Alternative Titles</div>
+            </div>
+            <div class="rd-alt-chips">
+              ${altTitles.map(t=>`<span class="rd-alt-chip">${esc(t)}</span>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <!-- Ranking -->
+          ${(a.rank||a.popularity) ? `
+          <div class="rd-section" style="animation-delay:0.1s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-ranking-star" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Ranking</div>
+            </div>
+            <div class="rd-rank-grid">
+              ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-fire" style="color:#f97316"></i></span><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-desc">Most Popular</span></div>` : ''}
+              ${a.rank       ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-trophy" style="color:#fbbf24"></i></span><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-desc">Highest Rated</span></div>` : ''}
+              ${a.favorites  ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-heart" style="color:#f43f5e"></i></span><span class="rd-rank-num">${(a.favorites/1000).toFixed(1)}k</span><span class="rd-rank-desc">Favorit</span></div>` : ''}
+              ${a.members    ? `<div class="rd-rank-item"><span class="rd-rank-trophy"><i class="fa-solid fa-users" style="color:#60a5fa"></i></span><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-desc">Members</span></div>` : ''}
+            </div>
+          </div>` : ''}
+
+          <!-- Synopsis -->
+          ${a.synopsis ? `
+          <div class="rd-section" style="animation-delay:0.12s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-file-lines" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Synopsis</div>
+            </div>
+            <div class="rd-section-card">
+              <div class="rd-synopsis" id="rdSynopsis">
+                ${esc(a.synopsis).replace('[Written by MAL Rewrite]','')}
+                <div class="rd-synopsis-fade"></div>
+              </div>
+              <div class="rd-syn-actions">
+                <button class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
+                  READ MORE <i class="fa-solid fa-chevron-down" id="rdSynArrow" style="font-size:10px"></i>
+                </button>
+                <button class="rd-btn-translate" id="rdTransBtn" onclick="rdTranslate()">
+                  <i class="fa-solid fa-language"></i> Terjemahkan (ID)
+                </button>
+                <button class="rd-btn-copy" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin!'))">
+                  <i class="fa-solid fa-link"></i> Salin Link
+                </button>
+              </div>
+            </div>
+          </div>` : ''}
+
+          <!-- Characters -->
+          ${allChars.length ? `
+          <div class="rd-section" style="animation-delay:0.14s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-user-group" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Characters</div>
+            </div>
+            <div class="rd-chars-scroll">${charsHTML}</div>
+          </div>` : ''}
+
+          <!-- Staff -->
+          ${allStaff.length ? `
+          <div class="rd-section" style="animation-delay:0.16s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-person-chalkboard" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Staff</div>
+            </div>
+            <div class="rd-staff-scroll">${staffHTML}</div>
+          </div>` : ''}
+
+        </div><!-- /rd-main -->
+
+        <!-- Right / Sidebar (desktop only) -->
+        <div class="rd-sidebar">
+
+          <!-- Trailer -->
+          ${a.trailer?.embed_url ? `
+          <div class="rd-section" style="animation-delay:0.18s">
+            <div class="rd-section-head">
+              <i class="fa-solid fa-film" style="color:var(--accent)"></i>
+              <div class="rd-section-title">Trailer</div>
+            </div>
+            <div class="rd-trailer-wrap">
+              <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+            </div>
+          </div>` : ''}
+
+          <!-- Quick stats card -->
+          <div class="rd-section-card" style="animation-delay:0.2s">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              ${a.score      ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Score</span><span style="color:#fbbf24;font-weight:700"><i class="fa-solid fa-star"></i> ${a.score}</span></div>` : ''}
+              ${a.rank       ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Ranked</span><span style="color:var(--text2);font-weight:700">#${a.rank}</span></div>` : ''}
+              ${a.popularity ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Popularity</span><span style="color:var(--text2);font-weight:700">#${a.popularity}</span></div>` : ''}
+              ${a.members    ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Members</span><span style="color:var(--text2);font-weight:700">${a.members.toLocaleString()}</span></div>` : ''}
+              ${a.favorites  ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Favorites</span><span style="color:var(--text2);font-weight:700">${a.favorites.toLocaleString()}</span></div>` : ''}
+              ${a.episodes   ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Episodes</span><span style="color:var(--text2);font-weight:700">${a.episodes}</span></div>` : ''}
+              ${a.type       ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Type</span><span style="color:var(--text2);font-weight:700">${esc(a.type)}</span></div>` : ''}
+              ${a.status     ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text3)">Status</span><span style="color:${a.airing?'#4caf7d':'var(--text2)'};font-weight:700">${esc(a.status)}</span></div>` : ''}
+            </div>
+          </div>
+
+        </div><!-- /rd-sidebar -->
+      </div><!-- /rd-content -->
     `;
-
-    // Render chars
-    if (allChars.length) renderChars();
-
 
   } catch(e) {
     document.getElementById('rdLoading')?.remove();
     page.innerHTML += `<div class="rd-error"><h3>Gagal memuat data</h3><p style="margin-bottom:14px">Cek koneksi internet kamu.</p><a href="/rekomendasi" style="color:var(--accent)">← Kembali</a></div>`;
   }
-
-  // ── Helpers ──
-  function infoItem(label, val) {
-    return `<div class="rd-info-item"><div class="rd-info-label">${label}</div><div class="rd-info-value">${val}</div></div>`;
-  }
-  function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
 })();
 
-// ── Syn toggle ──
+/* ── Synopsis toggle ── */
 function rdToggleSyn() {
-  const el  = document.getElementById('rdSynopsis');
-  const arr = document.getElementById('rdSynArrow');
-  const btn = document.getElementById('rdReadMore');
+  const el   = document.getElementById('rdSynopsis');
+  const icon = document.getElementById('rdSynArrow');
+  const btn  = document.getElementById('rdReadMore');
   const open = el.classList.toggle('expanded');
-  arr.style.transform = open ? 'rotate(180deg)' : '';
+  icon.style.transform = open ? 'rotate(180deg)' : '';
   btn.childNodes[0].textContent = open ? 'SHOW LESS ' : 'READ MORE ';
 }
 
-// ── Translate ──
+/* ── Translate ── */
 async function rdTranslate() {
   const el  = document.getElementById('rdSynopsis');
   const btn = document.getElementById('rdTransBtn');
@@ -616,8 +688,7 @@ async function rdTranslate() {
   if (btn.dataset.translated === '1') {
     btn.dataset.translated = '0';
     btn.innerHTML = '<i class="fa-solid fa-language"></i> Terjemahkan (ID)';
-    location.reload();
-    return;
+    location.reload(); return;
   }
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menerjemahkan...';
   try {
@@ -630,18 +701,19 @@ async function rdTranslate() {
     if (fade) el.appendChild(fade);
     btn.dataset.translated = '1';
     btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Tampilkan Asli';
-  } catch { btn.innerHTML = '<i class="fa-solid fa-language"></i> Terjemahkan (ID)'; }
+  } catch {
+    btn.innerHTML = '<i class="fa-solid fa-language"></i> Terjemahkan (ID)';
+  }
 }
 
-
-// ── Toast ──
+/* ── Toast ── */
 function rdToast(msg) {
   if (window.showToast) { showToast(msg, 'success'); return; }
   const t = document.createElement('div');
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;z-index:9999;white-space:nowrap;';
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;z-index:9999;white-space:nowrap;pointer-events:none;';
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
+  setTimeout(()=>t.remove(), 2500);
 }
 </script>
 {% endblock %}
