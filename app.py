@@ -2080,5 +2080,9 @@ def trakteer_latest():
 def quiz():
     return render_template('quiz.html')
 
+@app.route('/gacha')
+def gacha():
+    return render_template('gacha.html')
+
 if __name__ == "__main__":
     app.run(debug=True)
