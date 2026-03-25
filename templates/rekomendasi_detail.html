@@ -206,37 +206,44 @@
 
 /* Characters */
 .rd-chars-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
 }
-@media(min-width:600px) { .rd-chars-grid { grid-template-columns: repeat(3, 1fr); } }
+.rd-chars-grid::-webkit-scrollbar { display: none; }
 
 .rd-char-card {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px;
-  align-items: center;
+  padding: 10px 8px;
   transition: border-color 0.2s;
+  flex-shrink: 0;
+  width: 100px;
+  text-align: center;
 }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
 .rd-char-img {
-  width: 44px;
-  height: 56px;
+  width: 64px;
+  height: 80px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   flex-shrink: 0;
   background: var(--border);
 }
-.rd-char-info { flex: 1; min-width: 0; }
-.rd-char-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rd-char-role { font-size: 11px; color: var(--text3); }
-.rd-va-wrap { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
-.rd-va-img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; background: var(--border); }
-.rd-va-name { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rd-char-info { width: 100%; min-width: 0; }
+.rd-char-name { font-size: 11px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
+.rd-char-role { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.rd-va-wrap { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
+.rd-va-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; background: var(--border); flex-shrink: 0; }
+.rd-va-name { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
 
 /* Trailer */
 .rd-trailer-wrap {
@@ -312,13 +319,15 @@
 
   try {
     // Fetch paralel: detail + characters
-    const [resDetail, resChars] = await Promise.all([
+    const [resDetail, resChars, resStaff] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
-      fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`)
+      fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`),
+      fetch(`https://api.jikan.moe/v4/anime/${malId}/staff`)
     ]);
 
     const { data: a } = await resDetail.json();
     const { data: chars } = await resChars.json();
+    const { data: staff } = await resStaff.json();
 
     if (!a) throw new Error('Not found');
 
@@ -327,9 +336,9 @@
 
     const poster  = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
     const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
-    const mainChars = (chars || []).filter(c => c.role === 'Main').slice(0, 6);
-    const supChars  = (chars || []).filter(c => c.role === 'Supporting').slice(0, 6);
-    const allChars  = [...mainChars, ...supChars].slice(0, 12);
+    const mainChars = (chars || []).filter(c => c.role === 'Main');
+    const supChars  = (chars || []).filter(c => c.role === 'Supporting');
+    const allChars  = [...mainChars, ...supChars];
 
     const searchSlug = encodeURIComponent(a.title);
 
@@ -443,6 +452,30 @@
                   ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
                   <span class="rd-va-name">${esc(vaName)}</span>
                 </div>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Staff -->
+      ${staff && staff.length ? `
+      <div class="rd-section" style="animation-delay:0.2s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          STAF
+        </div>
+        <div class="rd-chars-grid">
+          ${staff.map(s => {
+            const img = s.person?.images?.jpg?.image_url || '';
+            const name = s.person?.name || '';
+            const positions = (s.positions || []).join(', ');
+            return `
+            <div class="rd-char-card">
+              <img class="rd-char-img" src="${img || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+              <div class="rd-char-info">
+                <div class="rd-char-name">${esc(name)}</div>
+                <div class="rd-char-role">${esc(positions)}</div>
               </div>
             </div>`;
           }).join('')}
