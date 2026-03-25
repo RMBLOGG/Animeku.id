@@ -4,7 +4,7 @@
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-.mlv-page { max-width: 620px; margin: 0 auto; padding: 20px 16px 100px; }
+.mlv-page { max-width: 620px; margin: 0 auto; padding: 80px 16px 100px; }
 .mlv-back { display: inline-flex; align-items: center; gap: 7px; color: var(--text2); font-size: 13px; font-weight: 700; background: var(--card); border: 1px solid var(--border); padding: 7px 14px; border-radius: var(--radius); text-decoration: none; transition: all 0.2s; margin-bottom: 20px; }
 .mlv-back:hover { border-color: var(--accent); color: var(--text); }
 
@@ -36,54 +36,181 @@
 .mlv-not-found { text-align: center; padding: 80px 20px; color: var(--text3); }
 .mlv-not-found .code { font-family: var(--font-head); font-size: 60px; color: var(--accent); }
 
-/* Detail Modal */
-.ml-modal-backdrop { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+/* ── Detail Modal ── */
+.ml-modal-backdrop {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
 .ml-modal-backdrop.open { opacity: 1; pointer-events: all; }
-.ml-modal { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.7); transform: translateY(20px) scale(0.96); transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); position: relative; }
+.ml-modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
 .ml-modal-backdrop.open .ml-modal { transform: translateY(0) scale(1); }
-.ml-modal-close { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; z-index: 10; }
-.ml-modal-close:hover { background: var(--accent); color: #fff; }
-.ml-modal-banner { width: 100%; height: 150px; position: relative; border-radius: var(--radius-lg) var(--radius-lg) 0 0; overflow: hidden; }
-.ml-modal-banner img { width: 100%; height: 100%; object-fit: cover; object-position: top; filter: brightness(0.5); }
-.ml-modal-banner-grad { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--card) 100%); }
-.ml-modal-banner-rank { position: absolute; top: 12px; left: 12px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; font-family: var(--font-head); }
-.ml-modal-body { display: flex; gap: 14px; padding: 0 16px 8px; margin-top: -48px; position: relative; }
-.ml-modal-poster { width: 84px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.5); align-self: flex-start; z-index: 1; }
-.ml-modal-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
-.ml-modal-info { flex: 1; min-width: 0; padding-top: 52px; }
-.ml-modal-badge-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
-.ml-badge { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 700; }
-.ml-badge-tv { background: rgba(77,171,247,0.2); color: #4dabf7; border: 1px solid rgba(77,171,247,0.3); }
-.ml-badge-movie { background: rgba(204,93,232,0.2); color: #cc5de8; border: 1px solid rgba(204,93,232,0.3); }
-.ml-badge-type { background: rgba(230,57,70,0.2); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
-.ml-badge-airing { background: rgba(76,175,125,0.2); color: #4caf7d; border: 1px solid rgba(76,175,125,0.3); }
-.ml-badge-fin { background: rgba(255,255,255,0.06); color: var(--text3); border: 1px solid var(--border); }
-.ml-modal-title { font-family: var(--font-head); font-size: 17px; letter-spacing: 0.5px; color: var(--text); line-height: 1.2; }
-.ml-modal-title-en { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.ml-modal-stats { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px; margin: 8px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
-.ml-stat { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 55px; }
-.ml-stat-label { font-size: 9px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; font-weight: 700; }
-.ml-stat-val { font-size: 14px; font-weight: 800; color: var(--text); font-family: var(--font-head); }
-.ml-stat-val.gold { color: #fbbf24; }
-.ml-modal-lower { padding: 0 16px 16px; }
-.ml-modal-genres { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-.ml-genre-tag { font-size: 10px; padding: 3px 10px; border-radius: 20px; background: rgba(230,57,70,0.08); color: var(--accent); border: 1px solid rgba(230,57,70,0.2); font-weight: 600; }
-.ml-synopsis { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.ml-synopsis.expanded { -webkit-line-clamp: unset; }
-.ml-syn-toggle { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; margin-bottom: 10px; font-family: var(--font-body); font-weight: 700; }
-.ml-modal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; font-size: 12px; margin-bottom: 10px; }
-.ml-meta-item { display: flex; flex-direction: column; gap: 1px; }
-.ml-meta-label { font-size: 9px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
-.ml-meta-val { color: var(--text2); font-weight: 600; }
-.ml-watch-link { display: inline-flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; border-radius: var(--radius); padding: 9px 16px; font-weight: 700; font-size: 13px; text-decoration: none; transition: opacity 0.2s; }
-.ml-watch-link:hover { opacity: 0.88; }
+.ml-modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+  color: #fff; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 13px; transition: all 0.15s; z-index: 10;
+}
+.ml-modal-close:hover { background: var(--accent); }
+
+/* Hero section */
+.ml-hero {
+  position: relative; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden; background: var(--bg2);
+}
+.ml-hero-backdrop {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center top;
+  filter: blur(28px) brightness(0.2) saturate(1.4);
+  transform: scale(1.1); z-index: 0;
+}
+.ml-hero-rank {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 800;
+  padding: 3px 12px; border-radius: 20px;
+  font-family: var(--font-head);
+}
+.ml-hero-inner {
+  position: relative; z-index: 1;
+  display: flex; gap: 16px; padding: 36px 16px 20px;
+  align-items: flex-start;
+}
+.ml-hero-poster {
+  width: 100px; flex-shrink: 0;
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  border: 2px solid rgba(255,255,255,0.08);
+}
+.ml-hero-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
+.ml-hero-meta { flex: 1; min-width: 0; }
+
+.ml-title {
+  font-family: var(--font-head); font-size: 18px;
+  letter-spacing: 0.5px; color: var(--text);
+  line-height: 1.2; margin-bottom: 3px;
+}
+.ml-title-alt { font-size: 11px; color: var(--text3); margin-bottom: 10px; font-style: italic; }
+
+.ml-stats-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ml-stat-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text2);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  padding: 3px 9px; border-radius: 20px;
+}
+.ml-stat-pill.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+.ml-stat-pill.airing { color: #4caf7d; }
+
+.ml-genres { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.ml-genre-tag {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(230,57,70,0.1);
+  border: 1px solid rgba(230,57,70,0.25);
+  color: var(--accent);
+}
+.ml-watch-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; background: var(--accent); color: #fff;
+  border-radius: var(--radius); font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: opacity 0.2s;
+}
+.ml-watch-btn:hover { opacity: 0.85; }
+
+/* Ranking row */
+.ml-ranking-row {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.ml-ranking-row::-webkit-scrollbar { display: none; }
+.ml-rank-item {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 8px 12px;
+  white-space: nowrap; flex-shrink: 0; font-size: 12px;
+}
+.ml-rank-num { font-family: var(--font-head); font-size: 16px; color: var(--accent); }
+.ml-rank-label { color: var(--text3); font-size: 10px; }
+
+/* Sections */
+.ml-section {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+}
+.ml-section-title {
+  font-family: var(--font-head); font-size: 14px;
+  letter-spacing: 1px; color: var(--accent);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+}
+
+/* Synopsis */
+.ml-synopsis {
+  font-size: 13px; color: var(--text2); line-height: 1.75;
+  position: relative; overflow: hidden; max-height: 110px;
+  transition: max-height 0.4s ease;
+}
+.ml-synopsis.expanded { max-height: 9999px; }
+.ml-syn-fade {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+  background: linear-gradient(to bottom, transparent, var(--card));
+  pointer-events: none; transition: opacity 0.3s;
+}
+.ml-synopsis.expanded .ml-syn-fade { opacity: 0; }
+.ml-read-more {
+  margin-top: 8px; color: var(--accent); font-size: 12px;
+  font-weight: 700; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 4px; background: none; border: none;
+  font-family: var(--font-body); padding: 0;
+}
+
+/* Info grid */
+.ml-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ml-info-label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-bottom: 3px; }
+.ml-info-value { font-size: 13px; color: var(--text2); }
+.ml-info-value a { color: var(--accent); }
+
+/* Characters */
+.ml-chars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.ml-char-card {
+  display: flex; gap: 8px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 8px; align-items: center; transition: border-color 0.2s;
+}
+.ml-char-card:hover { border-color: rgba(230,57,70,0.3); }
+.ml-char-img { width: 40px; height: 52px; object-fit: cover; border-radius: 5px; flex-shrink: 0; background: var(--border); }
+.ml-char-name { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-char-role { font-size: 10px; color: var(--text3); }
+.ml-va-wrap { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+.ml-va-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; background: var(--border); }
+.ml-va-name { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Trailer */
+.ml-trailer-wrap { position: relative; padding-bottom: 56.25%; border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+.ml-trailer-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+/* Loading */
 .ml-modal-loading { display: flex; align-items: center; justify-content: center; padding: 48px; color: var(--text3); gap: 10px; font-size: 13px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="mlv-page">
-  
+  <a href="/mylist/jelajahi" class="mlv-back"><i class="fa-solid fa-arrow-left"></i> Jelajahi</a>
   <div id="mlvContent">
     <div class="mlv-loading">
       <span class="mlv-spinner"><i class="fa-solid fa-spinner fa-spin"></i></span>
@@ -173,77 +300,172 @@ async function mlvOpenModal(idx) {
   const id = anime.mal_id;
   if (mlvDetailCache[id]) { mlvRenderModal(mlvDetailCache[id], idx); return; }
   try {
-    const r = await fetch('https://api.jikan.moe/v4/anime/' + id);
-    const j = await r.json();
-    mlvDetailCache[id] = j.data;
-    mlvRenderModal(j.data, idx);
+    const [resDetail, resChars] = await Promise.all([
+      fetch('https://api.jikan.moe/v4/anime/' + id),
+      fetch('https://api.jikan.moe/v4/anime/' + id + '/characters')
+    ]);
+    const { data: d } = await resDetail.json();
+    const { data: chars } = await resChars.json();
+    mlvDetailCache[id] = { d, chars };
+    mlvRenderModal({ d, chars }, idx);
   } catch { body.innerHTML = '<div class="ml-modal-loading">Gagal memuat 😢</div>'; }
 }
 
-function mlvBadgeClass(type) {
-  if (!type) return 'ml-badge-type';
-  const t = type.toLowerCase();
-  if (t==='tv') return 'ml-badge-tv';
-  if (t==='movie') return 'ml-badge-movie';
-  return 'ml-badge-type';
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function mlvRenderModal(d, idx) {
-  const poster  = d.images?.jpg?.large_image_url || '';
-  const genres  = [...(d.genres||[]), ...(d.themes||[])].map(g=>`<span class="ml-genre-tag">${g.name}</span>`).join('');
+function infoItem(label, val) {
+  return `<div><div class="ml-info-label">${label}</div><div class="ml-info-value">${val}</div></div>`;
+}
+
+function mlvRenderModal({ d, chars }, idx) {
+  if (!d) { document.getElementById('mlvModalBody').innerHTML = '<div class="ml-modal-loading">Data tidak ditemukan 😢</div>'; return; }
+
+  const poster   = d.images?.webp?.large_image_url || d.images?.jpg?.large_image_url || '';
+  const genres   = [...(d.genres||[]), ...(d.themes||[])].slice(0,6);
   const synopsis = (d.synopsis||'Tidak ada sinopsis.').replace('[Written by MAL Rewrite]','').trim();
-  const statusCls = d.airing ? 'ml-badge-airing' : 'ml-badge-fin';
+  const searchSlug = encodeURIComponent(d.title);
+
+  const mainChars = (chars||[]).filter(c=>c.role==='Main').slice(0,6);
+  const supChars  = (chars||[]).filter(c=>c.role==='Supporting').slice(0,6);
+  const allChars  = [...mainChars, ...supChars].slice(0,12);
+
   document.getElementById('mlvModalBody').innerHTML = `
-    <div class="ml-modal-banner">
-      <img src="${poster}" alt="">
-      <div class="ml-modal-banner-grad"></div>
-      <div class="ml-modal-banner-rank">🏆 #${idx+1}</div>
-    </div>
-    <div class="ml-modal-body">
-      <div class="ml-modal-poster"><img src="${poster}" alt=""></div>
-      <div class="ml-modal-info">
-        <div class="ml-modal-badge-row">
-          ${d.type ? `<span class="ml-badge ${mlvBadgeClass(d.type)}">${d.type}</span>` : ''}
-          ${d.status ? `<span class="ml-badge ${statusCls}">${d.status}</span>` : ''}
+    <!-- Hero -->
+    <div class="ml-hero">
+      <div class="ml-hero-backdrop" style="background-image:url('${poster}')"></div>
+      <div class="ml-hero-rank">🏆 #${idx+1}</div>
+      <div class="ml-hero-inner">
+        <div class="ml-hero-poster">
+          <img src="${poster}" alt="" onerror="this.src='/static/img/placeholder.svg'">
         </div>
-        <div class="ml-modal-title">${d.title}</div>
-        ${d.title_english && d.title_english !== d.title ? `<div class="ml-modal-title-en">${d.title_english}</div>` : ''}
+        <div class="ml-hero-meta">
+          <div class="ml-title">${esc(d.title)}</div>
+          ${d.title_english && d.title_english !== d.title ? `<div class="ml-title-alt">${esc(d.title_english)}</div>` : ''}
+          <div class="ml-stats-row">
+            ${d.score ? `<span class="ml-stat-pill score">⭐ ${d.score}</span>` : ''}
+            ${d.episodes ? `<span class="ml-stat-pill">▶ ${d.episodes} Ep</span>` : ''}
+            ${d.type ? `<span class="ml-stat-pill">${esc(d.type)}</span>` : ''}
+            ${d.status ? `<span class="ml-stat-pill ${d.airing?'airing':''}">${esc(d.status)}</span>` : ''}
+          </div>
+          <div class="ml-genres">
+            ${genres.map(g=>`<span class="ml-genre-tag">${esc(g.name)}</span>`).join('')}
+          </div>
+          <a href="/search?q=${searchSlug}" class="ml-watch-btn">
+            <i class="fa-solid fa-play"></i> Tonton di Animeku.ID
+          </a>
+        </div>
       </div>
     </div>
-    <div class="ml-modal-stats">
-      ${d.score ? `<div class="ml-stat"><span class="ml-stat-label">Score</span><span class="ml-stat-val gold">⭐ ${d.score}</span></div>` : ''}
-      ${d.rank ? `<div class="ml-stat"><span class="ml-stat-label">Rank</span><span class="ml-stat-val">#${d.rank}</span></div>` : ''}
-      ${d.popularity ? `<div class="ml-stat"><span class="ml-stat-label">Populer</span><span class="ml-stat-val">#${d.popularity}</span></div>` : ''}
-      ${d.episodes ? `<div class="ml-stat"><span class="ml-stat-label">Episode</span><span class="ml-stat-val">${d.episodes}</span></div>` : ''}
-    </div>
-    <div class="ml-modal-lower">
-      ${genres ? `<div class="ml-modal-genres">${genres}</div>` : ''}
-      <div class="ml-synopsis" id="mlvSyn">${synopsis}</div>
-      <button class="ml-syn-toggle" id="mlvSynToggle" onclick="mlvToggleSyn()">Baca selengkapnya ▾</button>
-      <div class="ml-modal-meta">
-        <div class="ml-meta-item"><span class="ml-meta-label">Tayang</span><span class="ml-meta-val">${d.aired?.string||'—'}</span></div>
-        <div class="ml-meta-item"><span class="ml-meta-label">Durasi</span><span class="ml-meta-val">${d.duration||'—'}</span></div>
-        <div class="ml-meta-item"><span class="ml-meta-label">Studio</span><span class="ml-meta-val">${(d.studios||[]).map(s=>s.name).join(', ')||'—'}</span></div>
-        <div class="ml-meta-item"><span class="ml-meta-label">Sumber</span><span class="ml-meta-val">${d.source||'—'}</span></div>
+
+    <!-- Ranking row -->
+    ${d.rank || d.popularity ? `
+    <div class="ml-ranking-row">
+      ${d.rank ? `<div class="ml-rank-item"><span class="ml-rank-num">#${d.rank}</span><span class="ml-rank-label">Ranked</span></div>` : ''}
+      ${d.popularity ? `<div class="ml-rank-item"><span class="ml-rank-num">#${d.popularity}</span><span class="ml-rank-label">Populer</span></div>` : ''}
+      ${d.members ? `<div class="ml-rank-item"><span class="ml-rank-num">${(d.members/1000).toFixed(0)}k</span><span class="ml-rank-label">Members</span></div>` : ''}
+      ${d.favorites ? `<div class="ml-rank-item"><span class="ml-rank-num">${(d.favorites/1000).toFixed(0)}k</span><span class="ml-rank-label">Favorit</span></div>` : ''}
+      ${d.scored_by ? `<div class="ml-rank-item"><span class="ml-rank-num">${(d.scored_by/1000).toFixed(0)}k</span><span class="ml-rank-label">Votes</span></div>` : ''}
+    </div>` : ''}
+
+    <!-- Synopsis -->
+    ${synopsis ? `
+    <div class="ml-section">
+      <div class="ml-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Sinopsis
       </div>
-      <a href="/search?q=${encodeURIComponent(d.title)}" class="ml-watch-link"><i class="fa-solid fa-play"></i> Tonton di Animeku.ID</a>
-    </div>`;
+      <div class="ml-synopsis" id="mlvSyn">
+        ${esc(synopsis)}
+        <div class="ml-syn-fade"></div>
+      </div>
+      <button class="ml-read-more" id="mlvSynToggle" onclick="mlvToggleSyn()">
+        Baca selengkapnya
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="mlvSynArrow"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>` : ''}
+
+    <!-- Info -->
+    <div class="ml-section">
+      <div class="ml-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Informasi
+      </div>
+      <div class="ml-info-grid">
+        ${d.status ? infoItem('Status', `<span style="color:${d.airing?'#4caf7d':'var(--text2)'}">${esc(d.status)}</span>`) : ''}
+        ${d.season && d.year ? infoItem('Season', `${esc(d.season.charAt(0).toUpperCase()+d.season.slice(1))} ${d.year}`) : ''}
+        ${d.aired?.string ? infoItem('Tayang', esc(d.aired.string)) : ''}
+        ${d.duration ? infoItem('Durasi', esc(d.duration)) : ''}
+        ${d.studios?.length ? infoItem('Studio', d.studios.map(s=>`<a href="/search?q=${encodeURIComponent(s.name)}">${esc(s.name)}</a>`).join(', ')) : ''}
+        ${d.source ? infoItem('Sumber', esc(d.source)) : ''}
+        ${d.rating ? infoItem('Rating', esc(d.rating)) : ''}
+        ${d.broadcast?.string ? infoItem('Jadwal', esc(d.broadcast.string)) : ''}
+      </div>
+    </div>
+
+    <!-- Characters -->
+    ${allChars.length ? `
+    <div class="ml-section">
+      <div class="ml-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Karakter
+      </div>
+      <div class="ml-chars-grid">
+        ${allChars.map(c => {
+          const charImg = c.character?.images?.jpg?.image_url || '';
+          const va = (c.voice_actors||[]).find(v=>v.language==='Japanese');
+          const vaImg = va?.person?.images?.jpg?.image_url || '';
+          const vaName = va?.person?.name || '';
+          return `<div class="ml-char-card">
+            <img class="ml-char-img" src="${charImg||'/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+            <div style="flex:1;min-width:0">
+              <div class="ml-char-name">${esc(c.character?.name||'')}</div>
+              <div class="ml-char-role">${esc(c.role||'')}</div>
+              ${vaName ? `<div class="ml-va-wrap">
+                ${vaImg ? `<img class="ml-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
+                <span class="ml-va-name">${esc(vaName)}</span>
+              </div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- Trailer -->
+    ${d.trailer?.embed_url ? `
+    <div class="ml-section">
+      <div class="ml-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Trailer
+      </div>
+      <div class="ml-trailer-wrap">
+        <iframe src="${d.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>` : ''}
+  `;
 }
+
 function mlvToggleSyn() {
-  const el = document.getElementById('mlvSyn');
+  const el  = document.getElementById('mlvSyn');
+  const arr = document.getElementById('mlvSynArrow');
   const btn = document.getElementById('mlvSynToggle');
-  el.classList.toggle('expanded');
-  btn.textContent = el.classList.contains('expanded') ? 'Sembunyikan ▴' : 'Baca selengkapnya ▾';
+  const open = el.classList.toggle('expanded');
+  arr.style.transform = open ? 'rotate(180deg)' : '';
+  btn.childNodes[0].textContent = open ? 'Sembunyikan ' : 'Baca selengkapnya ';
 }
+
 function mlvCloseModal() {
   document.getElementById('mlvModalBackdrop').classList.remove('open');
   document.body.style.overflow = '';
 }
+
 function mlvCopyLink() {
   navigator.clipboard.writeText(location.href).then(() => {
     if (window.showToast) showToast('Link disalin! 🔗', 'success');
   });
 }
+
 document.addEventListener('keydown', e => { if (e.key==='Escape') mlvCloseModal(); });
 mlvLoad();
 </script>
