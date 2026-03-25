@@ -3,295 +3,345 @@
 
 {% block head %}
 <style>
-.rd-page { max-width: 1000px; margin: 0 auto; padding: 80px 16px 80px; }
+/* ── PAGE ── */
+.rd-page { max-width: 900px; margin: 0 auto; padding: 0 0 80px; }
 
-/* ── HERO ── */
-.rd-hero {
+/* ── HERO BACKDROP ── */
+.rd-backdrop-wrap {
   position: relative;
-  border-radius: var(--radius-lg);
+  width: 100%;
+  height: 300px;
   overflow: hidden;
-  margin-bottom: 28px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  margin-bottom: 0;
 }
-.rd-hero-backdrop {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center top;
-  filter: blur(28px) brightness(0.2) saturate(1.4);
-  transform: scale(1.1);
-  z-index: 0;
+.rd-backdrop-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: blur(22px) brightness(0.25) saturate(1.6);
+  transform: scale(1.12);
 }
-.rd-hero-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 24px;
-  padding: 28px;
-  align-items: flex-start;
+.rd-backdrop-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(9,11,15,0.2) 0%, rgba(9,11,15,0.5) 60%, var(--bg) 100%);
 }
-.rd-poster {
+.rd-back-btn {
+  position: absolute; top: 16px; left: 16px; z-index: 10;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  color: var(--text2); font-size: 13px; font-weight: 600;
+  padding: 7px 14px; border-radius: 50px;
+  text-decoration: none; transition: all 0.2s;
+}
+.rd-back-btn:hover { color: var(--text); background: rgba(0,0,0,0.7); }
+
+/* ── POSTER CENTER ── */
+.rd-poster-center {
+  display: flex; justify-content: center;
+  margin-top: -110px;
+  position: relative; z-index: 2;
+  margin-bottom: 20px;
+}
+.rd-poster-img {
   width: 150px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  border: 3px solid rgba(255,255,255,0.08);
+  aspect-ratio: 2/3; object-fit: cover;
+  display: block;
 }
-.rd-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
 
-.rd-meta { flex: 1; min-width: 0; }
+/* ── TITLE BLOCK ── */
+.rd-title-block {
+  text-align: center;
+  padding: 0 16px 20px;
+}
 .rd-title {
   font-family: var(--font-head);
-  font-size: clamp(22px, 5vw, 36px);
-  letter-spacing: 1px;
+  font-size: clamp(28px, 7vw, 48px);
+  letter-spacing: 2px;
   color: var(--text);
-  line-height: 1.15;
-  margin-bottom: 4px;
+  line-height: 1.1;
+  margin-bottom: 6px;
 }
-.rd-title-alt { font-size: 13px; color: var(--text3); margin-bottom: 14px; font-style: italic; }
+.rd-title-alt {
+  font-size: 14px; color: var(--text3);
+  margin-bottom: 16px;
+}
 
+/* ── STATS PILLS ROW ── */
 .rd-stats-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px; margin-bottom: 14px;
 }
 .rd-stat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--border);
   color: var(--text2);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: 20px;
 }
 .rd-stat.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+.rd-stat.votes { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+.rd-stat.members { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
 
-.rd-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+/* ── GENRES ── */
+.rd-genres {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px; margin-bottom: 20px; padding: 0 16px;
+}
 .rd-genre-tag {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  background: rgba(230,57,70,0.1);
-  border: 1px solid rgba(230,57,70,0.25);
-  color: #e63946;
-}
-
-.rd-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.rd-btn-watch {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 20px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  text-decoration: none;
-  transition: opacity 0.2s, transform 0.15s;
-}
-.rd-btn-watch:hover { opacity: 0.85; transform: translateY(-1px); }
-.rd-btn-back {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border);
+  padding: 5px 14px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
   color: var(--text2);
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-family: var(--font-body);
-  text-decoration: none;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
-.rd-btn-back:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.rd-genre-tag:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── RANKING ── */
-.rd-ranking-row {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 4px 0 8px;
-  scrollbar-width: none;
-  margin-bottom: 24px;
+/* ── ACTION BUTTONS ── */
+.rd-actions {
+  display: flex; justify-content: center; gap: 10px;
+  padding: 0 16px 24px; flex-wrap: wrap;
 }
-.rd-ranking-row::-webkit-scrollbar { display: none; }
-.rd-rank-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-size: 13px;
+.rd-btn-watch {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 24px; background: var(--accent); color: #fff;
+  border-radius: var(--radius); font-size: 14px; font-weight: 700;
+  font-family: var(--font-body); text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s;
+  border: none; cursor: pointer;
 }
-.rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
-.rd-rank-label { color: var(--text3); font-size: 11px; }
+.rd-btn-watch:hover { opacity: 0.88; transform: translateY(-1px); }
+.rd-btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); color: var(--text2);
+  border-radius: var(--radius); font-size: 14px; font-weight: 600;
+  font-family: var(--font-body); text-decoration: none;
+  transition: all 0.2s; cursor: pointer;
+}
+.rd-btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+/* ── DIVIDER ── */
+.rd-divider { height: 1px; background: var(--border); margin: 0 16px 20px; }
 
 /* ── SECTIONS ── */
-.rd-section {
+.rd-section { padding: 0 16px; margin-bottom: 24px; }
+.rd-section-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.rd-section-title {
+  font-family: var(--font-head);
+  font-size: 22px; letter-spacing: 1.5px;
+  color: var(--accent);
+}
+.rd-section-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
-  margin-bottom: 16px;
   animation: rdFadeUp 0.4s ease both;
 }
-@keyframes rdFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+@keyframes rdFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
 
-.rd-section-title {
-  font-family: var(--font-head);
-  font-size: 18px;
-  letter-spacing: 1.5px;
-  color: var(--accent);
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* ── INFORMATION GRID ── */
+.rd-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.rd-info-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rd-info-item:nth-last-child(-n+2) { border-bottom: none; }
+.rd-info-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text3); font-weight: 700; margin-bottom: 5px;
+}
+.rd-info-value { font-size: 14px; color: var(--text2); font-weight: 500; }
+.rd-info-value.green { color: #4caf7d; }
+.rd-info-value a { color: var(--accent); text-decoration: none; }
+
+/* ── ALT TITLES ── */
+.rd-alt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd-alt-chip {
+  padding: 5px 12px; border-radius: 8px;
+  font-size: 12px; color: var(--text2);
+  background: var(--bg2); border: 1px solid var(--border);
 }
 
-/* Synopsis */
+/* ── RANKING ── */
+.rd-rank-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd-rank-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 13px;
+}
+.rd-rank-trophy { font-size: 16px; }
+.rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
+.rd-rank-desc { color: var(--text3); font-size: 12px; }
+
+/* ── SYNOPSIS ── */
 .rd-synopsis {
-  font-size: 14px;
-  color: var(--text2);
-  line-height: 1.85;
-  position: relative;
-  overflow: hidden;
-  max-height: 120px;
-  transition: max-height 0.4s ease;
+  font-size: 14px; color: var(--text2); line-height: 1.85;
+  position: relative; overflow: hidden;
+  max-height: 130px; transition: max-height 0.4s ease;
 }
 .rd-synopsis.expanded { max-height: 9999px; }
 .rd-synopsis-fade {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 50px;
-  background: linear-gradient(to bottom, transparent, var(--card));
-  pointer-events: none;
-  transition: opacity 0.3s;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(transparent, var(--card));
+  pointer-events: none; transition: opacity 0.3s;
 }
 .rd-synopsis.expanded .rd-synopsis-fade { opacity: 0; }
+.rd-syn-actions {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 14px; flex-wrap: wrap;
+}
 .rd-read-more {
-  margin-top: 10px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  color: var(--text3); font-size: 13px; font-weight: 700;
+  cursor: pointer; background: none; border: none;
+  padding: 0; font-family: var(--font-body);
+  display: inline-flex; align-items: center; gap: 4px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  transition: color 0.15s;
 }
-
-/* Info grid */
-.rd-info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.rd-read-more:hover { color: var(--text2); }
+.rd-btn-translate {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius);
+  background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3);
+  color: var(--accent); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body);
+  transition: all 0.15s;
 }
-@media(max-width:500px) { .rd-info-grid { grid-template-columns: 1fr; } }
-.rd-info-item {}
-.rd-info-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
-.rd-info-value { font-size: 14px; color: var(--text2); }
-.rd-info-value a { color: var(--accent); }
+.rd-btn-translate:hover { background: rgba(230,57,70,0.2); }
+.rd-btn-copy {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius);
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--text2); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body);
+  transition: all 0.15s;
+}
+.rd-btn-copy:hover { background: rgba(255,255,255,0.1); }
 
-/* Characters */
+/* ── CHARACTERS ── */
 .rd-chars-grid {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: none;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 }
-.rd-chars-grid::-webkit-scrollbar { display: none; }
-
 .rd-char-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 8px;
+  display: flex; gap: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
   transition: border-color 0.2s;
-  flex-shrink: 0;
-  width: 100px;
-  text-align: center;
 }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
 .rd-char-img {
-  width: 64px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
+  width: 68px; height: 90px;
+  object-fit: cover; flex-shrink: 0;
   background: var(--border);
 }
-.rd-char-info { width: 100%; min-width: 0; }
-.rd-char-name { font-size: 11px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
-.rd-char-role { font-size: 10px; color: var(--text3); margin-top: 2px; }
-.rd-va-wrap { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
-.rd-va-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; background: var(--border); flex-shrink: 0; }
-.rd-va-name { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
+.rd-char-body {
+  flex: 1; min-width: 0; padding: 8px 10px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.rd-char-name {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rd-char-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.rd-va-row {
+  display: flex; align-items: center; gap: 6px; margin-top: 8px;
+}
+.rd-va-img {
+  width: 26px; height: 26px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--border);
+}
+.rd-va-info { min-width: 0; }
+.rd-va-name {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rd-va-lang { font-size: 9px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
 
-/* Trailer */
+/* Chars pagination */
+.rd-chars-nav {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin-top: 16px;
+}
+.rd-page-btn {
+  padding: 7px 18px; border-radius: var(--radius);
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font-body);
+  transition: all 0.15s;
+}
+.rd-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.rd-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.rd-page-info { font-size: 13px; color: var(--text3); }
+
+/* ── STAFF ── */
+.rd-staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rd-staff-card {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 12px;
+  transition: border-color 0.2s;
+}
+.rd-staff-card:hover { border-color: rgba(230,57,70,0.2); }
+.rd-staff-img {
+  width: 44px; height: 44px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--border);
+}
+.rd-staff-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.rd-staff-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.rd-staff-noimg {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.05em;
+}
+
+/* ── TRAILER ── */
 .rd-trailer-wrap {
-  position: relative;
-  padding-bottom: 56.25%;
-  border-radius: var(--radius);
-  overflow: hidden;
+  position: relative; padding-bottom: 56.25%;
+  border-radius: var(--radius); overflow: hidden;
   background: var(--bg);
 }
 .rd-trailer-wrap iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
+  position: absolute; inset: 0; width: 100%; height: 100%; border: none;
 }
 
-/* Loading */
+/* ── LOADING / ERROR ── */
 .rd-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  color: var(--text3);
-  gap: 16px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 100px 20px; gap: 14px; color: var(--text3);
 }
 .rd-spinner {
   width: 36px; height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: rdSpin 0.8s linear infinite;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: rdSpin 0.8s linear infinite;
 }
 @keyframes rdSpin { to { transform: rotate(360deg); } }
+.rd-error { text-align: center; padding: 80px 20px; color: var(--text3); }
+.rd-error h3 { color: var(--text2); margin-bottom: 8px; }
 
-/* Error */
-.rd-error {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text3);
-}
-.rd-error h3 { color: var(--text2); font-size: 16px; margin-bottom: 8px; }
-
-@media(max-width: 600px) {
-  .rd-hero-inner { flex-direction: column; align-items: center; text-align: center; }
-  .rd-poster { width: 120px; }
-  .rd-stats-row, .rd-genres, .rd-actions { justify-content: center; }
+@media(max-width: 480px) {
+  .rd-chars-grid { grid-template-columns: 1fr; }
+  .rd-staff-grid { grid-template-columns: 1fr; }
+  .rd-info-grid { grid-template-columns: 1fr; }
+  .rd-info-item:last-child { border-bottom: none; }
+  .rd-info-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .rd-info-item:last-child { border-bottom: none; }
 }
 </style>
 {% endblock %}
@@ -308,174 +358,226 @@
 {% block scripts %}
 <script>
 (async function() {
-  // Ambil mal_id dari URL: /rekomendasi/anime/12345
   const malId = window.location.pathname.split('/').pop();
   const page  = document.getElementById('rdPage');
 
   if (!malId || isNaN(malId)) {
-    page.innerHTML = `<div class="rd-error"><h3>ID tidak valid</h3><p><a href="/rekomendasi" style="color:var(--accent)">← Kembali</a></p></div>`;
+    page.innerHTML = `<div class="rd-error"><h3>ID tidak valid</h3><a href="/rekomendasi" style="color:var(--accent)">← Kembali</a></div>`;
     return;
   }
 
+  let allChars = [], allStaff = [];
+  let charPage = 0;
+  const CHARS_PER_PAGE = 6;
+
   try {
-    // Fetch paralel: detail + characters
     const [resDetail, resChars, resStaff] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
       fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`),
-      fetch(`https://api.jikan.moe/v4/anime/${malId}/staff`)
+      fetch(`https://api.jikan.moe/v4/anime/${malId}/staff`),
     ]);
 
-    const { data: a } = await resDetail.json();
-    const { data: chars } = await resChars.json();
-    const { data: staff } = await resStaff.json();
+    const { data: a }      = await resDetail.json();
+    const { data: chars }  = await resChars.json();
+    const { data: staff }  = await resStaff.json();
 
     if (!a) throw new Error('Not found');
-
-    // Update page title
     document.title = `${a.title} — Animeku.id`;
 
-    const poster  = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
-    const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
-    const mainChars = (chars || []).filter(c => c.role === 'Main');
-    const supChars  = (chars || []).filter(c => c.role === 'Supporting');
-    const allChars  = [...mainChars, ...supChars];
+    const poster   = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
+    const genres   = [...(a.genres||[]), ...(a.themes||[])].slice(0, 8);
+    const altTitles = (a.titles||[]).filter(t => t.type !== 'Default' && t.title !== a.title).map(t => t.title).filter(Boolean).slice(0, 6);
 
-    const searchSlug = encodeURIComponent(a.title);
+    // Sort chars: Main first
+    allChars = [...(chars||[])].sort((x,y) => (x.role==='Main'?0:1)-(y.role==='Main'?0:1));
+    allStaff = (staff||[]).slice(0, 20);
+
+    function renderCharsPage() {
+      const start = charPage * CHARS_PER_PAGE;
+      const slice = allChars.slice(start, start + CHARS_PER_PAGE);
+      const total = Math.ceil(allChars.length / CHARS_PER_PAGE);
+      document.getElementById('rdCharsGrid').innerHTML = slice.map(c => {
+        const img   = c.character?.images?.jpg?.image_url || '';
+        const va    = (c.voice_actors||[]).find(v => v.language === 'Japanese');
+        const vaImg = va?.person?.images?.jpg?.image_url || '';
+        const vaName = va?.person?.name || '';
+        return `<div class="rd-char-card">
+          <img class="rd-char-img" src="${img||'/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+          <div class="rd-char-body">
+            <div>
+              <div class="rd-char-name">${esc(c.character?.name||'')}</div>
+              <div class="rd-char-role">${esc(c.role||'')}</div>
+            </div>
+            ${vaName ? `<div class="rd-va-row">
+              ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
+              <div class="rd-va-info">
+                <div class="rd-va-name">${esc(vaName)}</div>
+                <div class="rd-va-lang">Japanese</div>
+              </div>
+            </div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('rdCharPrev').disabled = charPage === 0;
+      document.getElementById('rdCharNext').disabled = charPage >= total - 1;
+      document.getElementById('rdCharPageInfo').textContent = `Page ${charPage+1} of ${total}`;
+    }
 
     page.innerHTML = `
-      <!-- Back -->
-      <div style="margin-bottom:16px">
-        <a href="javascript:history.back()" class="rd-btn-back" style="display:inline-flex">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      <!-- Backdrop -->
+      <div class="rd-backdrop-wrap">
+        <img class="rd-backdrop-img" src="${poster}" alt="">
+        <div class="rd-backdrop-grad"></div>
+        <a href="javascript:history.back()" class="rd-back-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Kembali
         </a>
       </div>
 
-      <!-- Hero -->
-      <div class="rd-hero">
-        <div class="rd-hero-backdrop" style="background-image:url('${poster}')"></div>
-        <div class="rd-hero-inner">
-          <div class="rd-poster">
-            <img src="${poster}" alt="${esc(a.title)}" onerror="this.src='/static/img/placeholder.svg'">
-          </div>
-          <div class="rd-meta">
-            <h1 class="rd-title">${esc(a.title)}</h1>
-            ${a.title_japanese ? `<div class="rd-title-alt">${esc(a.title_japanese)}</div>` : ''}
+      <!-- Poster -->
+      <div class="rd-poster-center">
+        <img class="rd-poster-img" src="${poster}" alt="${esc(a.title)}" onerror="this.src='/static/img/placeholder.svg'">
+      </div>
 
-            <div class="rd-stats-row">
-              ${a.score ? `<span class="rd-stat score">⭐ ${a.score} <span style="font-size:11px;opacity:.6">/ 10</span></span>` : ''}
-              ${a.scored_by ? `<span class="rd-stat">❤️ ${(a.scored_by/1000).toFixed(0)}k votes</span>` : ''}
-              ${a.episodes ? `<span class="rd-stat">▶ ${a.episodes} Ep</span>` : ''}
-              ${a.duration ? `<span class="rd-stat">⏱ ${a.duration.replace(' per ep','')}</span>` : ''}
-              ${a.type ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
-              ${a.status ? `<span class="rd-stat" style="color:${a.airing ? '#4caf7d' : 'var(--text2)'}">${esc(a.status)}</span>` : ''}
-            </div>
+      <!-- Title -->
+      <div class="rd-title-block">
+        <h1 class="rd-title">${esc(a.title)}</h1>
+        ${a.title_english && a.title_english !== a.title ? `<div class="rd-title-alt">${esc(a.title_english)}</div>` : ''}
 
-            <div class="rd-genres">
-              ${genres.map(g => `<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
-            </div>
+        <div class="rd-stats-row">
+          ${a.score    ? `<span class="rd-stat score">⭐ Avg: ${a.score}</span>` : ''}
+          ${a.scored_by? `<span class="rd-stat votes">❤️ ${a.scored_by.toLocaleString()}</span>` : ''}
+          ${a.members  ? `<span class="rd-stat members">📊 ${a.members.toLocaleString()}</span>` : ''}
+          ${a.type     ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
+          ${a.episodes ? `<span class="rd-stat">▶ ${a.episodes} Eps</span>` : ''}
+          ${a.duration ? `<span class="rd-stat">⏱ ${a.duration.replace(' per ep','')}</span>` : ''}
+        </div>
 
-            <div class="rd-actions">
-              <a href="/search?q=${searchSlug}" class="rd-btn-watch">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-                Tonton di Animeku
-              </a>
-            </div>
+        <div class="rd-genres">
+          ${genres.map(g=>`<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
+        </div>
+
+        <div class="rd-actions">
+          <a href="/search?q=${encodeURIComponent(a.title)}" class="rd-btn-watch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            Tonton di Animeku
+          </a>
+          <button class="rd-btn-secondary" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin! 🔗'))">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Salin Link
+          </button>
+        </div>
+      </div>
+
+      <div class="rd-divider"></div>
+
+      <!-- Information -->
+      <div class="rd-section" style="animation-delay:0.05s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="rd-section-title">Information</div>
+        </div>
+        <div class="rd-section-card">
+          <div class="rd-info-grid">
+            ${a.status   ? infoItem('Status', `<span class="${a.airing?'green':''}">${esc(a.status)}</span>`) : ''}
+            ${a.season && a.year ? infoItem('Season', `${esc(a.season[0].toUpperCase()+a.season.slice(1))} ${a.year}`) : (a.year ? infoItem('Year', a.year) : '')}
+            ${a.source   ? infoItem('Source', esc(a.source)) : ''}
+            ${a.country  ? infoItem('Country', esc(a.country)) : infoItem('Country','Japan')}
+            ${a.studios?.length ? infoItem('Studios', a.studios.map(s=>esc(s.name)).join(', ')) : ''}
+            ${a.rating   ? infoItem('Rating', esc(a.rating)) : ''}
+            ${a.aired?.string ? infoItem('Tayang', esc(a.aired.string)) : ''}
+            ${a.broadcast?.string ? infoItem('Jadwal', esc(a.broadcast.string)) : ''}
           </div>
         </div>
       </div>
 
+      <!-- Alt Titles -->
+      ${altTitles.length ? `
+      <div class="rd-section" style="animation-delay:0.08s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+          <div class="rd-section-title">Alternative Titles</div>
+        </div>
+        <div class="rd-alt-chips">
+          ${altTitles.map(t=>`<span class="rd-alt-chip">${esc(t)}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
       <!-- Ranking -->
-      ${a.rank || a.popularity ? `
-      <div class="rd-ranking-row">
-        ${a.rank ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-label">Ranked</span></div>` : ''}
-        ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-label">Populer</span></div>` : ''}
-        ${a.members ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-label">Members</span></div>` : ''}
-        ${a.favorites ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.favorites/1000).toFixed(0)}k</span><span class="rd-rank-label">Favorit</span></div>` : ''}
+      ${(a.rank||a.popularity) ? `
+      <div class="rd-section" style="animation-delay:0.1s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <div class="rd-section-title">Ranking</div>
+        </div>
+        <div class="rd-rank-grid">
+          ${a.rank       ? `<div class="rd-rank-item"><span class="rd-rank-trophy">🏆</span><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-desc">Highest Rated</span></div>` : ''}
+          ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-trophy">🏆</span><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-desc">Most Popular</span></div>` : ''}
+          ${a.favorites  ? `<div class="rd-rank-item"><span class="rd-rank-trophy">❤️</span><span class="rd-rank-num">${(a.favorites/1000).toFixed(1)}k</span><span class="rd-rank-desc">Favorit</span></div>` : ''}
+          ${a.members    ? `<div class="rd-rank-item"><span class="rd-rank-trophy">👥</span><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-desc">Members</span></div>` : ''}
+        </div>
       </div>` : ''}
 
       <!-- Synopsis -->
       ${a.synopsis ? `
-      <div class="rd-section" style="animation-delay:0.05s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Sinopsis
+      <div class="rd-section" style="animation-delay:0.12s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div class="rd-section-title">Synopsis</div>
         </div>
-        <div class="rd-synopsis" id="rdSynopsis">
-          ${esc(a.synopsis)}
-          <div class="rd-synopsis-fade"></div>
+        <div class="rd-section-card">
+          <div class="rd-synopsis" id="rdSynopsis">
+            ${esc(a.synopsis).replace('[Written by MAL Rewrite]','')}
+            <div class="rd-synopsis-fade"></div>
+          </div>
+          <div class="rd-syn-actions">
+            <button class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
+              READ MORE
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="rd-btn-translate" id="rdTransBtn" onclick="rdTranslate()">
+              🌐 Terjemahkan (ID)
+            </button>
+            <button class="rd-btn-copy" onclick="navigator.clipboard.writeText(location.href).then(()=>rdToast('Link disalin! 🔗'))">
+              🔗 Salin Link
+            </button>
+          </div>
         </div>
-        <span class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
-          Baca selengkapnya <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
-        </span>
       </div>` : ''}
-
-      <!-- Information -->
-      <div class="rd-section" style="animation-delay:0.1s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Informasi
-        </div>
-        <div class="rd-info-grid">
-          ${a.status ? infoItem('Status', `<span style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</span>`) : ''}
-          ${a.season && a.year ? infoItem('Season', `${esc(a.season.charAt(0).toUpperCase()+a.season.slice(1))} ${a.year}`) : ''}
-          ${a.source ? infoItem('Source', esc(a.source)) : ''}
-          ${a.rating ? infoItem('Rating', esc(a.rating)) : ''}
-          ${a.aired?.string ? infoItem('Tayang', esc(a.aired.string)) : ''}
-          ${a.broadcast?.string ? infoItem('Jadwal', esc(a.broadcast.string)) : ''}
-          ${a.studios?.length ? infoItem('Studio', a.studios.map(s=>`<a href="/search?q=${encodeURIComponent(s.name)}">${esc(s.name)}</a>`).join(', ')) : ''}
-          ${a.producers?.length ? infoItem('Producer', a.producers.slice(0,3).map(p=>esc(p.name)).join(', ')) : ''}
-        </div>
-      </div>
 
       <!-- Characters -->
       ${allChars.length ? `
-      <div class="rd-section" style="animation-delay:0.15s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Karakter
+      <div class="rd-section" style="animation-delay:0.14s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="rd-section-title">Characters</div>
         </div>
-        <div class="rd-chars-grid">
-          ${allChars.map(c => {
-            const charImg = c.character?.images?.jpg?.image_url || '';
-            const va = (c.voice_actors || []).find(v => v.language === 'Japanese');
-            const vaImg = va?.person?.images?.jpg?.image_url || '';
-            const vaName = va?.person?.name || '';
-            return `
-            <div class="rd-char-card">
-              <img class="rd-char-img" src="${charImg || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
-              <div class="rd-char-info">
-                <div class="rd-char-name">${esc(c.character?.name || '')}</div>
-                <div class="rd-char-role">${esc(c.role || '')}</div>
-                ${vaName ? `
-                <div class="rd-va-wrap">
-                  ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
-                  <span class="rd-va-name">${esc(vaName)}</span>
-                </div>` : ''}
-              </div>
-            </div>`;
-          }).join('')}
+        <div class="rd-chars-grid" id="rdCharsGrid"></div>
+        <div class="rd-chars-nav">
+          <button class="rd-page-btn" id="rdCharPrev" onclick="rdCharNav(-1)">Prev</button>
+          <span class="rd-page-info" id="rdCharPageInfo"></span>
+          <button class="rd-page-btn" id="rdCharNext" onclick="rdCharNav(1)">Next</button>
         </div>
       </div>` : ''}
 
       <!-- Staff -->
-      ${staff && staff.length ? `
-      <div class="rd-section" style="animation-delay:0.2s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          STAF
+      ${allStaff.length ? `
+      <div class="rd-section" style="animation-delay:0.16s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          <div class="rd-section-title">Staff</div>
         </div>
-        <div class="rd-chars-grid">
-          ${staff.map(s => {
+        <div class="rd-staff-grid">
+          ${allStaff.map(s => {
             const img = s.person?.images?.jpg?.image_url || '';
-            const name = s.person?.name || '';
-            const positions = (s.positions || []).join(', ');
-            return `
-            <div class="rd-char-card">
-              <img class="rd-char-img" src="${img || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
-              <div class="rd-char-info">
-                <div class="rd-char-name">${esc(name)}</div>
-                <div class="rd-char-role">${esc(positions)}</div>
+            const roles = (s.positions||[]).join(', ');
+            return `<div class="rd-staff-card">
+              ${img
+                ? `<img class="rd-staff-img" src="${img}" alt="" onerror="this.style.display='none'" loading="lazy">`
+                : `<div class="rd-staff-noimg">NO<br>IMG</div>`}
+              <div>
+                <div class="rd-staff-name">${esc(s.person?.name||'')}</div>
+                <div class="rd-staff-role">${esc(roles)}</div>
               </div>
             </div>`;
           }).join('')}
@@ -484,26 +586,31 @@
 
       <!-- Trailer -->
       ${a.trailer?.embed_url ? `
-      <div class="rd-section" style="animation-delay:0.2s">
-        <div class="rd-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-          Trailer
+      <div class="rd-section" style="animation-delay:0.18s">
+        <div class="rd-section-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <div class="rd-section-title">Trailer</div>
         </div>
-        <div class="rd-trailer-wrap">
-          <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+        <div class="rd-section-card">
+          <div class="rd-trailer-wrap">
+            <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+          </div>
         </div>
       </div>` : ''}
     `;
 
+    // Render chars
+    if (allChars.length) renderCharsPage();
+
+    // Expose for pagination
+    window._rdCharsRender = renderCharsPage;
+
   } catch(e) {
     document.getElementById('rdLoading')?.remove();
-    page.innerHTML += `<div class="rd-error">
-      <h3>Gagal memuat data</h3>
-      <p style="margin-bottom:16px">Cek koneksi internet kamu.</p>
-      <a href="/rekomendasi" style="color:var(--accent)">← Kembali ke Rekomendasi</a>
-    </div>`;
+    page.innerHTML += `<div class="rd-error"><h3>Gagal memuat data</h3><p style="margin-bottom:14px">Cek koneksi internet kamu.</p><a href="/rekomendasi" style="color:var(--accent)">← Kembali</a></div>`;
   }
 
+  // ── Helpers ──
   function infoItem(label, val) {
     return `<div class="rd-info-item"><div class="rd-info-label">${label}</div><div class="rd-info-value">${val}</div></div>`;
   }
@@ -512,13 +619,57 @@
   }
 })();
 
+// ── Syn toggle ──
 function rdToggleSyn() {
   const el  = document.getElementById('rdSynopsis');
   const arr = document.getElementById('rdSynArrow');
   const btn = document.getElementById('rdReadMore');
   const open = el.classList.toggle('expanded');
   arr.style.transform = open ? 'rotate(180deg)' : '';
-  btn.childNodes[0].textContent = open ? 'Sembunyikan ' : 'Baca selengkapnya ';
+  btn.childNodes[0].textContent = open ? 'SHOW LESS ' : 'READ MORE ';
+}
+
+// ── Translate ──
+async function rdTranslate() {
+  const el  = document.getElementById('rdSynopsis');
+  const btn = document.getElementById('rdTransBtn');
+  const text = el.innerText.trim();
+  if (btn.dataset.translated === '1') {
+    btn.dataset.translated = '0';
+    btn.textContent = '🌐 Terjemahkan (ID)';
+    location.reload();
+    return;
+  }
+  btn.textContent = '⏳ Menerjemahkan...';
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=id&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(url);
+    const j = await r.json();
+    const translated = j[0].map(x=>x[0]).join('');
+    const fade = el.querySelector('.rd-synopsis-fade');
+    el.innerHTML = translated;
+    if (fade) el.appendChild(fade);
+    btn.dataset.translated = '1';
+    btn.textContent = '🔄 Tampilkan Asli';
+  } catch { btn.textContent = '🌐 Terjemahkan (ID)'; }
+}
+
+// ── Chars pagination ──
+function rdCharNav(dir) {
+  charPage += dir;
+  window._rdCharsRender?.();
+  document.querySelector('.rd-section:has(#rdCharsGrid)')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+let charPage = 0;
+
+// ── Toast ──
+function rdToast(msg) {
+  if (window.showToast) { showToast(msg, 'success'); return; }
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;z-index:9999;white-space:nowrap;';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
 }
 </script>
 {% endblock %}
