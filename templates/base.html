@@ -775,7 +775,7 @@ function closeAnnouncement() {
         <a href="/movies">Movie</a>
         <a href="/jadwal">Jadwal</a>
         <a href="/genres">Genre</a>
-        <a href="/quiz.html">Game</a>
+        <a href="/koleksi">Koleksi</a>
       <a href="/animelist">Anime A-Z</a>
       <a href="/mylist">MyList</a>
       </div>
@@ -807,11 +807,11 @@ function closeAnnouncement() {
       </span>
       <span class="mob-nav-label">Jadwal</span>
     </a>
-    <a href="/koleksi" class="mob-nav-item" data-page="koleksi">
+    <a href="/quiz" class="mob-nav-item" data-page="game">
       <span class="mob-nav-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>
       </span>
-      <span class="mob-nav-label">Koleksi</span>
+      <span class="mob-nav-label">Game</span>
     </a>
     <a href="/rekomendasi" class="mob-nav-item" data-page="rekomendasi">
       <span class="mob-nav-icon">
@@ -932,7 +932,7 @@ function closeAnnouncement() {
         (page === 'home' && (path === '/' || path === '/home')) ||
         (page === 'ongoing' && path.startsWith('/ongoing')) ||
         (page === 'schedule' && path.startsWith('/schedule')) ||
-        (page === 'koleksi' && path.startsWith('/koleksi')) ||
+        (page === 'game' && path.startsWith('/quiz')) ||
         (page === 'rekomendasi' && path.startsWith('/rekomendasi')) ||
         (page === 'mylist' && path.startsWith('/mylist')) ||
         (page === 'login' && (path.startsWith('/auth') || path.startsWith('/profile')))
