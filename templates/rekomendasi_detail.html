@@ -3,195 +3,234 @@
 
 {% block head %}
 <style>
-/* Force desktop viewport behavior on mobile */
-.rd-page {
-  width: 960px;
-  margin: 0 auto;
-  padding: 80px 16px 80px;
-}
+.rd-page { max-width: 1000px; margin: 0 auto; padding: 80px 16px 80px; }
 
 /* ── HERO ── */
 .rd-hero {
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
   background: var(--card);
   border: 1px solid var(--border);
 }
 .rd-hero-backdrop {
-  position: absolute; inset: 0;
-  background-size: cover; background-position: center top;
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
   filter: blur(28px) brightness(0.2) saturate(1.4);
-  transform: scale(1.1); z-index: 0;
+  transform: scale(1.1);
+  z-index: 0;
 }
 .rd-hero-inner {
-  position: relative; z-index: 1;
-  display: flex; gap: 24px; padding: 28px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 24px;
+  padding: 28px;
   align-items: flex-start;
 }
 .rd-poster {
-  width: 150px; flex-shrink: 0;
-  border-radius: 10px; overflow: hidden;
+  width: 150px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
   box-shadow: 0 12px 40px rgba(0,0,0,0.7);
   border: 2px solid rgba(255,255,255,0.08);
 }
 .rd-poster img { width: 100%; display: block; aspect-ratio: 2/3; object-fit: cover; }
+
 .rd-meta { flex: 1; min-width: 0; }
 .rd-title {
   font-family: var(--font-head);
-  font-size: 28px; letter-spacing: 1px;
-  color: var(--text); line-height: 1.15; margin-bottom: 4px;
+  font-size: clamp(22px, 5vw, 36px);
+  letter-spacing: 1px;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 4px;
 }
 .rd-title-alt { font-size: 13px; color: var(--text3); margin-bottom: 14px; font-style: italic; }
-.rd-stats-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+
+.rd-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
 .rd-stat {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 13px; color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text2);
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--border);
-  padding: 4px 10px; border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 .rd-stat.score { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+
 .rd-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .rd-genre-tag {
-  padding: 4px 12px; border-radius: 20px;
-  font-size: 12px; font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
   background: rgba(230,57,70,0.1);
   border: 1px solid rgba(230,57,70,0.25);
   color: #e63946;
 }
+
 .rd-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .rd-btn-watch {
-  display: flex; align-items: center; gap: 7px;
-  padding: 10px 20px; background: var(--accent); color: #fff;
-  border-radius: var(--radius); font-size: 14px; font-weight: 700;
-  font-family: var(--font-body); text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  text-decoration: none;
   transition: opacity 0.2s, transform 0.15s;
 }
 .rd-btn-watch:hover { opacity: 0.85; transform: translateY(-1px); }
-.rd-btn-secondary {
-  display: flex; align-items: center; gap: 7px;
-  padding: 10px 16px; background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border); color: var(--text2);
-  border-radius: var(--radius); font-size: 14px;
-  font-family: var(--font-body); text-decoration: none;
-  transition: all 0.2s; cursor: pointer;
-}
-.rd-btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text); }
 .rd-btn-back {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 14px; background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border); color: var(--text2);
-  border-radius: var(--radius); font-size: 13px;
-  font-family: var(--font-body); text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: var(--font-body);
+  text-decoration: none;
   transition: all 0.2s;
 }
 .rd-btn-back:hover { background: rgba(255,255,255,0.1); color: var(--text); }
 
-/* ── 2-COLUMN LAYOUT ── */
-.rd-body {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 16px;
-  align-items: start;
+/* ── RANKING ── */
+.rd-ranking-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+  margin-bottom: 24px;
 }
-.rd-col-left { min-width: 0; }
-.rd-col-right { min-width: 0; }
+.rd-ranking-row::-webkit-scrollbar { display: none; }
+.rd-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+.rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
+.rd-rank-label { color: var(--text3); font-size: 11px; }
 
 /* ── SECTIONS ── */
 .rd-section {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  margin-bottom: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
   animation: rdFadeUp 0.4s ease both;
 }
 @keyframes rdFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
 .rd-section-title {
   font-family: var(--font-head);
-  font-size: 14px; letter-spacing: 1.5px;
-  color: var(--accent); margin-bottom: 14px;
-  display: flex; align-items: center; gap: 8px;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
-/* Ranking row */
-.rd-ranking-row {
-  display: flex; gap: 8px;
-  padding: 4px 0 8px; scrollbar-width: none;
-  margin-bottom: 14px; flex-wrap: wrap;
-}
-.rd-rank-item {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 10px 14px;
-  white-space: nowrap; flex: 1; font-size: 13px;
-}
-.rd-rank-num { font-family: var(--font-head); font-size: 18px; color: var(--accent); }
-.rd-rank-label { color: var(--text3); font-size: 11px; }
 
 /* Synopsis */
 .rd-synopsis {
-  font-size: 14px; color: var(--text2);
-  line-height: 1.85; position: relative;
-  overflow: hidden; max-height: 120px;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.85;
+  position: relative;
+  overflow: hidden;
+  max-height: 120px;
   transition: max-height 0.4s ease;
 }
 .rd-synopsis.expanded { max-height: 9999px; }
 .rd-synopsis-fade {
-  position: absolute; bottom: 0; left: 0; right: 0;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
   height: 50px;
   background: linear-gradient(to bottom, transparent, var(--card));
-  pointer-events: none; transition: opacity 0.3s;
+  pointer-events: none;
+  transition: opacity 0.3s;
 }
 .rd-synopsis.expanded .rd-synopsis-fade { opacity: 0; }
 .rd-read-more {
-  margin-top: 10px; color: var(--accent);
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 10px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Info grid */
-.rd-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rd-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media(max-width:500px) { .rd-info-grid { grid-template-columns: 1fr; } }
 .rd-info-item {}
 .rd-info-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
 .rd-info-value { font-size: 14px; color: var(--text2); }
 .rd-info-value a { color: var(--accent); }
 
-/* Alt titles */
-.rd-alt-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.rd-alt-tag {
-  padding: 4px 12px; border-radius: 20px;
-  font-size: 12px; background: var(--bg2);
-  border: 1px solid var(--border); color: var(--text2);
-}
-
-/* Stats sidebar */
-.rd-stats-table { width: 100%; border-collapse: collapse; }
-.rd-stats-table tr { border-bottom: 1px solid var(--border); }
-.rd-stats-table tr:last-child { border-bottom: none; }
-.rd-stats-table td { padding: 9px 4px; font-size: 13px; }
-.rd-stats-table td:first-child { color: var(--text3); width: 45%; }
-.rd-stats-table td:last-child { color: var(--text); font-weight: 600; text-align: right; }
-.rd-score-val { color: #fbbf24 !important; font-family: var(--font-head); font-size: 18px !important; }
-
-/* Trailer */
-.rd-trailer-wrap {
-  position: relative; padding-bottom: 56.25%;
-  border-radius: var(--radius); overflow: hidden; background: var(--bg);
-}
-.rd-trailer-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-
 /* Characters */
-.rd-chars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.rd-chars-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media(min-width:600px) { .rd-chars-grid { grid-template-columns: repeat(3, 1fr); } }
+
 .rd-char-card {
-  display: flex; gap: 8px; background: var(--bg2);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 8px; align-items: center; transition: border-color 0.2s;
+  display: flex;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  align-items: center;
+  transition: border-color 0.2s;
 }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
-.rd-char-img { width: 44px; height: 56px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: var(--border); }
+.rd-char-img {
+  width: 44px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: var(--border);
+}
 .rd-char-info { flex: 1; min-width: 0; }
 .rd-char-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rd-char-role { font-size: 11px; color: var(--text3); }
@@ -199,19 +238,54 @@
 .rd-va-img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; background: var(--border); }
 .rd-va-name { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Loading / Error */
+/* Trailer */
+.rd-trailer-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+}
+.rd-trailer-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Loading */
 .rd-loading {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 80px 20px; color: var(--text3); gap: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text3);
+  gap: 16px;
 }
 .rd-spinner {
   width: 36px; height: 36px;
-  border: 3px solid var(--border); border-top-color: var(--accent);
-  border-radius: 50%; animation: rdSpin 0.8s linear infinite;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: rdSpin 0.8s linear infinite;
 }
 @keyframes rdSpin { to { transform: rotate(360deg); } }
-.rd-error { text-align: center; padding: 60px 20px; color: var(--text3); }
+
+/* Error */
+.rd-error {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text3);
+}
 .rd-error h3 { color: var(--text2); font-size: 16px; margin-bottom: 8px; }
+
+@media(max-width: 600px) {
+  .rd-hero-inner { flex-direction: column; align-items: center; text-align: center; }
+  .rd-poster { width: 120px; }
+  .rd-stats-row, .rd-genres, .rd-actions { justify-content: center; }
+}
 </style>
 {% endblock %}
 
@@ -227,6 +301,7 @@
 {% block scripts %}
 <script>
 (async function() {
+  // Ambil mal_id dari URL: /rekomendasi/anime/12345
   const malId = window.location.pathname.split('/').pop();
   const page  = document.getElementById('rdPage');
 
@@ -236,35 +311,33 @@
   }
 
   try {
+    // Fetch paralel: detail + characters
     const [resDetail, resChars] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
       fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`)
     ]);
+
     const { data: a } = await resDetail.json();
     const { data: chars } = await resChars.json();
+
     if (!a) throw new Error('Not found');
 
+    // Update page title
     document.title = `${a.title} — Animeku.id`;
 
-    const poster     = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
-    const genres     = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
-    const mainChars  = (chars || []).filter(c => c.role === 'Main').slice(0, 6);
-    const supChars   = (chars || []).filter(c => c.role === 'Supporting').slice(0, 6);
-    const allChars   = [...mainChars, ...supChars].slice(0, 12);
-    const searchSlug = encodeURIComponent(a.title);
+    const poster  = a.images?.webp?.large_image_url || a.images?.jpg?.large_image_url || '/static/img/placeholder.svg';
+    const genres  = [...(a.genres || []), ...(a.themes || [])].slice(0, 6);
+    const mainChars = (chars || []).filter(c => c.role === 'Main').slice(0, 6);
+    const supChars  = (chars || []).filter(c => c.role === 'Supporting').slice(0, 6);
+    const allChars  = [...mainChars, ...supChars].slice(0, 12);
 
-    // Alt titles
-    const altTitles = (a.titles || [])
-      .filter(t => t.type !== 'Default')
-      .map(t => t.title)
-      .filter((v,i,arr) => v && arr.indexOf(v) === i)
-      .slice(0, 5);
+    const searchSlug = encodeURIComponent(a.title);
 
     page.innerHTML = `
       <!-- Back -->
       <div style="margin-bottom:16px">
-        <a href="javascript:history.back()" class="rd-btn-back">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        <a href="javascript:history.back()" class="rd-btn-back" style="display:inline-flex">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Kembali
         </a>
       </div>
@@ -278,161 +351,115 @@
           </div>
           <div class="rd-meta">
             <h1 class="rd-title">${esc(a.title)}</h1>
-            ${a.title_english && a.title_english !== a.title ? `<div class="rd-title-alt">${esc(a.title_english)}</div>` : ''}
+            ${a.title_japanese ? `<div class="rd-title-alt">${esc(a.title_japanese)}</div>` : ''}
+
             <div class="rd-stats-row">
               ${a.score ? `<span class="rd-stat score">⭐ ${a.score} <span style="font-size:11px;opacity:.6">/ 10</span></span>` : ''}
               ${a.scored_by ? `<span class="rd-stat">❤️ ${(a.scored_by/1000).toFixed(0)}k votes</span>` : ''}
               ${a.episodes ? `<span class="rd-stat">▶ ${a.episodes} Ep</span>` : ''}
               ${a.duration ? `<span class="rd-stat">⏱ ${a.duration.replace(' per ep','')}</span>` : ''}
               ${a.type ? `<span class="rd-stat">${esc(a.type)}</span>` : ''}
-              ${a.status ? `<span class="rd-stat" style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</span>` : ''}
+              ${a.status ? `<span class="rd-stat" style="color:${a.airing ? '#4caf7d' : 'var(--text2)'}">${esc(a.status)}</span>` : ''}
             </div>
+
             <div class="rd-genres">
-              ${genres.map(g=>`<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
+              ${genres.map(g => `<span class="rd-genre-tag">${esc(g.name)}</span>`).join('')}
             </div>
+
             <div class="rd-actions">
               <a href="/search?q=${searchSlug}" class="rd-btn-watch">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
                 Tonton di Animeku
               </a>
-              <button class="rd-btn-secondary" onclick="navigator.clipboard.writeText(location.href).then(()=>alert('Link disalin!'))">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Salin Link
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 2-column body -->
-      <div class="rd-body">
+      <!-- Ranking -->
+      ${a.rank || a.popularity ? `
+      <div class="rd-ranking-row">
+        ${a.rank ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-label">Ranked</span></div>` : ''}
+        ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-label">Populer</span></div>` : ''}
+        ${a.members ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.members/1000).toFixed(0)}k</span><span class="rd-rank-label">Members</span></div>` : ''}
+        ${a.favorites ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.favorites/1000).toFixed(0)}k</span><span class="rd-rank-label">Favorit</span></div>` : ''}
+      </div>` : ''}
 
-        <!-- LEFT COLUMN -->
-        <div class="rd-col-left">
+      <!-- Synopsis -->
+      ${a.synopsis ? `
+      <div class="rd-section" style="animation-delay:0.05s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Sinopsis
+        </div>
+        <div class="rd-synopsis" id="rdSynopsis">
+          ${esc(a.synopsis)}
+          <div class="rd-synopsis-fade"></div>
+        </div>
+        <span class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
+          Baca selengkapnya <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </div>` : ''}
 
-          <!-- Ranking -->
-          ${a.rank || a.popularity ? `
-          <div class="rd-ranking-row">
-            ${a.rank ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.rank}</span><span class="rd-rank-label">Highest Rated</span></div>` : ''}
-            ${a.popularity ? `<div class="rd-rank-item"><span class="rd-rank-num">#${a.popularity}</span><span class="rd-rank-label">Most Popular</span></div>` : ''}
-            ${a.favorites ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.favorites/1000).toFixed(1)}K</span><span class="rd-rank-label">Favorit</span></div>` : ''}
-            ${a.members ? `<div class="rd-rank-item"><span class="rd-rank-num">${(a.members/1000).toFixed(0)}K</span><span class="rd-rank-label">Members</span></div>` : ''}
-          </div>` : ''}
+      <!-- Information -->
+      <div class="rd-section" style="animation-delay:0.1s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Informasi
+        </div>
+        <div class="rd-info-grid">
+          ${a.status ? infoItem('Status', `<span style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</span>`) : ''}
+          ${a.season && a.year ? infoItem('Season', `${esc(a.season.charAt(0).toUpperCase()+a.season.slice(1))} ${a.year}`) : ''}
+          ${a.source ? infoItem('Source', esc(a.source)) : ''}
+          ${a.rating ? infoItem('Rating', esc(a.rating)) : ''}
+          ${a.aired?.string ? infoItem('Tayang', esc(a.aired.string)) : ''}
+          ${a.broadcast?.string ? infoItem('Jadwal', esc(a.broadcast.string)) : ''}
+          ${a.studios?.length ? infoItem('Studio', a.studios.map(s=>`<a href="/search?q=${encodeURIComponent(s.name)}">${esc(s.name)}</a>`).join(', ')) : ''}
+          ${a.producers?.length ? infoItem('Producer', a.producers.slice(0,3).map(p=>esc(p.name)).join(', ')) : ''}
+        </div>
+      </div>
 
-          <!-- Information -->
-          <div class="rd-section" style="animation-delay:0.05s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Information
-            </div>
-            <div class="rd-info-grid">
-              ${a.status ? infoItem('Status', `<span style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</span>`) : ''}
-              ${a.season && a.year ? infoItem('Season', `${esc(a.season.charAt(0).toUpperCase()+a.season.slice(1))} ${a.year}`) : ''}
-              ${a.source ? infoItem('Source', esc(a.source)) : ''}
-              ${a.aired?.string ? infoItem('Aired', esc(a.aired.string)) : ''}
-              ${a.studios?.length ? infoItem('Studios', a.studios.map(s=>`<a href="/search?q=${encodeURIComponent(s.name)}">${esc(s.name)}</a>`).join(', ')) : ''}
-              ${a.producers?.length ? infoItem('Producers', a.producers.slice(0,3).map(p=>esc(p.name)).join(', ')) : ''}
-              ${a.rating ? infoItem('Rating', esc(a.rating)) : ''}
-              ${a.broadcast?.string ? infoItem('Broadcast', esc(a.broadcast.string)) : ''}
-              ${a.score && a.scored_by ? infoItem('Mean Score', `${a.score} (${(a.scored_by/1000).toFixed(0)}k users)`) : ''}
-            </div>
-          </div>
+      <!-- Characters -->
+      ${allChars.length ? `
+      <div class="rd-section" style="animation-delay:0.15s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Karakter
+        </div>
+        <div class="rd-chars-grid">
+          ${allChars.map(c => {
+            const charImg = c.character?.images?.jpg?.image_url || '';
+            const va = (c.voice_actors || []).find(v => v.language === 'Japanese');
+            const vaImg = va?.person?.images?.jpg?.image_url || '';
+            const vaName = va?.person?.name || '';
+            return `
+            <div class="rd-char-card">
+              <img class="rd-char-img" src="${charImg || '/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
+              <div class="rd-char-info">
+                <div class="rd-char-name">${esc(c.character?.name || '')}</div>
+                <div class="rd-char-role">${esc(c.role || '')}</div>
+                ${vaName ? `
+                <div class="rd-va-wrap">
+                  ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
+                  <span class="rd-va-name">${esc(vaName)}</span>
+                </div>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
 
-          <!-- Alt Titles -->
-          ${altTitles.length ? `
-          <div class="rd-section" style="animation-delay:0.08s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Alternative Titles
-            </div>
-            <div class="rd-alt-tags">
-              ${altTitles.map(t=>`<span class="rd-alt-tag">${esc(t)}</span>`).join('')}
-            </div>
-          </div>` : ''}
-
-          <!-- Synopsis -->
-          ${a.synopsis ? `
-          <div class="rd-section" style="animation-delay:0.1s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Synopsis
-            </div>
-            <div class="rd-synopsis" id="rdSynopsis">
-              ${esc(a.synopsis)}
-              <div class="rd-synopsis-fade"></div>
-            </div>
-            <span class="rd-read-more" id="rdReadMore" onclick="rdToggleSyn()">
-              Baca selengkapnya
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rdSynArrow"><path d="M6 9l6 6 6-6"/></svg>
-            </span>
-          </div>` : ''}
-
-          <!-- Characters -->
-          ${allChars.length ? `
-          <div class="rd-section" style="animation-delay:0.15s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Characters
-            </div>
-            <div class="rd-chars-grid">
-              ${allChars.map(c => {
-                const charImg = c.character?.images?.jpg?.image_url || '';
-                const va = (c.voice_actors||[]).find(v=>v.language==='Japanese');
-                const vaImg = va?.person?.images?.jpg?.image_url || '';
-                const vaName = va?.person?.name || '';
-                return `<div class="rd-char-card">
-                  <img class="rd-char-img" src="${charImg||'/static/img/placeholder.svg'}" alt="" onerror="this.src='/static/img/placeholder.svg'" loading="lazy">
-                  <div class="rd-char-info">
-                    <div class="rd-char-name">${esc(c.character?.name||'')}</div>
-                    <div class="rd-char-role">${esc(c.role||'')}</div>
-                    ${vaName ? `<div class="rd-va-wrap">
-                      ${vaImg ? `<img class="rd-va-img" src="${vaImg}" alt="" onerror="this.style.display='none'" loading="lazy">` : ''}
-                      <span class="rd-va-name">${esc(vaName)}</span>
-                    </div>` : ''}
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>` : ''}
-
-        </div><!-- /col-left -->
-
-        <!-- RIGHT COLUMN -->
-        <div class="rd-col-right">
-
-          <!-- Trailer -->
-          ${a.trailer?.embed_url ? `
-          <div class="rd-section" style="animation-delay:0.05s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
-              Trailer
-            </div>
-            <div class="rd-trailer-wrap">
-              <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
-            </div>
-          </div>` : ''}
-
-          <!-- Stats -->
-          <div class="rd-section" style="animation-delay:0.08s">
-            <div class="rd-section-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Stats
-            </div>
-            <table class="rd-stats-table">
-              ${a.score ? `<tr><td>Score</td><td class="rd-score-val">★ ${a.score}</td></tr>` : ''}
-              ${a.rank ? `<tr><td>Ranked</td><td>#${a.rank}</td></tr>` : ''}
-              ${a.popularity ? `<tr><td>Popularity</td><td>#${a.popularity}</td></tr>` : ''}
-              ${a.members ? `<tr><td>Members</td><td>${a.members.toLocaleString()}</td></tr>` : ''}
-              ${a.favorites ? `<tr><td>Favorites</td><td>${a.favorites.toLocaleString()}</td></tr>` : ''}
-              ${a.episodes ? `<tr><td>Episodes</td><td>${a.episodes}</td></tr>` : ''}
-              ${a.type ? `<tr><td>Type</td><td>${esc(a.type)}</td></tr>` : ''}
-              ${a.status ? `<tr><td>Status</td><td style="color:${a.airing?'#4caf7d':'var(--text2)'}">${esc(a.status)}</td></tr>` : ''}
-            </table>
-          </div>
-
-        </div><!-- /col-right -->
-
-      </div><!-- /rd-body -->
+      <!-- Trailer -->
+      ${a.trailer?.embed_url ? `
+      <div class="rd-section" style="animation-delay:0.2s">
+        <div class="rd-section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Trailer
+        </div>
+        <div class="rd-trailer-wrap">
+          <iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>` : ''}
     `;
 
   } catch(e) {
