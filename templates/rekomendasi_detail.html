@@ -234,24 +234,35 @@
 }
 .rd-btn-copy:hover { background: rgba(255,255,255,0.1); }
 
-/* ── CHARACTERS ── */
-.rd-chars-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+/* ── CHARACTERS & STAFF — horizontal scroll 2 rows ── */
+.rd-hscroll-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, calc(50% - 8px));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  /* force 2-column layout that scrolls */
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
 }
+.rd-hscroll-wrap::-webkit-scrollbar { display: none; }
+
 .rd-char-card {
   display: flex; gap: 0;
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden;
+  min-width: 220px;
   transition: border-color 0.2s;
 }
 .rd-char-card:hover { border-color: rgba(230,57,70,0.3); }
 .rd-char-img {
-  width: 68px; height: 90px;
+  width: 72px; height: 96px;
   object-fit: cover; flex-shrink: 0;
   background: var(--border);
 }
 .rd-char-body {
-  flex: 1; min-width: 0; padding: 8px 10px;
+  flex: 1; min-width: 0; padding: 10px 12px;
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .rd-char-name {
@@ -263,7 +274,7 @@
   display: flex; align-items: center; gap: 6px; margin-top: 8px;
 }
 .rd-va-img {
-  width: 26px; height: 26px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
   object-fit: cover; flex-shrink: 0; background: var(--border);
 }
 .rd-va-info { min-width: 0; }
@@ -273,42 +284,26 @@
 }
 .rd-va-lang { font-size: 9px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
 
-/* Chars pagination */
-.rd-chars-nav {
-  display: flex; align-items: center; justify-content: center;
-  gap: 12px; margin-top: 16px;
-}
-.rd-page-btn {
-  padding: 7px 18px; border-radius: var(--radius);
-  background: var(--bg2); border: 1px solid var(--border);
-  color: var(--text2); font-size: 13px; font-weight: 600;
-  cursor: pointer; font-family: var(--font-body);
-  transition: all 0.15s;
-}
-.rd-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-.rd-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.rd-page-info { font-size: 13px; color: var(--text3); }
-
-/* ── STAFF ── */
-.rd-staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* ── STAFF (same horizontal scroll) ── */
 .rd-staff-card {
   display: flex; gap: 10px; align-items: center;
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 10px 12px;
+  border-radius: var(--radius); padding: 12px 14px;
+  min-width: 220px;
   transition: border-color 0.2s;
 }
 .rd-staff-card:hover { border-color: rgba(230,57,70,0.2); }
 .rd-staff-img {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: 50%;
   object-fit: cover; flex-shrink: 0; background: var(--border);
 }
 .rd-staff-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .rd-staff-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .rd-staff-noimg {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: 50%;
   background: var(--bg3); border: 1px solid var(--border);
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.05em;
+  font-size: 9px; color: var(--text3); font-weight: 700; letter-spacing: 0.03em; text-align: center;
 }
 
 /* ── TRAILER ── */
@@ -336,8 +331,7 @@
 .rd-error h3 { color: var(--text2); margin-bottom: 8px; }
 
 @media(max-width: 480px) {
-  .rd-chars-grid { grid-template-columns: 1fr; }
-  .rd-staff-grid { grid-template-columns: 1fr; }
+
   .rd-info-grid { grid-template-columns: 1fr; }
   .rd-info-item:last-child { border-bottom: none; }
   .rd-info-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
@@ -367,9 +361,6 @@
   }
 
   let allChars = [], allStaff = [];
-  let charPage = 0;
-  const CHARS_PER_PAGE = 6;
-
   try {
     const [resDetail, resChars, resStaff] = await Promise.all([
       fetch(`https://api.jikan.moe/v4/anime/${malId}`),
@@ -392,11 +383,8 @@
     allChars = [...(chars||[])].sort((x,y) => (x.role==='Main'?0:1)-(y.role==='Main'?0:1));
     allStaff = (staff||[]).slice(0, 20);
 
-    function renderCharsPage() {
-      const start = charPage * CHARS_PER_PAGE;
-      const slice = allChars.slice(start, start + CHARS_PER_PAGE);
-      const total = Math.ceil(allChars.length / CHARS_PER_PAGE);
-      document.getElementById('rdCharsGrid').innerHTML = slice.map(c => {
+    function renderChars() {
+      document.getElementById('rdCharsGrid').innerHTML = allChars.slice(0, 40).map(c => {
         const img   = c.character?.images?.jpg?.image_url || '';
         const va    = (c.voice_actors||[]).find(v => v.language === 'Japanese');
         const vaImg = va?.person?.images?.jpg?.image_url || '';
@@ -418,9 +406,6 @@
           </div>
         </div>`;
       }).join('');
-      document.getElementById('rdCharPrev').disabled = charPage === 0;
-      document.getElementById('rdCharNext').disabled = charPage >= total - 1;
-      document.getElementById('rdCharPageInfo').textContent = `Page ${charPage+1} of ${total}`;
     }
 
     page.innerHTML = `
@@ -552,12 +537,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <div class="rd-section-title">Characters</div>
         </div>
-        <div class="rd-chars-grid" id="rdCharsGrid"></div>
-        <div class="rd-chars-nav">
-          <button class="rd-page-btn" id="rdCharPrev" onclick="rdCharNav(-1)">Prev</button>
-          <span class="rd-page-info" id="rdCharPageInfo"></span>
-          <button class="rd-page-btn" id="rdCharNext" onclick="rdCharNav(1)">Next</button>
-        </div>
+        <div class="rd-hscroll-wrap" id="rdCharsGrid"></div>
       </div>` : ''}
 
       <!-- Staff -->
@@ -567,7 +547,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
           <div class="rd-section-title">Staff</div>
         </div>
-        <div class="rd-staff-grid">
+        <div class="rd-hscroll-wrap">
           ${allStaff.map(s => {
             const img = s.person?.images?.jpg?.image_url || '';
             const roles = (s.positions||[]).join(', ');
@@ -600,10 +580,8 @@
     `;
 
     // Render chars
-    if (allChars.length) renderCharsPage();
+    if (allChars.length) renderChars();
 
-    // Expose for pagination
-    window._rdCharsRender = renderCharsPage;
 
   } catch(e) {
     document.getElementById('rdLoading')?.remove();
@@ -654,13 +632,6 @@ async function rdTranslate() {
   } catch { btn.textContent = '🌐 Terjemahkan (ID)'; }
 }
 
-// ── Chars pagination ──
-function rdCharNav(dir) {
-  charPage += dir;
-  window._rdCharsRender?.();
-  document.querySelector('.rd-section:has(#rdCharsGrid)')?.scrollIntoView({behavior:'smooth', block:'start'});
-}
-let charPage = 0;
 
 // ── Toast ──
 function rdToast(msg) {
