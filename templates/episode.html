@@ -18,6 +18,235 @@
 
 <style>
 .player-container { padding: 4px 4px 24px !important; }
+
+/* ── AUTO-NEXT OVERLAY ──────────────────────────────── */
+#autoNextOverlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  z-index: 20;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: inherit;
+}
+#autoNextOverlay.show { display: flex; }
+.autonext-title {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+}
+.autonext-ep {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-head);
+  text-align: center;
+  padding: 0 24px;
+}
+.autonext-ring {
+  position: relative;
+  width: 72px; height: 72px;
+}
+.autonext-ring svg {
+  position: absolute; inset: 0;
+  transform: rotate(-90deg);
+}
+.autonext-ring-bg { stroke: rgba(255,255,255,0.1); }
+.autonext-ring-fill {
+  stroke: var(--accent, #e63946);
+  stroke-dasharray: 188.5;
+  stroke-dashoffset: 188.5;
+  transition: stroke-dashoffset 1s linear;
+}
+.autonext-count {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #fff;
+  font-family: var(--font-head);
+}
+.autonext-actions { display: flex; gap: 10px; }
+.autonext-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-body);
+  transition: opacity 0.2s;
+}
+.autonext-btn:hover { opacity: 0.85; }
+.autonext-btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+.autonext-btn-now { background: var(--accent, #e63946); color: #fff; }
+
+/* ── KEYBOARD HINT ──────────────────────────────────── */
+#kbHint {
+  position: fixed;
+  bottom: 80px; right: 20px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 18px;
+  z-index: 9000;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  animation: fadeSlideIn 0.25s ease;
+}
+#kbHint.show { display: flex; }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.kb-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.kb-key {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+.kb-desc { color: rgba(255,255,255,0.55); font-size: 12px; }
+
+/* ── KB TOAST ───────────────────────────────────────── */
+#kbToast {
+  position: fixed;
+  top: 70px; left: 50%; transform: translateX(-50%) translateY(-10px);
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-family: var(--font-mono, monospace);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 9999;
+  white-space: nowrap;
+}
+#kbToast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── SHARE BAR ──────────────────────────────────────── */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  flex-wrap: wrap;
+}
+.share-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  margin-right: 4px;
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  font-family: var(--font-body);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.share-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+.share-btn-wa  { color: #25d366; border-color: rgba(37,211,102,0.3); }
+.share-btn-wa:hover  { background: rgba(37,211,102,0.08); border-color: rgba(37,211,102,0.5); color: #25d366; }
+.share-btn-tw  { color: #1d9bf0; border-color: rgba(29,155,240,0.3); }
+.share-btn-tw:hover  { background: rgba(29,155,240,0.08); border-color: rgba(29,155,240,0.5); color: #1d9bf0; }
+.share-btn-copy.copied { color: #4caf7d; border-color: rgba(76,175,125,0.4); }
+
+/* ── WATCHED BADGE di ep-btn ────────────────────────── */
+.ep-btn.watched {
+  position: relative;
+}
+.ep-btn.watched::after {
+  content: '✓';
+  position: absolute;
+  top: 2px; right: 4px;
+  font-size: 9px;
+  color: #4caf7d;
+  font-weight: 700;
+}
+
+/* ── JUMP TO CURRENT BTN ────────────────────────────── */
+#jumpCurrentBtn {
+  display: none;
+  margin-top: 10px;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(230,57,70,0.3);
+  background: rgba(230,57,70,0.08);
+  color: var(--accent, #e63946);
+  cursor: pointer;
+  font-family: var(--font-mono, monospace);
+  transition: all 0.2s;
+}
+#jumpCurrentBtn:hover { background: rgba(230,57,70,0.15); }
+#jumpCurrentBtn.show { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── SPOILER TAG di komentar ────────────────────────── */
+.spoiler-wrap {
+  display: inline-block;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 1px 8px;
+  cursor: pointer;
+  color: transparent;
+  text-shadow: 0 0 8px rgba(255,255,255,0.5);
+  transition: all 0.2s;
+  user-select: none;
+  font-style: italic;
+}
+.spoiler-wrap.revealed {
+  color: var(--text2);
+  text-shadow: none;
+  background: rgba(230,57,70,0.1);
+  border: 1px solid rgba(230,57,70,0.2);
+}
+.spoiler-toolbar {
+  display: flex; gap: 6px; margin-top: 8px; align-items: center;
+}
+.spoiler-toolbar-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text3);
+  cursor: pointer;
+  font-family: var(--font-mono, monospace);
+  transition: all 0.2s;
+}
+.spoiler-toolbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+.spoiler-toolbar-btn.active { color: var(--accent); border-color: rgba(230,57,70,0.3); background: rgba(230,57,70,0.08); }
 </style>
 
 <div class="player-container">
@@ -147,6 +376,25 @@
     })();
     </script>
 
+  <!-- AUTO-NEXT OVERLAY -->
+  {% if next_ep %}
+  <div id="autoNextOverlay">
+    <div class="autonext-title">Episode berikutnya</div>
+    <div class="autonext-ep" id="autoNextEpName">{{ next_ep.name }}</div>
+    <div class="autonext-ring">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle class="autonext-ring-bg" cx="36" cy="36" r="30" fill="none" stroke-width="5"/>
+        <circle class="autonext-ring-fill" id="autoNextRing" cx="36" cy="36" r="30" fill="none" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="autonext-count" id="autoNextCount">5</div>
+    </div>
+    <div class="autonext-actions">
+      <button class="autonext-btn autonext-btn-cancel" onclick="cancelAutoNext()">Batalkan</button>
+      <button class="autonext-btn autonext-btn-now" onclick="goNextNow()">Sekarang ›</button>
+    </div>
+  </div>
+  {% endif %}
+
     {% if data.streams and data.streams | length > 0 %}
     <iframe id="playerIframe" src="about:blank"
       allowfullscreen allow="autoplay; fullscreen"
@@ -222,6 +470,23 @@
     <span>Jika video tidak muncul, coba ganti server atau nonaktifkan ad blocker.</span>
   </div>
 
+  <!-- SHARE BAR -->
+  <div class="share-bar">
+    <span class="share-label">Share</span>
+    <a id="shareBtnWa" href="#" target="_blank" rel="noopener" class="share-btn share-btn-wa" onclick="shareWa(event)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.827L0 24l6.337-1.499A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 0 1-5.027-1.381l-.36-.214-3.732.882.924-3.638-.235-.374A9.788 9.788 0 0 1 2.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+      WhatsApp
+    </a>
+    <a id="shareBtnTw" href="#" target="_blank" rel="noopener" class="share-btn share-btn-tw" onclick="shareTw(event)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.213 5.567zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      Twitter/X
+    </a>
+    <button id="shareBtnCopy" class="share-btn share-btn-copy" onclick="shareCopy()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy Link
+    </button>
+  </div>
+
   <!-- ACTION BAR -->
   <div class="player-action-bar">
     {% if anime_slug %}
@@ -266,15 +531,23 @@
   <!-- DAFTAR EPISODE -->
   {% if episodes | length > 0 %}
   <div class="player-ep-section">
-    <button class="player-ep-toggle" id="epToggleBtn" onclick="toggleEpList()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      Daftar Episode ({{ episodes | length }})
-    </button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="player-ep-toggle" id="epToggleBtn" onclick="toggleEpList()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        Daftar Episode ({{ episodes | length }})
+      </button>
+      <button id="jumpCurrentBtn" onclick="jumpToCurrent()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Ke Episode Ini
+      </button>
+    </div>
     <div class="hidden" id="epListGrid">
-      <div class="episodes-grid" style="margin-top:12px">
+      <div class="episodes-grid" style="margin-top:12px" id="episodesGrid">
         {% for ep in episodes %}
         <a href="/episode/{{ ep.slug }}?anime={{ anime_slug }}"
-           class="ep-btn {% if ep.slug == slug %}active{% endif %}">
+           class="ep-btn {% if ep.slug == slug %}active{% endif %}"
+           data-slug="{{ ep.slug }}"
+           id="epbtn-{{ ep.slug }}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
           {{ ep.name }}
         </a>
@@ -286,8 +559,16 @@
 
 </div>
 
-<script>
-function selectQuality(btn, quality) {
+<!-- KEYBOARD HINT PANEL -->
+<div id="kbHint">
+  <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;font-family:var(--font-mono,monospace)">KEYBOARD SHORTCUTS</div>
+  <div class="kb-row"><span class="kb-key">N</span><span class="kb-desc">Episode berikutnya</span></div>
+  <div class="kb-row"><span class="kb-key">P</span><span class="kb-desc">Episode sebelumnya</span></div>
+  <div class="kb-row"><span class="kb-key">F</span><span class="kb-desc">Fullscreen</span></div>
+  <div class="kb-row"><span class="kb-key">?</span><span class="kb-desc">Tutup panel ini</span></div>
+</div>
+<!-- KB TOAST -->
+<div id="kbToast"></div>(btn, quality) {
   // Highlight tombol resolusi aktif
   document.querySelectorAll('#qualityTabs .server-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -361,12 +642,172 @@ function showPlaceholder() {
 function toggleEpList() {
   document.getElementById('epListGrid').classList.toggle('hidden');
   document.getElementById('epToggleBtn').classList.toggle('open');
+  updateJumpBtn();
 }
 
+/* ════════════════════════════════════════════════════
+   PROGRESS TRACKER — localStorage
+════════════════════════════════════════════════════ */
+const WATCHED_KEY = 'animeku_watched_{{ anime_slug }}';
+function getWatched() {
+  try { return JSON.parse(localStorage.getItem(WATCHED_KEY)) || []; } catch { return []; }
+}
+function markWatched(slug) {
+  const w = getWatched();
+  if (!w.includes(slug)) { w.push(slug); localStorage.setItem(WATCHED_KEY, JSON.stringify(w)); }
+}
+function applyWatchedBadges() {
+  const w = getWatched();
+  w.forEach(s => {
+    const btn = document.getElementById('epbtn-' + s);
+    if (btn) btn.classList.add('watched');
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   JUMP TO CURRENT EPISODE
+════════════════════════════════════════════════════ */
+function jumpToCurrent() {
+  const active = document.querySelector('.ep-btn.active');
+  if (active) {
+    active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    active.style.outline = '2px solid var(--accent)';
+    setTimeout(() => active.style.outline = '', 1500);
+  }
+}
+function updateJumpBtn() {
+  const btn = document.getElementById('jumpCurrentBtn');
+  if (!btn) return;
+  const grid = document.getElementById('epListGrid');
+  btn.classList.toggle('show', grid && !grid.classList.contains('hidden'));
+}
+
+/* ════════════════════════════════════════════════════
+   AUTO-NEXT EPISODE
+════════════════════════════════════════════════════ */
+{% if next_ep %}
+const NEXT_EP_URL = '/episode/{{ next_ep.slug }}?anime={{ anime_slug }}';
+{% else %}
+const NEXT_EP_URL = null;
+{% endif %}
+let autoNextTimer = null;
+let autoNextCount = 5;
+let autoNextInterval = null;
+const CIRCUMFERENCE = 188.5;
+
+function startAutoNextDetection() {
+  if (!NEXT_EP_URL) return;
+  window.addEventListener('message', function onMsg(e) {
+    if (e.data && (e.data.type === 'ended' || e.data === 'ended')) {
+      window.removeEventListener('message', onMsg);
+      triggerAutoNext();
+    }
+  });
+}
+function triggerAutoNext() {
+  if (!NEXT_EP_URL) return;
+  clearTimeout(autoNextTimer);
+  const overlay = document.getElementById('autoNextOverlay');
+  if (!overlay) return;
+  overlay.classList.add('show');
+  autoNextCount = 5;
+  const countEl = document.getElementById('autoNextCount');
+  const ring = document.getElementById('autoNextRing');
+  if (countEl) countEl.textContent = autoNextCount;
+  if (ring) ring.style.strokeDashoffset = '0';
+  autoNextInterval = setInterval(() => {
+    autoNextCount--;
+    if (countEl) countEl.textContent = autoNextCount;
+    if (ring) ring.style.strokeDashoffset = CIRCUMFERENCE * (autoNextCount / 5);
+    if (autoNextCount <= 0) { clearInterval(autoNextInterval); goNextNow(); }
+  }, 1000);
+}
+function cancelAutoNext() {
+  clearInterval(autoNextInterval);
+  clearTimeout(autoNextTimer);
+  const overlay = document.getElementById('autoNextOverlay');
+  if (overlay) overlay.classList.remove('show');
+}
+function goNextNow() {
+  if (NEXT_EP_URL) window.location.href = NEXT_EP_URL;
+}
+
+/* ════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+════════════════════════════════════════════════════ */
+let kbToastTimeout = null;
+function showKbToast(msg) {
+  const t = document.getElementById('kbToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(kbToastTimeout);
+  kbToastTimeout = setTimeout(() => t.classList.remove('show'), 1800);
+}
+document.addEventListener('keydown', function(e) {
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  switch(e.key.toLowerCase()) {
+    case 'n':
+      {% if next_ep %}
+      showKbToast('⏭ Episode berikutnya');
+      setTimeout(() => window.location.href = '/episode/{{ next_ep.slug }}?anime={{ anime_slug }}', 600);
+      {% else %}
+      showKbToast('Tidak ada episode berikutnya');
+      {% endif %}
+      break;
+    case 'p':
+      {% if prev_ep %}
+      showKbToast('⏮ Episode sebelumnya');
+      setTimeout(() => window.location.href = '/episode/{{ prev_ep.slug }}?anime={{ anime_slug }}', 600);
+      {% else %}
+      showKbToast('Tidak ada episode sebelumnya');
+      {% endif %}
+      break;
+    case 'f':
+      const iframe = document.getElementById('playerIframe');
+      if (iframe) {
+        if (iframe.requestFullscreen) iframe.requestFullscreen();
+        else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+        showKbToast('⛶ Fullscreen');
+      }
+      break;
+    case '?':
+      document.getElementById('kbHint')?.classList.toggle('show');
+      break;
+  }
+});
+
+/* ════════════════════════════════════════════════════
+   SHARE BUTTONS
+════════════════════════════════════════════════════ */
+function getShareText() {
+  const title = document.querySelector('.player-title')?.textContent.trim() || document.title;
+  return encodeURIComponent('Lagi nonton: ' + title + ' di Animeku.id\n' + window.location.href);
+}
+function shareWa(e) { e.preventDefault(); window.open('https://wa.me/?text=' + getShareText(), '_blank'); }
+function shareTw(e) { e.preventDefault(); window.open('https://twitter.com/intent/tweet?text=' + getShareText(), '_blank'); }
+function shareCopy() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.getElementById('shareBtnCopy');
+    if (!btn) return;
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tersalin!`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link`;
+    }, 2000);
+  }).catch(() => {});
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
-  // Auto-load server pertama
   const firstBtn = document.querySelector('.server-btn.active');
   if (firstBtn) switchServer(firstBtn);
+
+  markWatched('{{ slug }}');
+  applyWatchedBadges();
 
   if (typeof saveEpisodeProgress === 'function') {
     saveEpisodeProgress(
@@ -379,6 +820,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<!-- KEYBOARD HINT PANEL -->
+<div id="kbHint">
+  <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;font-family:var(--font-mono,monospace)">KEYBOARD SHORTCUTS</div>
+  <div class="kb-row"><span class="kb-key">N</span><span class="kb-desc">Episode berikutnya</span></div>
+  <div class="kb-row"><span class="kb-key">P</span><span class="kb-desc">Episode sebelumnya</span></div>
+  <div class="kb-row"><span class="kb-key">F</span><span class="kb-desc">Fullscreen player</span></div>
+  <div class="kb-row"><span class="kb-key">?</span><span class="kb-desc">Tutup panel ini</span></div>
+  <div style="margin-top:6px;font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--font-mono,monospace)">Tekan ? untuk toggle</div>
+</div>
+<!-- KB TOAST -->
+<div id="kbToast"></div>
 
 <!-- KOMENTAR -->
 <div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
@@ -504,7 +957,13 @@ function renderCommentForm(user) {
       <div style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
         ${avatarHtml}
         <div style="flex:1">
-          <textarea id="commentInput" placeholder="Tulis komentar..." rows="2" class="comment-input"></textarea>
+          <textarea id="commentInput" placeholder="Tulis komentar... (gunakan [spoiler]teks[/spoiler] untuk menyembunyikan spoiler)" rows="2" class="comment-input"></textarea>
+          <div class="spoiler-toolbar">
+            <button class="spoiler-toolbar-btn" id="spoilerTagBtn" onclick="insertSpoilerTag()" title="Wrap teks terpilih sebagai spoiler">
+              🙈 Spoiler Tag
+            </button>
+            <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono,monospace)">atau tulis [spoiler]...[/spoiler]</span>
+          </div>
           <button onclick="submitComment()" class="btn btn-primary btn-sm" style="margin-top:10px">Kirim</button>
         </div>
       </div>`;
@@ -539,7 +998,7 @@ async function loadComments() {
           <span class="comment-name">${escHtml(c.user_name||'User')}</span>
           <span class="comment-time">${timeAgo(c.created_at)}</span>
         </div>
-        <p class="comment-body">${escHtml(c.content)}</p>
+        <p class="comment-body">${renderComment(c.content)}</p>
         ${deleteBtn}
       </div>
     </div>`;
@@ -595,6 +1054,29 @@ function timeAgo(iso) {
   if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
   if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
   return Math.floor(diff/86400) + ' hari lalu';
+}
+
+function renderComment(content) {
+  // Parse [spoiler]...[/spoiler] tags
+  return escHtml(content).replace(
+    /\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi,
+    (_, inner) => `<span class="spoiler-wrap" onclick="this.classList.toggle('revealed')" title="Klik untuk reveal spoiler">⚠ ${inner}</span>`
+  );
+}
+
+function insertSpoilerTag() {
+  const ta = document.getElementById('commentInput');
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const selected = ta.value.substring(start, end) || 'tulis spoiler di sini';
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(end);
+  ta.value = before + '[spoiler]' + selected + '[/spoiler]' + after;
+  ta.focus();
+  ta.selectionStart = start + 9;
+  ta.selectionEnd = start + 9 + selected.length;
+  const btn = document.getElementById('spoilerTagBtn');
+  if (btn) { btn.classList.add('active'); setTimeout(() => btn.classList.remove('active'), 600); }
 }
 
 initComments();
