@@ -2076,5 +2076,9 @@ def trakteer_latest():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
+@app.route('/quiz')
+def quiz():
+    return render_template('quiz.html')
+
 if __name__ == "__main__":
     app.run(debug=True)
