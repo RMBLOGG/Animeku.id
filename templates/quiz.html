@@ -1,0 +1,749 @@
+{% extends "base.html" %}
+{% block title %}Anime Quiz — Animeku.id{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ── PAGE ── */
+.qz-page { max-width: 640px; margin: 0 auto; padding: 32px 16px 100px; }
+
+/* ── HERO ── */
+.qz-hero {
+  text-align: center; margin-bottom: 32px;
+}
+.qz-hero-icon {
+  font-size: 48px; display: block; margin-bottom: 10px;
+  animation: qzBounce 2s ease-in-out infinite;
+}
+@keyframes qzBounce {
+  0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) }
+}
+.qz-hero h1 {
+  font-family: var(--font-head); font-size: 32px;
+  letter-spacing: 2px; color: var(--text); margin: 0 0 6px;
+}
+.qz-hero h1 span { color: var(--accent); }
+.qz-hero p { color: var(--text3); font-size: 13px; }
+
+/* ── CARDS ── */
+.qz-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px;
+  margin-bottom: 16px; animation: qzFadeUp 0.35s ease both;
+}
+@keyframes qzFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+
+/* ── LOGIN GATE ── */
+.qz-login-gate { text-align: center; padding: 32px 20px; }
+.qz-login-gate .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+.qz-login-gate h2 { font-family: var(--font-head); font-size: 20px; color: var(--text); margin-bottom: 8px; }
+.qz-login-gate p { color: var(--text3); font-size: 13px; margin-bottom: 20px; }
+
+/* ── DIFFICULTY ── */
+.qz-diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.qz-diff-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 16px 8px; border-radius: var(--radius);
+  border: 2px solid var(--border); background: var(--bg2);
+  cursor: pointer; transition: all 0.15s; font-family: var(--font-body);
+}
+.qz-diff-btn:hover { border-color: var(--accent); background: rgba(230,57,70,0.06); }
+.qz-diff-btn.selected { border-color: var(--accent); background: rgba(230,57,70,0.1); }
+.qz-diff-btn .icon { font-size: 24px; }
+.qz-diff-btn .label { font-size: 13px; font-weight: 700; color: var(--text); }
+.qz-diff-btn .desc { font-size: 10px; color: var(--text3); text-align: center; }
+
+/* ── BUTTONS ── */
+.qz-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 11px 22px; border-radius: var(--radius);
+  font-size: 14px; font-weight: 700; font-family: var(--font-body);
+  cursor: pointer; border: none; transition: all 0.15s; text-decoration: none;
+}
+.qz-btn-primary { background: var(--accent); color: #fff; width: 100%; }
+.qz-btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.qz-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.qz-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text2); }
+.qz-btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+/* ── QUIZ AREA ── */
+.qz-progress-bar-wrap {
+  background: var(--bg2); border-radius: 99px;
+  height: 6px; margin-bottom: 16px; overflow: hidden;
+}
+.qz-progress-bar {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(to right, var(--accent), #ff6b6b);
+  transition: width 0.4s ease;
+}
+.qz-hud {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.qz-hud-stat {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--text3); font-weight: 700;
+}
+.qz-hud-stat span { color: var(--text); font-family: var(--font-head); font-size: 16px; }
+.qz-timer {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-head); font-size: 22px; color: var(--text);
+  transition: color 0.3s;
+}
+.qz-timer.urgent { color: var(--accent); animation: qzPulse 0.5s ease infinite alternate; }
+@keyframes qzPulse { from{opacity:1} to{opacity:0.5} }
+
+/* ── POSTER AREA ── */
+.qz-poster-wrap {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  margin-bottom: 20px; background: var(--bg2);
+  border: 1px solid var(--border);
+  height: 260px;
+}
+.qz-poster-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: filter 0.5s ease;
+}
+.qz-poster-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(9,11,15,0.6) 0%, transparent 60%);
+  pointer-events: none;
+}
+.qz-blur-hint {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; color: rgba(255,255,255,0.6);
+  font-family: var(--font-head); letter-spacing: 0.5px;
+}
+.qz-question-label {
+  font-family: var(--font-head); font-size: 16px;
+  letter-spacing: 0.5px; color: var(--text); margin-bottom: 14px;
+  text-align: center;
+}
+
+/* ── CHOICES ── */
+.qz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qz-choice {
+  padding: 12px 14px; border-radius: var(--radius);
+  border: 1.5px solid var(--border); background: var(--bg2);
+  color: var(--text2); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; text-align: left;
+  font-family: var(--font-body); line-height: 1.4;
+  display: flex; align-items: center; gap: 8px;
+}
+.qz-choice:hover:not(:disabled) { border-color: rgba(230,57,70,0.5); background: rgba(230,57,70,0.05); color: var(--text); }
+.qz-choice.correct { border-color: #4caf7d; background: rgba(76,175,125,0.12); color: #4caf7d; }
+.qz-choice.wrong { border-color: var(--accent); background: rgba(230,57,70,0.12); color: var(--accent); }
+.qz-choice.dimmed { opacity: 0.35; }
+.qz-choice:disabled { cursor: not-allowed; }
+.qz-choice-letter {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+  font-family: var(--font-head);
+}
+.qz-choice.correct .qz-choice-letter { background: rgba(76,175,125,0.25); border-color: #4caf7d; }
+.qz-choice.wrong .qz-choice-letter { background: rgba(230,57,70,0.25); border-color: var(--accent); }
+
+/* ── FEEDBACK ── */
+.qz-feedback {
+  margin-top: 14px; padding: 12px 14px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; text-align: center;
+  display: none; animation: qzFadeUp 0.2s ease;
+}
+.qz-feedback.correct { background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.3); color: #4caf7d; }
+.qz-feedback.wrong { background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.25); color: var(--accent); }
+.qz-feedback.timeout { background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.25); color: #ffc107; }
+
+/* ── RESULT ── */
+.qz-result-score {
+  text-align: center; padding: 20px 0;
+}
+.qz-result-score .big {
+  font-family: var(--font-head); font-size: 72px;
+  color: var(--accent); line-height: 1; display: block;
+}
+.qz-result-score .label { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.qz-result-grade {
+  font-family: var(--font-head); font-size: 28px; margin: 12px 0 4px;
+}
+.qz-result-msg { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.qz-result-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;
+}
+.qz-result-stat {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 8px; text-align: center;
+}
+.qz-result-stat .val { font-family: var(--font-head); font-size: 20px; color: var(--text); }
+.qz-result-stat .lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+.qz-btn-row { display: flex; gap: 8px; }
+.qz-btn-row .qz-btn { flex: 1; }
+
+/* ── LEADERBOARD ── */
+.qz-lb-title {
+  font-family: var(--font-head); font-size: 18px; letter-spacing: 1px;
+  color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.qz-lb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
+  background: var(--bg2); border: 1px solid var(--border);
+  margin-bottom: 6px; transition: border-color 0.2s;
+}
+.qz-lb-item.me { border-color: rgba(230,57,70,0.4); background: rgba(230,57,70,0.05); }
+.qz-lb-rank {
+  font-family: var(--font-head); font-size: 18px; width: 28px;
+  text-align: center; flex-shrink: 0;
+}
+.qz-lb-rank.gold { color: #fbbf24; }
+.qz-lb-rank.silver { color: #94a3b8; }
+.qz-lb-rank.bronze { color: #cd7c4b; }
+.qz-lb-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  object-fit: cover; background: var(--border); flex-shrink: 0;
+}
+.qz-lb-avatar-ph {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); display: flex; align-items: center;
+  justify-content: center; font-family: var(--font-head);
+  font-size: 14px; color: #fff; flex-shrink: 0;
+}
+.qz-lb-name { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
+.qz-lb-info { font-size: 11px; color: var(--text3); }
+.qz-lb-score { font-family: var(--font-head); font-size: 18px; color: var(--accent); flex-shrink: 0; }
+.qz-lb-empty { text-align: center; padding: 24px; color: var(--text3); font-size: 13px; }
+
+/* ── HOW TO PLAY ── */
+.qz-how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qz-how-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.qz-how-icon { font-size: 22px; flex-shrink: 0; }
+.qz-how-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.qz-how-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+@media(max-width: 480px) {
+  .qz-choices { grid-template-columns: 1fr; }
+  .qz-diff-grid { grid-template-columns: 1fr; }
+  .qz-how-grid { grid-template-columns: 1fr; }
+  .qz-result-stats { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qz-page">
+
+  <!-- HERO -->
+  <div class="qz-hero">
+    <span class="qz-hero-icon">🎌</span>
+    <h1>ANIME <span>QUIZ</span></h1>
+    <p>Seberapa hafal kamu sama anime? Tebak judulnya dari poster!</p>
+  </div>
+
+  <!-- SCREENS (diatur JS) -->
+  <div id="qzScreenHome">
+    <!-- Login gate -->
+    <div class="qz-card" id="qzLoginGate" style="display:none">
+      <div class="qz-login-gate">
+        <span class="emoji">🔒</span>
+        <h2>Login Dulu Yuk!</h2>
+        <p>Kamu perlu login untuk main quiz dan simpan skor ke leaderboard.</p>
+        <a href="/auth/login" class="qz-btn qz-btn-primary" style="max-width:200px;margin:0 auto">
+          <i class="fa-solid fa-right-to-bracket"></i> Login Sekarang
+        </a>
+      </div>
+    </div>
+
+    <!-- Main menu -->
+    <div id="qzMainMenu">
+      <!-- Difficulty -->
+      <div class="qz-card">
+        <div style="font-family:var(--font-head);font-size:16px;letter-spacing:1px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-sliders" style="color:var(--accent)"></i> Pilih Kesulitan
+        </div>
+        <div class="qz-diff-grid">
+          <button class="qz-diff-btn selected" data-diff="easy" onclick="qzSelectDiff(this,'easy')">
+            <span class="icon">🟢</span>
+            <span class="label">Mudah</span>
+            <span class="desc">Poster jelas<br>20 detik</span>
+          </button>
+          <button class="qz-diff-btn" data-diff="medium" onclick="qzSelectDiff(this,'medium')">
+            <span class="icon">🟡</span>
+            <span class="label">Sedang</span>
+            <span class="desc">Poster agak blur<br>15 detik</span>
+          </button>
+          <button class="qz-diff-btn" data-diff="hard" onclick="qzSelectDiff(this,'hard')">
+            <span class="icon">🔴</span>
+            <span class="label">Susah</span>
+            <span class="desc">Poster blur<br>10 detik</span>
+          </button>
+        </div>
+        <button class="qz-btn qz-btn-primary" id="qzStartBtn" onclick="qzStart()">
+          <i class="fa-solid fa-play"></i> Mulai Quiz
+        </button>
+      </div>
+
+      <!-- How to play -->
+      <div class="qz-card">
+        <div style="font-family:var(--font-head);font-size:16px;letter-spacing:1px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-circle-question" style="color:var(--accent)"></i> Cara Main
+        </div>
+        <div class="qz-how-grid">
+          <div class="qz-how-item">
+            <span class="qz-how-icon">🖼️</span>
+            <div class="qz-how-text"><strong>Lihat Poster</strong>Poster anime ditampilkan, makin lama makin jelas</div>
+          </div>
+          <div class="qz-how-item">
+            <span class="qz-how-icon">⏱️</span>
+            <div class="qz-how-text"><strong>Jawab Cepat</strong>Jawab sebelum waktu habis, skor lebih tinggi kalau cepat</div>
+          </div>
+          <div class="qz-how-item">
+            <span class="qz-how-icon">✅</span>
+            <div class="qz-how-text"><strong>Pilih Jawaban</strong>Ada 4 pilihan judul anime, pilih yang benar</div>
+          </div>
+          <div class="qz-how-item">
+            <span class="qz-how-icon">🏆</span>
+            <div class="qz-how-text"><strong>Kumpulkan Skor</strong>10 soal per sesi, skor terbaik masuk leaderboard</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div id="qzScreenLoading" style="display:none">
+    <div class="qz-card" style="text-align:center;padding:48px 24px">
+      <div style="font-size:40px;margin-bottom:16px;animation:qzBounce 1s ease-in-out infinite">🎌</div>
+      <div style="font-family:var(--font-head);font-size:18px;color:var(--text);margin-bottom:8px">Memuat Soal...</div>
+      <div style="font-size:13px;color:var(--text3)" id="qzLoadingStatus">Mengambil data anime</div>
+      <div style="margin-top:20px;background:var(--bg2);border-radius:99px;height:4px;overflow:hidden">
+        <div id="qzLoadBar" style="height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width 0.3s ease"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="qzScreenQuiz" style="display:none">
+    <div class="qz-progress-bar-wrap">
+      <div class="qz-progress-bar" id="qzProgressBar" style="width:10%"></div>
+    </div>
+    <div class="qz-hud">
+      <div class="qz-hud-stat"><i class="fa-solid fa-list-ol" style="font-size:12px"></i> Soal <span id="qzQNum">1</span>/10</div>
+      <div class="qz-timer" id="qzTimer"><i class="fa-regular fa-clock" style="font-size:16px"></i> <span id="qzTimerVal">15</span></div>
+      <div class="qz-hud-stat"><i class="fa-solid fa-star" style="font-size:12px;color:#fbbf24"></i> Skor <span id="qzScore">0</span></div>
+    </div>
+
+    <div class="qz-card" style="padding:16px">
+      <div class="qz-poster-wrap" id="qzPosterWrap">
+        <img id="qzPosterImg" src="" alt="">
+        <div class="qz-poster-overlay"></div>
+        <div class="qz-blur-hint" id="qzBlurHint">🔍 Makin jelas tiap detik</div>
+      </div>
+      <div class="qz-question-label">Anime apa ini?</div>
+      <div class="qz-choices" id="qzChoices"></div>
+      <div class="qz-feedback" id="qzFeedback"></div>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="qzScreenResult" style="display:none">
+    <div class="qz-card">
+      <div class="qz-result-score">
+        <span class="big" id="qzFinalScore">0</span>
+        <div class="label">Total Skor</div>
+        <div class="qz-result-grade" id="qzGrade">⭐⭐⭐</div>
+        <div class="qz-result-msg" id="qzMsg">Luar biasa!</div>
+      </div>
+      <div class="qz-result-stats">
+        <div class="qz-result-stat">
+          <div class="val" id="qzResCorrect">0</div>
+          <div class="lbl">✅ Benar</div>
+        </div>
+        <div class="qz-result-stat">
+          <div class="val" id="qzResWrong">0</div>
+          <div class="lbl">❌ Salah</div>
+        </div>
+        <div class="qz-result-stat">
+          <div class="val" id="qzResAcc">0%</div>
+          <div class="lbl">🎯 Akurasi</div>
+        </div>
+      </div>
+      <div id="qzSaveStatus" style="text-align:center;font-size:13px;color:var(--text3);margin-bottom:14px"></div>
+      <div class="qz-btn-row">
+        <button class="qz-btn qz-btn-primary" onclick="qzStart()">
+          <i class="fa-solid fa-rotate-right"></i> Main Lagi
+        </button>
+        <button class="qz-btn qz-btn-ghost" onclick="qzGoHome()">
+          <i class="fa-solid fa-house"></i> Menu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="qz-card" id="qzLeaderboard">
+    <div class="qz-lb-title">
+      <i class="fa-solid fa-trophy" style="color:#fbbf24"></i> Leaderboard
+      <button onclick="qzLoadLeaderboard()" style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </div>
+    <div id="qzLbList"><div class="qz-lb-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat...</div></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SUPABASE_URL  = "https://mafnnqttvkdgqqxczqyt.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y";
+
+// ── State ──
+let qzUser       = null;
+let qzDifficulty = 'easy';
+let qzQuestions  = [];
+let qzCurrent    = 0;
+let qzScore      = 0;
+let qzCorrect    = 0;
+let qzWrong      = 0;
+let qzTimer      = null;
+let qzTimeLeft   = 20;
+let qzAnswered   = false;
+let qzBlurTimer  = null;
+
+// Difficulty config
+const QZ_DIFF = {
+  easy:   { time: 20, blurStart: 6,  blurStep: 2,  scoreBase: 100 },
+  medium: { time: 15, blurStart: 14, blurStep: 2.5, scoreBase: 150 },
+  hard:   { time: 10, blurStart: 22, blurStep: 3.5, scoreBase: 200 },
+};
+
+// Popular anime IDs dari MAL (campuran populer & known)
+const ANIME_POOL = [
+  1,21,16498,5114,11061,9253,9969,2904,38000,40748,
+  41467,38524,32281,33486,37779,35790,38474,40591,49387,50265,
+  1535,19,6547,15417,34572,23273,42938,51009,52991,54492,
+  52034,48316,48569,44511,46569,47917,48661,42203,40591,45576,
+  1735,2025,849,28851,31964,33352,22319,13601,28171,35849
+];
+
+// ── Init ──
+(function() {
+  try { qzUser = JSON.parse(localStorage.getItem('sb_user')); } catch {}
+  if (!qzUser) {
+    document.getElementById('qzLoginGate').style.display = 'block';
+    document.getElementById('qzMainMenu').style.display = 'none';
+  }
+  qzLoadLeaderboard();
+})();
+
+// ── Difficulty select ──
+function qzSelectDiff(el, diff) {
+  document.querySelectorAll('.qz-diff-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  qzDifficulty = diff;
+}
+
+// ── Show screen ──
+function qzShow(id) {
+  ['qzScreenHome','qzScreenLoading','qzScreenQuiz','qzScreenResult'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+// ── Start game ──
+async function qzStart() {
+  if (!qzUser) { window.location.href = '/auth/login'; return; }
+  qzShow('qzScreenLoading');
+  qzScore = 0; qzCorrect = 0; qzWrong = 0; qzCurrent = 0; qzQuestions = [];
+
+  // Shuffle pool & pick 15 candidates (we need 10 valid)
+  const shuffled = [...ANIME_POOL].sort(() => Math.random() - 0.5).slice(0, 15);
+  let loaded = 0;
+
+  document.getElementById('qzLoadBar').style.width = '10%';
+  document.getElementById('qzLoadingStatus').textContent = 'Mengambil data anime...';
+
+  const results = [];
+  for (let i = 0; i < shuffled.length && results.length < 10; i++) {
+    try {
+      const r = await fetch(`https://api.jikan.moe/v4/anime/${shuffled[i]}`);
+      const { data } = await r.json();
+      if (data && data.title && data.images?.jpg?.large_image_url) {
+        results.push(data);
+      }
+      loaded++;
+      document.getElementById('qzLoadBar').style.width = Math.round((loaded / shuffled.length) * 80 + 10) + '%';
+      await new Promise(res => setTimeout(res, 340)); // rate limit Jikan
+    } catch {}
+  }
+
+  if (results.length < 4) {
+    qzShow('qzScreenHome');
+    if (window.showToast) showToast('Gagal memuat soal, coba lagi 😢', 'error');
+    return;
+  }
+
+  // Build questions: each question = 1 correct + 3 wrong
+  const pool = results.slice(0, 10);
+  qzQuestions = pool.map((anime, idx) => {
+    const wrongs = pool.filter((_, i) => i !== idx).sort(() => Math.random() - 0.5).slice(0, 3);
+    const choices = [anime, ...wrongs].sort(() => Math.random() - 0.5);
+    return { anime, choices };
+  });
+
+  document.getElementById('qzLoadBar').style.width = '100%';
+  document.getElementById('qzLoadingStatus').textContent = 'Siap!';
+  await new Promise(res => setTimeout(res, 400));
+
+  qzShow('qzScreenQuiz');
+  qzRenderQuestion();
+}
+
+// ── Render question ──
+function qzRenderQuestion() {
+  if (qzCurrent >= qzQuestions.length) { qzFinish(); return; }
+
+  const { anime, choices } = qzQuestions[qzCurrent];
+  const cfg = QZ_DIFF[qzDifficulty];
+  qzAnswered = false;
+  qzTimeLeft = cfg.time;
+
+  // Progress
+  const pct = ((qzCurrent) / qzQuestions.length) * 100;
+  document.getElementById('qzProgressBar').style.width = pct + '%';
+  document.getElementById('qzQNum').textContent = qzCurrent + 1;
+  document.getElementById('qzScore').textContent = qzScore;
+
+  // Poster with blur
+  const img = document.getElementById('qzPosterImg');
+  img.src = anime.images.jpg.large_image_url;
+  img.style.filter = `blur(${cfg.blurStart}px)`;
+
+  // Blur reduce over time
+  clearInterval(qzBlurTimer);
+  let blurVal = cfg.blurStart;
+  qzBlurTimer = setInterval(() => {
+    blurVal = Math.max(0, blurVal - cfg.blurStep);
+    img.style.filter = `blur(${blurVal}px)`;
+    if (blurVal <= 0) {
+      clearInterval(qzBlurTimer);
+      document.getElementById('qzBlurHint').style.display = 'none';
+    }
+  }, 1000);
+  document.getElementById('qzBlurHint').style.display = 'block';
+
+  // Choices
+  const letters = ['A','B','C','D'];
+  document.getElementById('qzChoices').innerHTML = choices.map((c, i) => `
+    <button class="qz-choice" onclick="qzAnswer(this, '${c.mal_id}', '${anime.mal_id}')">
+      <span class="qz-choice-letter">${letters[i]}</span>
+      ${esc(c.title)}
+    </button>`).join('');
+
+  // Feedback
+  const fb = document.getElementById('qzFeedback');
+  fb.style.display = 'none'; fb.className = 'qz-feedback';
+
+  // Timer
+  clearInterval(qzTimer);
+  updateTimerUI();
+  qzTimer = setInterval(() => {
+    qzTimeLeft--;
+    updateTimerUI();
+    if (qzTimeLeft <= 0) {
+      clearInterval(qzTimer);
+      clearInterval(qzBlurTimer);
+      if (!qzAnswered) qzTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const el = document.getElementById('qzTimerVal');
+  const wrap = document.getElementById('qzTimer');
+  el.textContent = qzTimeLeft;
+  wrap.classList.toggle('urgent', qzTimeLeft <= 5);
+}
+
+// ── Answer ──
+function qzAnswer(btn, chosenId, correctId) {
+  if (qzAnswered) return;
+  qzAnswered = true;
+  clearInterval(qzTimer);
+  clearInterval(qzBlurTimer);
+
+  // Reveal poster
+  document.getElementById('qzPosterImg').style.filter = 'blur(0px)';
+  document.getElementById('qzBlurHint').style.display = 'none';
+
+  const isCorrect = String(chosenId) === String(correctId);
+  const cfg = QZ_DIFF[qzDifficulty];
+  const timeBonus = Math.round((qzTimeLeft / cfg.time) * cfg.scoreBase);
+  const gained = isCorrect ? cfg.scoreBase + timeBonus : 0;
+
+  // Style choices
+  document.querySelectorAll('.qz-choice').forEach(b => {
+    b.disabled = true;
+    const bid = b.getAttribute('onclick').match(/'(\d+)',\s*'(\d+)'/);
+    if (bid && String(bid[1]) === String(correctId)) b.classList.add('correct');
+    else if (b === btn && !isCorrect) b.classList.add('wrong');
+    else b.classList.add('dimmed');
+  });
+
+  // Feedback
+  const fb = document.getElementById('qzFeedback');
+  if (isCorrect) {
+    qzScore += gained; qzCorrect++;
+    fb.className = 'qz-feedback correct';
+    fb.innerHTML = `✅ Benar! <strong>+${gained} poin</strong> (termasuk bonus waktu ${timeBonus})`;
+  } else {
+    qzWrong++;
+    const correctAnime = qzQuestions[qzCurrent].anime;
+    fb.className = 'qz-feedback wrong';
+    fb.innerHTML = `❌ Salah! Jawabannya: <strong>${esc(correctAnime.title)}</strong>`;
+  }
+  fb.style.display = 'block';
+  document.getElementById('qzScore').textContent = qzScore;
+
+  setTimeout(() => { qzCurrent++; qzRenderQuestion(); }, 2000);
+}
+
+// ── Timeout ──
+function qzTimeout() {
+  qzAnswered = true;
+  qzWrong++;
+  document.getElementById('qzPosterImg').style.filter = 'blur(0px)';
+  document.getElementById('qzBlurHint').style.display = 'none';
+  document.querySelectorAll('.qz-choice').forEach(b => {
+    b.disabled = true;
+    const bid = b.getAttribute('onclick').match(/'(\d+)',\s*'(\d+)'/);
+    if (bid && String(bid[1]) === String(qzQuestions[qzCurrent].anime.mal_id)) b.classList.add('correct');
+    else b.classList.add('dimmed');
+  });
+  const fb = document.getElementById('qzFeedback');
+  fb.className = 'qz-feedback timeout';
+  fb.innerHTML = `⏱️ Waktu habis! Jawabannya: <strong>${esc(qzQuestions[qzCurrent].anime.title)}</strong>`;
+  fb.style.display = 'block';
+  setTimeout(() => { qzCurrent++; qzRenderQuestion(); }, 2000);
+}
+
+// ── Finish ──
+async function qzFinish() {
+  clearInterval(qzTimer); clearInterval(qzBlurTimer);
+  qzShow('qzScreenResult');
+
+  document.getElementById('qzFinalScore').textContent = qzScore;
+  document.getElementById('qzResCorrect').textContent = qzCorrect;
+  document.getElementById('qzResWrong').textContent = qzWrong;
+  document.getElementById('qzResAcc').textContent = Math.round((qzCorrect / qzQuestions.length) * 100) + '%';
+
+  // Grade
+  const pct = qzCorrect / qzQuestions.length;
+  let grade, msg;
+  if (pct >= 0.9)      { grade = '🏆 S RANK'; msg = 'Otaku sejati! Kamu luar biasa!'; }
+  else if (pct >= 0.7) { grade = '⭐ A RANK'; msg = 'Keren banget! Hampir sempurna!'; }
+  else if (pct >= 0.5) { grade = '👍 B RANK'; msg = 'Lumayan! Masih bisa lebih baik!'; }
+  else if (pct >= 0.3) { grade = '📚 C RANK'; msg = 'Kurang nih, nonton anime lebih banyak!'; }
+  else                  { grade = '😅 D RANK'; msg = 'Yah... perlu banyak nonton anime nih!'; }
+  document.getElementById('qzGrade').textContent = grade;
+  document.getElementById('qzMsg').textContent = msg;
+
+  // Save to Supabase
+  const saveEl = document.getElementById('qzSaveStatus');
+  if (qzUser) {
+    saveEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan skor...';
+    try {
+      // Upsert: simpan jika lebih tinggi dari skor sebelumnya
+      const checkRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/quiz_scores?user_id=eq.${qzUser.id}&difficulty=eq.${qzDifficulty}&select=id,score`,
+        { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }
+      );
+      const existing = await checkRes.json();
+      const prev = existing?.[0];
+
+      if (!prev || qzScore > prev.score) {
+        const method = prev ? 'PATCH' : 'POST';
+        const url = prev
+          ? `${SUPABASE_URL}/rest/v1/quiz_scores?id=eq.${prev.id}`
+          : `${SUPABASE_URL}/rest/v1/quiz_scores`;
+        await fetch(url, {
+          method,
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            user_id: qzUser.id,
+            user_name: qzUser.name || qzUser.email || 'User',
+            user_avatar: qzUser.avatar || '',
+            score: qzScore,
+            correct: qzCorrect,
+            total: qzQuestions.length,
+            difficulty: qzDifficulty,
+            played_at: new Date().toISOString()
+          })
+        });
+        saveEl.innerHTML = `✅ Skor tersimpan!${prev ? ' (rekor baru 🎉)' : ''}`;
+      } else {
+        saveEl.innerHTML = `ℹ️ Rekor terbaik kamu masih ${prev.score} poin`;
+      }
+    } catch {
+      saveEl.innerHTML = '⚠️ Gagal simpan skor';
+    }
+    qzLoadLeaderboard();
+  } else {
+    saveEl.innerHTML = '<a href="/auth/login" style="color:var(--accent)">Login</a> untuk simpan skor ke leaderboard';
+  }
+}
+
+// ── Go Home ──
+function qzGoHome() {
+  clearInterval(qzTimer); clearInterval(qzBlurTimer);
+  qzShow('qzScreenHome');
+}
+
+// ── Leaderboard ──
+async function qzLoadLeaderboard() {
+  const el = document.getElementById('qzLbList');
+  el.innerHTML = '<div class="qz-lb-empty"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/quiz_scores?order=score.desc&limit=10&select=*`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }
+    );
+    const data = await res.json();
+    if (!data.length) { el.innerHTML = '<div class="qz-lb-empty">Belum ada skor 🎌<br>Jadilah yang pertama!</div>'; return; }
+
+    const rankIcons = ['🥇','🥈','🥉'];
+    const rankClass = ['gold','silver','bronze'];
+    el.innerHTML = data.map((row, i) => {
+      const isMe = qzUser && row.user_id === qzUser.id;
+      const diffLabel = { easy:'Mudah', medium:'Sedang', hard:'Susah' }[row.difficulty] || row.difficulty;
+      const avatarHtml = row.user_avatar
+        ? `<img class="qz-lb-avatar" src="${esc(row.user_avatar)}" alt="" onerror="this.style.display='none'">`
+        : `<div class="qz-lb-avatar-ph">${(row.user_name||'?')[0].toUpperCase()}</div>`;
+      return `<div class="qz-lb-item${isMe?' me':''}">
+        <span class="qz-lb-rank ${rankClass[i]||''}">${rankIcons[i] || (i+1)}</span>
+        ${avatarHtml}
+        <div style="flex:1;min-width:0">
+          <div class="qz-lb-name">${esc(row.user_name||'User')}${isMe?' <span style="color:var(--accent);font-size:11px">(kamu)</span>':''}</div>
+          <div class="qz-lb-info">${diffLabel} · ${row.correct}/${row.total} benar</div>
+        </div>
+        <div class="qz-lb-score">${row.score.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+  } catch {
+    el.innerHTML = '<div class="qz-lb-empty">Gagal memuat leaderboard</div>';
+  }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}
