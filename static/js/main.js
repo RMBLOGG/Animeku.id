@@ -93,9 +93,100 @@ readMoreBtn?.addEventListener('click', () => {
 // ════════════════════════════════════════════════
 // localStorage Helpers
 // ════════════════════════════════════════════════
-const WL_KEY   = 'animeku_watchlist';
-const HIST_KEY = 'animeku_history';
-const PROG_KEY = 'animeku_progress';
+const WL_KEY     = 'animeku_watchlist';
+const HIST_KEY   = 'animeku_history';
+const PROG_KEY   = 'animeku_progress';
+const STATUS_KEY = 'animeku_status';
+
+// Status options
+const STATUS_OPTIONS = [
+  { key: 'watching',  label: 'Watching',      emoji: '▶',  color: '#4caf7d' },
+  { key: 'plan',      label: 'Plan to Watch', emoji: '📌', color: '#64b5f6' },
+  { key: 'completed', label: 'Completed',     emoji: '✅', color: '#a5d6a7' },
+  { key: 'dropped',   label: 'Dropped',       emoji: '🚫', color: '#e57373' },
+];
+
+function getStatuses()          { return lsGet(STATUS_KEY, {}); }
+function getAnimeStatus(slug)   { return getStatuses()[slug] || null; }
+
+function setAnimeStatus(slug, title, poster, type, statusKey) {
+  const statuses = getStatuses();
+  if (!statusKey || statuses[slug]?.key === statusKey) {
+    delete statuses[slug];
+    lsSet(STATUS_KEY, statuses);
+    showToast('Status dihapus');
+    _syncStatusBtn(slug);
+    return;
+  }
+  statuses[slug] = { key: statusKey, title, poster, type, updatedAt: Date.now() };
+  lsSet(STATUS_KEY, statuses);
+  const opt = STATUS_OPTIONS.find(o => o.key === statusKey);
+  showToast(`${opt?.emoji || ''} ${opt?.label || statusKey}`);
+  _syncStatusBtn(slug);
+}
+
+function _syncStatusBtn(slug) {
+  const btn = document.getElementById('statusBtn');
+  if (!btn) return;
+  const st  = getAnimeStatus(slug);
+  const opt = st ? STATUS_OPTIONS.find(o => o.key === st.key) : null;
+  const txt = document.getElementById('statusBtnText');
+  if (opt) {
+    btn.style.color        = opt.color;
+    btn.style.borderColor  = opt.color + '55';
+    if (txt) txt.textContent = opt.emoji + ' ' + opt.label;
+  } else {
+    btn.style.color       = '';
+    btn.style.borderColor = '';
+    if (txt) txt.textContent = '☆ Status';
+  }
+}
+
+function openStatusMenu(slug, title, poster, type) {
+  document.getElementById('statusMenu')?.remove();
+  const existing = getAnimeStatus(slug)?.key;
+  const menu = document.createElement('div');
+  menu.id = 'statusMenu';
+  menu.style.cssText = [
+    'position:fixed','z-index:9999','background:var(--card,#1a1a1a)',
+    'border:1px solid var(--border,rgba(255,255,255,0.1))','border-radius:10px',
+    'padding:6px','min-width:180px','box-shadow:0 8px 32px rgba(0,0,0,0.6)',
+  ].join(';');
+
+  if (!document.getElementById('_stMenuStyle')) {
+    const s = document.createElement('style');
+    s.id = '_stMenuStyle';
+    s.textContent = `.st-opt{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:7px;cursor:pointer;font-size:13px;font-family:var(--font-body,sans-serif);border:none;background:none;width:100%;text-align:left;color:var(--text,#fff);transition:background 0.15s}.st-opt:hover{background:rgba(255,255,255,0.06)}.st-opt.st-active{background:rgba(255,255,255,0.08);font-weight:600}`;
+    document.head.appendChild(s);
+  }
+
+  menu.innerHTML = STATUS_OPTIONS.map(o => `
+    <button class="st-opt ${existing === o.key ? 'st-active' : ''}"
+      onclick="setAnimeStatus('${slug.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}','${poster.replace(/'/g,"\\'")}','${type.replace(/'/g,"\\'")}','${o.key}');document.getElementById('statusMenu')?.remove()">
+      <span style="font-size:15px">${o.emoji}</span>
+      <span style="color:${o.color}">${o.label}</span>
+      ${existing === o.key ? '<span style="margin-left:auto;font-size:10px;opacity:0.4">✓</span>' : ''}
+    </button>`).join('');
+
+  const btn = document.getElementById('statusBtn');
+  if (btn) {
+    const r = btn.getBoundingClientRect();
+    menu.style.left = Math.min(r.left, window.innerWidth - 195) + 'px';
+    menu.style.top  = (r.bottom + 6) + 'px';
+  }
+  document.body.appendChild(menu);
+
+  setTimeout(() => {
+    function closeMenu(e) {
+      const m = document.getElementById('statusMenu');
+      if (m && !m.contains(e.target) && e.target.id !== 'statusBtn' && !e.target.closest('#statusBtn')) {
+        m.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    }
+    document.addEventListener('click', closeMenu);
+  }, 50);
+}
 
 function lsGet(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -254,6 +345,7 @@ function _init() {
   const detailSlug = document.getElementById('detailHero')?.dataset.animeSlug;
   if (detailSlug) {
     _syncWatchlistBtn(detailSlug, lsGet(WL_KEY, []));
+    _syncStatusBtn(detailSlug);
 
     // Pasang click listener langsung (tidak perlu onclick di HTML)
     const btn = document.getElementById('watchlistBtn');
