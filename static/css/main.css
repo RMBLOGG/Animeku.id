@@ -206,7 +206,10 @@ button { cursor: pointer; border: none; background: none; }
 /* Overlay */
 .sidebar-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 290px; /* hanya tutupi area di luar sidebar */
+  bottom: 0;
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -297,17 +300,20 @@ body.sidebar-open .sidebar-body {
 /* Scrollable body */
 .sidebar-body {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll; /* scroll bukan auto, lebih reliable di mobile */
   overflow-x: hidden;
   padding-bottom: 24px;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   /* Custom scrollbar */
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
+  scrollbar-color: rgba(255,255,255,0.3) rgba(255,255,255,0.05);
 }
-.sidebar-body::-webkit-scrollbar { width: 3px; }
-.sidebar-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-body::-webkit-scrollbar { width: 4px; }
+.sidebar-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 99px; }
 .sidebar-body::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.25);
   border-radius: 99px;
 }
 .sidebar-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
