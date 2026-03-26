@@ -2,405 +2,813 @@
 {% block title %}Profil — Animeku.id{% endblock %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Profile Page Styles ────────────────────────────────── */
+/* ══════════════════════════════════════════════════
+   PROFILE PAGE — REDESIGN PROFESIONAL
+   Aesthetic: Luxury Dark · Editorial · Glassmorphism
+   ══════════════════════════════════════════════════ */
+
+:root {
+  --gold: #f5c518;
+  --gold-dim: rgba(245,197,24,0.12);
+  --gold-border: rgba(245,197,24,0.22);
+  --green: #4caf7d;
+  --red-soft: #e57373;
+  --glass: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.07);
+  --syne: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
 .profile-wrap {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 28px 16px 60px;
-  overflow-x: hidden;
+  padding: 32px 16px 80px;
   box-sizing: border-box;
 }
 
-/* Header Card */
-.profile-header {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 32px 28px 24px;
-  margin-bottom: 20px;
-  overflow: hidden;
+/* ── AMBIENT GLOW BG ── */
+.profile-wrap::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse, rgba(230,57,70,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
-.profile-header::before {
+
+/* ═══════════════════════════════════
+   HERO HEADER
+   ═══════════════════════════════════ */
+.p-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  background: var(--card, #0e1117);
+  border: 1px solid var(--glass-border);
+}
+
+/* Subtle grid texture */
+.p-hero::before {
   content: '';
   position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.p-hero-accent {
+  position: absolute;
   top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent), #f4a261, var(--accent));
-  background-size: 200% 100%;
-  animation: shimmer 2.5s linear infinite;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--accent, #e63946) 20%,
+    #f5c518 50%,
+    var(--accent, #e63946) 80%,
+    transparent 100%);
+  background-size: 300% 100%;
+  animation: accentSlide 4s linear infinite;
 }
-@keyframes shimmer {
-  0% { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
+@keyframes accentSlide {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
-.profile-header-inner {
+
+.p-hero-inner {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 32px 28px 28px;
   flex-wrap: wrap;
 }
-.profile-avatar-wrap {
+
+/* Avatar */
+.p-avatar-ring {
   position: relative;
   flex-shrink: 0;
 }
-.profile-avatar {
-  width: 80px;
-  height: 80px;
+.p-avatar-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent, #e63946) 0deg,
+    #f5c518 120deg,
+    var(--accent, #e63946) 240deg,
+    #f5c518 360deg
+  );
+  animation: spinRing 6s linear infinite;
+  z-index: 0;
+}
+@keyframes spinRing {
+  to { transform: rotate(360deg); }
+}
+.p-avatar-ring::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: var(--card, #0e1117);
+  z-index: 1;
+}
+#profileAvatar,
+.profile-avatar-fallback {
+  position: relative;
+  z-index: 2;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--border);
-  background: var(--bg);
+  display: block;
 }
 .profile-avatar-fallback {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #f4a261);
+  background: linear-gradient(135deg, var(--accent, #e63946), #f5c518);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-body);
-  font-size: 32px;
-  font-weight: 700;
+  font-family: var(--syne);
+  font-size: 34px;
+  font-weight: 800;
   color: #fff;
-  border: 2px solid var(--border);
 }
-.profile-meta { flex: 1; min-width: 0; }
-.profile-name {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0 0 4px;
+
+/* Meta */
+.p-meta { flex: 1; min-width: 0; padding-top: 4px; }
+
+.p-meta-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text3, #555d70);
+  margin-bottom: 6px;
+}
+.p-name {
+  font-family: var(--syne);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text, #e8eaf0);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.profile-email {
-  font-size: 13px;
-  color: var(--text2);
-  margin: 0 0 10px;
-}
-.profile-joined {
+.p-email {
+  font-family: var(--mono);
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text3, #555d70);
+  margin-bottom: 16px;
 }
 
-.profile-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.badge {
+.p-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.p-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text2, #8b92a5);
+  cursor: default;
+  transition: all 0.2s;
+}
+.p-chip-id {
+  cursor: pointer;
+}
+.p-chip-id:hover {
+  border-color: rgba(255,255,255,0.18);
+  color: var(--text, #e8eaf0);
+  background: rgba(255,255,255,0.05);
+}
+.p-chip-coin {
+  border-color: var(--gold-border);
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.p-chip svg { opacity: 0.7; }
+
+/* Right side stats */
+.p-hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 4px;
+}
+@media (max-width: 560px) {
+  .p-hero-stats { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+}
+
+.p-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+.p-stat-pill-num {
+  font-family: var(--syne);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #e8eaf0);
+  line-height: 1;
+}
+.p-stat-pill-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════
+   LAYOUT GRID
+   ═══════════════════════════════════ */
+.p-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 700px) {
+  .p-grid { grid-template-columns: 1fr; }
+}
+.p-full { grid-column: 1 / -1; }
+
+/* ═══════════════════════════════════
+   CARD BASE
+   ═══════════════════════════════════ */
+.p-card {
+  background: var(--card, #0e1117);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.p-card:hover { border-color: rgba(255,255,255,0.1); }
+
+.p-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 0;
+  margin-bottom: 16px;
+}
+.p-card-title {
+  font-family: var(--syne);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: .3px;
-}
-.badge-user-id {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
-  color: var(--text3);
-  font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  cursor: pointer;
-  transition: var(--trans);
-}
-.badge-user-id:hover { color: var(--text2); border-color: rgba(255,255,255,0.2); }
-
-/* Sections grid */
-.profile-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-@media (max-width: 620px) {
-  .profile-grid { grid-template-columns: 1fr; }
-}
-.profile-section {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  overflow: hidden;
-  min-width: 0;
-  box-sizing: border-box;
-}
-.profile-section.full-width { grid-column: 1 / -1; }
-
-.section-title {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--text2);
-  margin: 0 0 16px;
+  color: var(--text2, #8b92a5);
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.section-title .dot {
-  width: 6px; height: 6px;
+.p-card-title-dot {
+  width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent, #e63946);
   flex-shrink: 0;
+  box-shadow: 0 0 6px var(--accent, #e63946);
 }
+.p-card-action {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  letter-spacing: 0.5px;
+}
+.p-card-action:hover { color: var(--accent, #e63946); }
+.p-card-body { padding: 0 20px 20px; }
 
-/* Watchlist */
-.watchlist-empty {
-  text-align: center;
-  padding: 28px 0;
-  color: var(--text3);
-  font-size: 13px;
+/* ═══════════════════════════════════
+   SETTINGS PANEL
+   ═══════════════════════════════════ */
+.p-setting-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--glass-border);
 }
-.watchlist-grid {
+.p-setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+.p-setting-label {
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #e8eaf0);
+  margin-bottom: 2px;
+}
+.p-setting-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+}
+.p-select {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text, #e8eaf0);
+  font-size: 13px;
+  font-family: var(--mono);
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555d70' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.p-select:focus { outline: none; border-color: rgba(255,255,255,0.2); }
+
+.p-input-row { display: flex; gap: 8px; }
+.p-input {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text, #e8eaf0);
+  font-size: 13px;
+  font-family: var(--mono);
+  padding: 9px 12px;
+  transition: border-color 0.2s;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.p-input:focus { outline: none; border-color: rgba(255,255,255,0.25); }
+.p-input::placeholder { color: var(--text3, #555d70); }
+
+.p-btn-save {
+  padding: 9px 16px;
+  background: var(--accent, #e63946);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.p-btn-save:hover { opacity: 0.85; transform: translateY(-1px); }
+.p-btn-save:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+/* ═══════════════════════════════════
+   WATCHLIST
+   ═══════════════════════════════════ */
+.p-watchlist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 10px;
 }
-.watchlist-item {
+.p-watchlist-item {
   position: relative;
-  border-radius: var(--radius);
+  border-radius: 10px;
   overflow: hidden;
   aspect-ratio: 2/3;
-  background: var(--bg);
+  background: var(--bg, #0a0c10);
   cursor: pointer;
-  transition: var(--trans);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
+  text-decoration: none;
 }
-.watchlist-item:hover { transform: scale(1.04); }
-.watchlist-item img {
+.p-watchlist-item:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+}
+.p-watchlist-item img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
 }
-.watchlist-item-overlay {
+.p-watchlist-item-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(transparent 50%, rgba(0,0,0,0.85));
+  background: linear-gradient(transparent 45%, rgba(0,0,0,0.9));
 }
-.watchlist-item-title {
+.p-watchlist-item-title {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 6px 5px 5px;
-  font-size: 9px;
+  padding: 5px;
+  font-family: var(--syne);
+  font-size: 8.5px;
   font-weight: 600;
   color: #fff;
   line-height: 1.3;
   text-align: center;
 }
+.p-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 0;
+  gap: 8px;
+  color: var(--text3, #555d70);
+}
+.p-empty-icon { font-size: 28px; opacity: 0.4; }
+.p-empty-text { font-family: var(--mono); font-size: 12px; letter-spacing: 0.5px; }
 
-/* History */
-.history-list { display: flex; flex-direction: column; gap: 10px; }
-.history-item {
+/* ═══════════════════════════════════
+   HISTORY
+   ═══════════════════════════════════ */
+.p-history-list { display: flex; flex-direction: column; gap: 8px; }
+.p-history-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   cursor: pointer;
-  transition: var(--trans);
+  transition: background 0.2s, border-color 0.2s;
   text-decoration: none;
-  overflow: hidden;
-  min-width: 0;
 }
-.history-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); }
-.history-thumb {
-  width: 44px; height: 62px;
-  border-radius: 6px;
+.p-history-item:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+}
+.p-history-thumb {
+  width: 40px; height: 56px;
+  border-radius: 7px;
   object-fit: cover;
   background: var(--bg);
   flex-shrink: 0;
 }
-.history-info { flex: 1; min-width: 0; }
-.history-title {
-  font-size: 13px;
+.p-history-info { flex: 1; min-width: 0; }
+.p-history-title {
+  font-family: var(--syne);
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text, #e8eaf0);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 3px;
 }
-.history-ep {
-  font-size: 11px;
-  color: var(--text2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.history-time {
+.p-history-ep {
+  font-family: var(--mono);
   font-size: 10px;
-  color: var(--text3);
+  color: var(--text2, #8b92a5);
+}
+.p-history-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
   white-space: nowrap;
-}
-.history-empty {
-  text-align: center;
-  padding: 28px 0;
-  color: var(--text3);
-  font-size: 13px;
+  flex-shrink: 0;
 }
 
-/* Settings */
-.settings-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.settings-item:last-child { border-bottom: none; }
-.settings-label {
-  font-size: 13px;
-  color: var(--text);
-  font-weight: 500;
-}
-.settings-sub {
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 2px;
-}
-.settings-input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 13px;
-  padding: 7px 10px;
-  font-family: var(--font-body);
-  transition: var(--trans);
-  width: 120px;
-  min-width: 0;
-  box-sizing: border-box;
-}
-.settings-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
-
-.source-select {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 13px;
-  padding: 7px 10px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: var(--trans);
-}
-.source-select:focus { outline: none; border-color: rgba(255,255,255,0.3); }
-
-.btn-save {
-  padding: 7px 16px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: var(--trans);
-}
-.btn-save:hover { opacity: 0.85; }
-.btn-save:disabled { opacity: 0.4; cursor: default; }
-
-/* Danger zone */
-.danger-zone {
+/* ═══════════════════════════════════
+   COIN WALLET
+   ═══════════════════════════════════ */
+.p-wallet-banner {
+  border-radius: 14px;
+  background: linear-gradient(135deg,
+    rgba(245,197,24,0.1) 0%,
+    rgba(230,160,0,0.05) 100%);
+  border: 1px solid var(--gold-border);
+  padding: 18px 20px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
 }
-.btn-logout {
-  padding: 9px 18px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text2);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: var(--trans);
+.p-wallet-balance-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(245,197,24,0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
-.btn-logout:hover { background: rgba(255,255,255,0.08); color: var(--text); }
-.btn-delete {
-  padding: 9px 18px;
-  background: rgba(230,57,70,0.08);
-  border: 1px solid rgba(230,57,70,0.3);
-  border-radius: var(--radius);
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: var(--trans);
+.p-wallet-balance-num {
+  font-family: var(--syne);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+  letter-spacing: -1px;
 }
-.btn-delete:hover { background: rgba(230,57,70,0.18); }
+.p-wallet-balance-unit {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: rgba(245,197,24,0.6);
+  margin-left: 4px;
+}
+.p-wallet-info {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(245,197,24,0.5);
+  line-height: 1.7;
+  margin-top: 6px;
+}
+.p-wallet-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
 
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 11px 20px;
-  font-size: 13px;
-  color: var(--text);
-  z-index: 9999;
-  transition: transform .3s ease;
+.p-btn-copy-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
   white-space: nowrap;
-  pointer-events: none;
+  transition: opacity 0.2s;
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast.success { border-color: rgba(76,175,79,0.5); color: #4caf7d; }
-.toast.error { border-color: rgba(230,57,70,0.5); color: var(--accent); }
+.p-btn-copy-id:hover { opacity: 0.8; }
 
-/* Not logged in */
+.p-btn-topup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f5c518, #e6a800);
+  color: #1a1000;
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: 0 4px 20px rgba(245,197,24,0.25);
+}
+.p-btn-topup:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,197,24,0.35); }
+
+/* Transaction list */
+.p-tx-section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3, #555d70);
+  margin-bottom: 10px;
+}
+.p-tx-list { display: flex; flex-direction: column; gap: 6px; }
+.p-tx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+.p-tx-icon {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.p-tx-info { flex: 1; min-width: 0; }
+.p-tx-desc {
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #e8eaf0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+.p-tx-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
+}
+.p-tx-amount {
+  font-family: var(--syne);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════
+   PURCHASED ANIME
+   ═══════════════════════════════════ */
+.p-purchased-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(76,175,125,0.04);
+  border: 1px solid rgba(76,175,125,0.15);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+.p-purchased-item:hover { border-color: rgba(76,175,125,0.3); }
+
+/* ═══════════════════════════════════
+   ACCOUNT / DANGER ZONE
+   ═══════════════════════════════════ */
+.p-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.p-account-label {
+  font-family: var(--syne);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #e8eaf0);
+}
+.p-account-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3, #555d70);
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+.p-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.p-btn-logout {
+  padding: 9px 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text2, #8b92a5);
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.p-btn-logout:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--text, #e8eaf0);
+  border-color: rgba(255,255,255,0.15);
+}
+.p-btn-delete {
+  padding: 9px 18px;
+  background: rgba(230,57,70,0.07);
+  border: 1px solid rgba(230,57,70,0.25);
+  border-radius: 10px;
+  color: var(--accent, #e63946);
+  font-family: var(--syne);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.p-btn-delete:hover {
+  background: rgba(230,57,70,0.14);
+  border-color: rgba(230,57,70,0.45);
+}
+
+/* ═══════════════════════════════════
+   LOGIN PROMPT
+   ═══════════════════════════════════ */
 .profile-login-prompt {
   text-align: center;
-  padding: 80px 24px;
+  padding: 100px 24px;
 }
 .profile-login-prompt p {
-  font-size: 15px;
-  color: var(--text2);
-  margin-bottom: 20px;
+  font-family: var(--syne);
+  font-size: 16px;
+  color: var(--text2, #8b92a5);
+  margin-bottom: 24px;
+  font-weight: 500;
 }
 .btn-login-google {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
+  padding: 13px 28px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text, #e8eaf0);
+  font-family: var(--syne);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
-  transition: var(--trans);
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
 }
-.btn-login-google:hover { background: rgba(255,255,255,0.08); }
+.btn-login-google:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
 
-/* Skeleton loader */
-.skeleton {
-  background: linear-gradient(90deg, var(--border) 25%, rgba(255,255,255,0.04) 50%, var(--border) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-wave 1.5s infinite;
-  border-radius: 6px;
+/* ═══════════════════════════════════
+   TOAST
+   ═══════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--card, #0e1117);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-family: var(--syne);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #e8eaf0);
+  z-index: 9999;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  letter-spacing: 0.3px;
 }
-@keyframes skeleton-wave {
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(76,175,125,0.4); color: var(--green); }
+.toast.error { border-color: rgba(230,57,70,0.4); color: var(--accent, #e63946); }
+
+/* ═══════════════════════════════════
+   SKELETON
+   ═══════════════════════════════════ */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--glass-border) 25%,
+    rgba(255,255,255,0.05) 50%,
+    var(--glass-border) 75%);
+  background-size: 200% 100%;
+  animation: skeletonWave 1.6s infinite;
+  border-radius: 8px;
+}
+@keyframes skeletonWave {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════
+   ENTRANCE ANIMATIONS
+   ═══════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.p-hero          { animation: fadeUp 0.5s ease both; }
+.p-grid > *:nth-child(1) { animation: fadeUp 0.5s 0.1s ease both; }
+.p-grid > *:nth-child(2) { animation: fadeUp 0.5s 0.15s ease both; }
+.p-grid > *:nth-child(3) { animation: fadeUp 0.5s 0.2s ease both; }
+.p-grid > *:nth-child(4) { animation: fadeUp 0.5s 0.25s ease both; }
+.p-grid > *:nth-child(5) { animation: fadeUp 0.5s 0.3s ease both; }
+.p-grid > *:nth-child(6) { animation: fadeUp 0.5s 0.35s ease both; }
+
+/* Delete modal */
+#deleteModal {
+  backdrop-filter: blur(8px);
+}
+.p-modal-box {
+  background: var(--card, #0e1117);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 340px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  animation: fadeUp 0.3s ease;
 }
 </style>
 {% endblock %}
@@ -408,7 +816,7 @@
 {% block content %}
 <div class="profile-wrap">
 
-  <!-- Not Logged In State -->
+  <!-- Not Logged In -->
   <div id="profileLoginPrompt" class="profile-login-prompt" style="display:none">
     <p>Login untuk melihat dan mengelola profil kamu</p>
     <a href="/auth/login" class="btn-login-google">
@@ -417,172 +825,242 @@
     </a>
   </div>
 
-  <!-- Profile Content (hidden until loaded) -->
+  <!-- Profile Content -->
   <div id="profileContent" style="display:none">
 
-    <!-- Header Card -->
-    <div class="profile-header">
-      <div class="profile-header-inner">
-        <div class="profile-avatar-wrap">
-          <img id="profileAvatar" class="profile-avatar" src="" alt="" style="display:none">
+    <!-- ── HERO HEADER ── -->
+    <div class="p-hero">
+      <div class="p-hero-accent"></div>
+      <div class="p-hero-inner">
+
+        <!-- Avatar -->
+        <div class="p-avatar-ring">
+          <img id="profileAvatar" src="" alt="" style="display:none">
           <div id="avatarFallback" class="profile-avatar-fallback" style="display:none">?</div>
         </div>
-        <div class="profile-meta">
-          <div class="profile-name" id="profileName">—</div>
-          <div class="profile-email" id="profileEmail">—</div>
-          <div class="profile-badges">
-            <span class="badge badge-user-id" id="userIdBadge" title="Klik untuk copy User ID">ID: …</span>
-            <span class="badge" id="coinBadge" style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.25);color:#f5c518;cursor:default">
-              <i class="fas fa-coins"></i> <span id="coinBalanceText">— koin</span>
+
+        <!-- Meta -->
+        <div class="p-meta">
+          <div class="p-meta-label">Member</div>
+          <div class="p-name" id="profileName">—</div>
+          <div class="p-email" id="profileEmail">—</div>
+          <div class="p-chips">
+            <span class="p-chip p-chip-id" id="userIdBadge" title="Klik untuk copy User ID">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+              ID: …
+            </span>
+            <span class="p-chip p-chip-coin" id="coinBadge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H9m0 3h5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+              <span id="coinBalanceText">— koin</span>
             </span>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="profile-grid">
-
-      <!-- Pengaturan Source -->
-      <div class="profile-section">
-        <div class="section-title"><span class="dot"></span>Pengaturan</div>
-        <div class="settings-item">
-          <div>
-            <div class="settings-label">Source Default</div>
-            <div class="settings-sub">Sumber streaming favorit kamu</div>
-          </div>
-          <select class="source-select" id="sourceSelect">
-            <option value="samehadaku">Dayynime-v1</option>
-            <option value="animasu">Dayynime-v2</option>
-            <option value="otakudesu">Dayynime-v3</option>
-          </select>
-        </div>
-        <div class="settings-item">
-          <div>
-            <div class="settings-label">Display Name</div>
-            <div class="settings-sub">Nama yang tampil di komentar</div>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="text" class="settings-input" id="displayNameInput" placeholder="Nama kamu" maxlength="30">
-            <button class="btn-save" id="btnSaveName">Simpan</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Watchlist -->
-      <div class="profile-section full-width">
-        <div class="section-title" style="justify-content:space-between">
-          <span style="display:flex;align-items:center;gap:8px"><span class="dot"></span>Watchlist</span>
-          <span id="watchlistCount" style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">0 anime</span>
-        </div>
-        <div id="watchlistContainer">
-          <div class="watchlist-empty">Belum ada anime di watchlist</div>
-        </div>
-      </div>
-
-      <!-- Riwayat Tonton -->
-      <div class="profile-section full-width">
-        <div class="section-title" style="justify-content:space-between">
-          <span style="display:flex;align-items:center;gap:8px"><span class="dot"></span>Riwayat Tonton</span>
-          <button id="btnClearHistory" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font-body);padding:0;transition:var(--trans)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">Hapus semua</button>
-        </div>
-        <div id="historyContainer">
-          <div class="history-empty">Belum ada riwayat tonton</div>
-        </div>
-      </div>
-
-      <!-- Koin & Transaksi -->
-      <div class="profile-section full-width" id="coinSection" style="display:none">
-        <div class="section-title" style="justify-content:space-between">
-          <span style="display:flex;align-items:center;gap:8px">
-            <span class="dot" style="background:#f5c518"></span>Dompet Koin
-          </span>
-          <span id="coinBalanceBig" style="font-size:18px;font-weight:700;color:#f5c518;font-family:var(--font-mono,monospace)">— koin</span>
-        </div>
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Cara topup koin:</div>
-            <div style="font-size:13px;color:var(--text2);line-height:1.6">
-              Transfer ke admin → konfirmasi → admin tambah koin manual<br>
-              <span style="color:var(--text3);font-size:11px">1 koin = Rp 1.000 · 5 koin = akses 1 anime</span>
+        <!-- Stats -->
+        <div class="p-hero-stats">
+          <div class="p-stat-pill">
+            <div>
+              <div class="p-stat-pill-num" id="statWatchlist">0</div>
+              <div class="p-stat-pill-label">Watchlist</div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-            <button onclick="copyUserId()" style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.25);color:#f5c518;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font-mono,monospace);white-space:nowrap">
-              <i class="fas fa-copy"></i> Copy User ID
-            </button>
-            <a href="/topup" style="background:linear-gradient(135deg,#f5c518,#e6a800);color:#1a1a2e;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-              <i class="fas fa-coins"></i> Topup Koin
-            </a>
+          <div class="p-stat-pill">
+            <div>
+              <div class="p-stat-pill-num" id="statHistory">0</div>
+              <div class="p-stat-pill-label">Ditonton</div>
+            </div>
           </div>
         </div>
-        <!-- Riwayat Transaksi -->
-        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Riwayat Transaksi</div>
-        <div id="txList" style="display:flex;flex-direction:column;gap:6px">
-          <div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Memuat...</div>
+
+      </div>
+    </div>
+
+    <!-- ── MAIN GRID ── -->
+    <div class="p-grid">
+
+      <!-- ── SETTINGS (kiri) ── -->
+      <div class="p-card">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot"></span>
+            Pengaturan
+          </div>
+        </div>
+        <div class="p-card-body">
+          <div class="p-setting-row">
+            <div class="p-setting-label">Source Streaming</div>
+            <div class="p-setting-sub">Sumber streaming default kamu</div>
+            <select class="p-select" id="sourceSelect">
+              <option value="samehadaku">Dayynime-v1</option>
+              <option value="animasu">Dayynime-v2</option>
+              <option value="otakudesu">Dayynime-v3</option>
+            </select>
+          </div>
+          <div class="p-setting-row">
+            <div class="p-setting-label">Display Name</div>
+            <div class="p-setting-sub">Nama yang tampil di komentar</div>
+            <div class="p-input-row">
+              <input type="text" class="p-input" id="displayNameInput" placeholder="Nama kamu" maxlength="30">
+              <button class="p-btn-save" id="btnSaveName">Simpan</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Anime yang Dibeli -->
-      <div class="profile-section full-width" id="purchasedSection" style="display:none">
-        <div class="section-title">
-          <span class="dot" style="background:#4caf7d"></span>Anime yang Dibeli
-          <span id="purchasedCount" style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:auto">0 anime</span>
-        </div>
-        <div id="purchasedList">
-          <div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Memuat...</div>
-        </div>
-      </div>
-
-      <!-- Danger Zone -->
-      <div class="profile-section full-width">
-        <div class="section-title"><span class="dot" style="background:var(--accent)"></span>Akun</div>
-        <div class="danger-zone">
-          <div>
-            <div class="settings-label">Keluar dari akun</div>
-            <div class="settings-sub">Sesi kamu di browser ini akan dihapus</div>
+      <!-- ── WATCHLIST (kanan) ── -->
+      <div class="p-card">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot" style="background:#f5c518;box-shadow:0 0 6px #f5c518"></span>
+            Watchlist
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-logout" id="btnLogout">Logout</button>
-            <button class="btn-delete" id="btnDeleteAccount">Hapus Akun</button>
+          <span id="watchlistCount" class="p-card-action" style="cursor:default">0 anime</span>
+        </div>
+        <div class="p-card-body">
+          <div id="watchlistContainer">
+            <div class="p-empty">
+              <div class="p-empty-icon">🎬</div>
+              <div class="p-empty-text">Belum ada anime</div>
+            </div>
           </div>
         </div>
       </div>
 
-    </div><!-- .profile-grid -->
+      <!-- ── HISTORY (full width) ── -->
+      <div class="p-card p-full">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot" style="background:#60a5fa;box-shadow:0 0 6px #60a5fa"></span>
+            Riwayat Tonton
+          </div>
+          <button id="btnClearHistory" class="p-card-action">Hapus semua</button>
+        </div>
+        <div class="p-card-body">
+          <div id="historyContainer">
+            <div class="p-empty">
+              <div class="p-empty-icon">📺</div>
+              <div class="p-empty-text">Belum ada riwayat</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DOMPET KOIN (full width) ── -->
+      <div class="p-card p-full" id="coinSection" style="display:none">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot" style="background:var(--gold);box-shadow:0 0 6px var(--gold)"></span>
+            Dompet Koin
+          </div>
+        </div>
+        <div class="p-card-body">
+
+          <!-- Balance Banner -->
+          <div class="p-wallet-banner">
+            <div>
+              <div class="p-wallet-balance-label">Saldo Saat Ini</div>
+              <div>
+                <span class="p-wallet-balance-num" id="coinBalanceBig">—</span>
+                <span class="p-wallet-balance-unit">koin</span>
+              </div>
+              <div class="p-wallet-info">
+                1 koin = Rp 1.000 &nbsp;·&nbsp; 5 koin = akses 1 anime
+              </div>
+            </div>
+            <div class="p-wallet-actions">
+              <button onclick="copyUserId()" class="p-btn-copy-id">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy User ID
+              </button>
+              <a href="/topup" class="p-btn-topup">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                Topup Koin
+              </a>
+            </div>
+          </div>
+
+          <!-- Transaksi -->
+          <div class="p-tx-section-title">Riwayat Transaksi</div>
+          <div class="p-tx-list" id="txList">
+            <div style="color:var(--text3);font-family:var(--mono);font-size:12px;padding:10px 0">Memuat...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANIME DIBELI ── -->
+      <div class="p-card p-full" id="purchasedSection" style="display:none">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span>
+            Anime yang Dibeli
+          </div>
+          <span id="purchasedCount" class="p-card-action" style="cursor:default">0 anime</span>
+        </div>
+        <div class="p-card-body">
+          <div id="purchasedList" style="display:flex;flex-direction:column;gap:8px">
+            <div style="color:var(--text3);font-family:var(--mono);font-size:12px;padding:10px 0">Memuat...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AKUN (danger zone) ── -->
+      <div class="p-card p-full">
+        <div class="p-card-head">
+          <div class="p-card-title">
+            <span class="p-card-title-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>
+            Akun
+          </div>
+        </div>
+        <div class="p-card-body">
+          <div class="p-account-row">
+            <div>
+              <div class="p-account-label">Keluar dari akun</div>
+              <div class="p-account-sub">Sesi kamu di browser ini akan dihapus</div>
+            </div>
+            <div class="p-btn-row">
+              <button class="p-btn-logout" id="btnLogout">Logout</button>
+              <button class="p-btn-delete" id="btnDeleteAccount">Hapus Akun</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .p-grid -->
   </div><!-- #profileContent -->
 
-  <!-- Loading skeleton -->
+  <!-- Skeleton -->
   <div id="profileSkeleton">
-    <div class="profile-header">
-      <div class="profile-header-inner">
-        <div class="skeleton" style="width:80px;height:80px;border-radius:50%;flex-shrink:0"></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-          <div class="skeleton" style="height:22px;width:160px"></div>
-          <div class="skeleton" style="height:14px;width:200px"></div>
-          <div class="skeleton" style="height:22px;width:100px;border-radius:20px"></div>
+    <div class="p-hero" style="padding:32px 28px 28px">
+      <div style="display:flex;gap:24px;align-items:center">
+        <div class="skeleton" style="width:88px;height:88px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+          <div class="skeleton" style="height:10px;width:80px;border-radius:4px"></div>
+          <div class="skeleton" style="height:26px;width:180px"></div>
+          <div class="skeleton" style="height:12px;width:200px"></div>
+          <div class="skeleton" style="height:26px;width:140px;border-radius:100px"></div>
         </div>
       </div>
     </div>
-    <div class="profile-grid">
-      <div class="profile-section"><div class="skeleton" style="height:80px;border-radius:var(--radius)"></div></div>
-      <div class="profile-section"><div class="skeleton" style="height:80px;border-radius:var(--radius)"></div></div>
+    <div class="p-grid" style="margin-top:16px">
+      <div class="p-card"><div class="p-card-body" style="padding:20px"><div class="skeleton" style="height:100px"></div></div></div>
+      <div class="p-card"><div class="p-card-body" style="padding:20px"><div class="skeleton" style="height:100px"></div></div></div>
     </div>
   </div>
 
-</div>
+</div><!-- .profile-wrap -->
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Delete Account Modal -->
-<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center">
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;max-width:340px;width:90%;text-align:center">
-    <div style="font-size:32px;margin-bottom:12px">⚠️</div>
-    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Hapus Akun?</div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Tindakan ini tidak bisa dibatalkan.</div>
+<!-- Delete Modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);align-items:center;justify-content:center">
+  <div class="p-modal-box">
+    <div style="font-size:36px;margin-bottom:14px">⚠️</div>
+    <div style="font-family:var(--syne);font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-0.3px">Hapus Akun?</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:24px">Tindakan ini tidak bisa dibatalkan.</div>
     <div style="display:flex;gap:10px;justify-content:center">
-      <button onclick="document.getElementById('deleteModal').style.display='none'" class="btn-logout">Batal</button>
-      <button id="btnConfirmDelete" class="btn-delete">Ya, Hapus</button>
+      <button onclick="document.getElementById('deleteModal').style.display='none'" class="p-btn-logout">Batal</button>
+      <button id="btnConfirmDelete" class="p-btn-delete">Ya, Hapus</button>
     </div>
   </div>
 </div>
@@ -591,7 +1069,6 @@
 (function() {
   const $ = id => document.getElementById(id);
 
-  // ── Toast ──────────────────────────────────────────────
   function showToast(msg, type='') {
     const t = $('toast');
     t.textContent = msg;
@@ -599,14 +1076,12 @@
     setTimeout(() => { t.className = 'toast'; }, 3000);
   }
 
-  // ── Copy to clipboard ──────────────────────────────────
   $('userIdBadge').addEventListener('click', function() {
     const uid = this.dataset.uid || '';
     if (!uid) return;
     navigator.clipboard.writeText(uid).then(() => showToast('User ID disalin!', 'success'));
   });
 
-  // ── Load watchlist from localStorage ──────────────────
   function loadWatchlist() {
     let wl = [];
     try {
@@ -616,31 +1091,32 @@
     } catch(e) {}
 
     $('watchlistCount').textContent = wl.length + ' anime';
+    $('statWatchlist').textContent = wl.length;
     const container = $('watchlistContainer');
 
     if (!wl.length) {
-      container.innerHTML = '<div class="watchlist-empty">Belum ada anime di watchlist</div>';
+      container.innerHTML = '<div class="p-empty"><div class="p-empty-icon">🎬</div><div class="p-empty-text">Belum ada anime di watchlist</div></div>';
       return;
     }
 
     const grid = document.createElement('div');
-    grid.className = 'watchlist-grid';
+    grid.className = 'p-watchlist-grid';
     wl.slice(0, 18).forEach(item => {
       const el = document.createElement('a');
       el.href = '/anime/' + (item.slug || '#');
-      el.className = 'watchlist-item';
+      el.className = 'p-watchlist-item';
       el.innerHTML = `
         <img src="${item.poster || ''}" alt="${item.title || ''}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
-        <div class="watchlist-item-overlay"></div>
-        <div class="watchlist-item-title">${item.title || ''}</div>
+        <div class="p-watchlist-item-overlay"></div>
+        <div class="p-watchlist-item-title">${item.title || ''}</div>
       `;
       grid.appendChild(el);
     });
 
     if (wl.length > 18) {
       const more = document.createElement('div');
-      more.style.cssText = 'display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:var(--bg);border-radius:var(--radius);color:var(--text3);font-size:12px';
-      more.textContent = '+' + (wl.length - 18) + ' lagi';
+      more.style.cssText = 'display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;color:var(--text3);font-family:var(--syne);font-size:11px;font-weight:700';
+      more.textContent = '+' + (wl.length - 18);
       grid.appendChild(more);
     }
 
@@ -648,7 +1124,6 @@
     container.appendChild(grid);
   }
 
-  // ── Load history from localStorage ────────────────────
   function loadHistory() {
     let hist = [];
     try {
@@ -657,27 +1132,29 @@
       if (!Array.isArray(hist)) hist = [];
     } catch(e) {}
 
+    $('statHistory').textContent = hist.length;
     const container = $('historyContainer');
+
     if (!hist.length) {
-      container.innerHTML = '<div class="history-empty">Belum ada riwayat tonton</div>';
+      container.innerHTML = '<div class="p-empty"><div class="p-empty-icon">📺</div><div class="p-empty-text">Belum ada riwayat tonton</div></div>';
       return;
     }
 
     const list = document.createElement('div');
-    list.className = 'history-list';
+    list.className = 'p-history-list';
 
     hist.slice(0, 10).forEach(item => {
       const el = document.createElement('a');
       el.href = '/episode/' + (item.epSlug || '#') + '?anime=' + (item.animeSlug || '');
-      el.className = 'history-item';
+      el.className = 'p-history-item';
       const timeAgoStr = item.watchedAt ? relativeTime(item.watchedAt) : '';
       el.innerHTML = `
-        <img class="history-thumb" src="${item.animePoster || ''}" alt="${item.animeTitle || ''}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
-        <div class="history-info">
-          <div class="history-title">${item.animeTitle || 'Unknown'}</div>
-          <div class="history-ep">${item.epName || ''}</div>
+        <img class="p-history-thumb" src="${item.animePoster || ''}" alt="${item.animeTitle || ''}" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+        <div class="p-history-info">
+          <div class="p-history-title">${item.animeTitle || 'Unknown'}</div>
+          <div class="p-history-ep">${item.epName || ''}</div>
         </div>
-        <div class="history-time">${timeAgoStr}</div>
+        <div class="p-history-time">${timeAgoStr}</div>
       `;
       list.appendChild(el);
     });
@@ -704,7 +1181,6 @@
     showToast('Riwayat dihapus', 'success');
   });
 
-  // ── Coin balance & transactions ─────────────────────────
   async function loadCoins(token) {
     if (!token) return;
     try {
@@ -714,80 +1190,78 @@
       if (!r.ok) return;
       const d = await r.json();
       const bal = d.balance ?? 0;
-      // Update badge di header
-      const balText = document.getElementById('coinBalanceText');
+      const balText = $('coinBalanceText');
       if (balText) balText.textContent = bal + ' koin';
-      // Update section
-      const section = document.getElementById('coinSection');
+      const section = $('coinSection');
       if (section) section.style.display = 'block';
-      const balBig = document.getElementById('coinBalanceBig');
-      if (balBig) balBig.textContent = bal + ' koin';
+      const balBig = $('coinBalanceBig');
+      if (balBig) balBig.textContent = bal;
     } catch(e) {}
 
-    // Transaksi
     try {
       const r2 = await fetch('/api/coins/transactions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!r2.ok) return;
       const txs = await r2.json();
-      const txList = document.getElementById('txList');
+      const txList = $('txList');
       if (!txList) return;
       if (!Array.isArray(txs) || !txs.length) {
-        txList.innerHTML = '<div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Belum ada transaksi</div>';
+        txList.innerHTML = '<div style="color:var(--text3);font-family:var(--mono);font-size:12px;padding:10px 0">Belum ada transaksi</div>';
         return;
       }
       txList.innerHTML = txs.map(tx => {
         const isTopup = tx.type === 'topup';
-        const sign    = isTopup ? '+' : '';
-        const color   = isTopup ? '#4caf7d' : '#e57373';
-        const icon    = isTopup ? 'fa-arrow-down' : 'fa-arrow-up';
-        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
-          <div style="width:32px;height:32px;border-radius:50%;background:${isTopup ? 'rgba(76,175,125,0.15)' : 'rgba(230,87,87,0.15)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="fas ${icon}" style="font-size:12px;color:${color}"></i>
+        const sign    = isTopup ? '+' : '−';
+        const color   = isTopup ? 'var(--green)' : 'var(--red-soft)';
+        const iconBg  = isTopup ? 'rgba(76,175,125,0.12)' : 'rgba(229,115,115,0.12)';
+        const iconPath = isTopup
+          ? '<path d="M12 8v8M8 12h8"/>'
+          : '<path d="M12 16V8M8 12h8"/>';
+        return `<div class="p-tx-item">
+          <div class="p-tx-icon" style="background:${iconBg}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5"><circle cx="12" cy="12" r="10"/>${iconPath}</svg>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.description || (isTopup ? 'Topup koin' : 'Pembelian akses')}</div>
-            <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono,monospace)">${tx.created_at ? new Date(tx.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : ''}</div>
+          <div class="p-tx-info">
+            <div class="p-tx-desc">${tx.description || (isTopup ? 'Topup koin' : 'Pembelian akses')}</div>
+            <div class="p-tx-date">${tx.created_at ? new Date(tx.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : ''}</div>
           </div>
-          <div style="font-size:14px;font-weight:700;color:${color};font-family:var(--font-mono,monospace);flex-shrink:0">${sign}${tx.amount} koin</div>
+          <div class="p-tx-amount" style="color:${color}">${sign}${tx.amount} koin</div>
         </div>`;
       }).join('');
     } catch(e) {}
 
-    // Anime yang dibeli
     try {
       const r3 = await fetch('/api/coins/my-access', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!r3.ok) return;
       const accesses = await r3.json();
-      const section = document.getElementById('purchasedSection');
-      const list    = document.getElementById('purchasedList');
-      const count   = document.getElementById('purchasedCount');
+      const section = $('purchasedSection');
+      const list    = $('purchasedList');
+      const count   = $('purchasedCount');
       if (!section || !list) return;
       section.style.display = 'block';
       if (count) count.textContent = (accesses.length || 0) + ' anime';
       if (!Array.isArray(accesses) || !accesses.length) {
-        list.innerHTML = '<div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Belum ada anime yang dibeli</div>';
+        list.innerHTML = '<div style="color:var(--text3);font-family:var(--mono);font-size:12px;padding:10px 0">Belum ada anime yang dibeli</div>';
         return;
       }
-      list.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">${accesses.map(a => `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid rgba(76,175,125,0.2)">
-          <i class="fas fa-unlock" style="color:#4caf7d;flex-shrink:0"></i>
-          <a href="/anime/${a.anime_slug}" style="flex:1;color:var(--text);text-decoration:none;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.anime_slug}</a>
-          <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono,monospace);flex-shrink:0">${a.purchased_at ? new Date(a.purchased_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : ''}</span>
-        </div>`).join('')}</div>`;
+      list.innerHTML = accesses.map(a => `
+        <div class="p-purchased-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <a href="/anime/${a.anime_slug}" style="flex:1;color:var(--text);text-decoration:none;font-family:var(--syne);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.anime_slug}</a>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0">${a.purchased_at ? new Date(a.purchased_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : ''}</span>
+        </div>`).join('');
     } catch(e) {}
   }
 
-  function copyUserId() {
-    const uid = document.getElementById('userIdBadge')?.dataset.uid || '';
+  window.copyUserId = function() {
+    const uid = $('userIdBadge')?.dataset.uid || '';
     if (!uid) { showToast('User ID tidak tersedia', 'error'); return; }
     navigator.clipboard.writeText(uid).then(() => showToast('User ID disalin!', 'success'));
-  }
+  };
 
-  // ── Source preference ──────────────────────────────────
   async function loadCurrentSource() {
     try {
       const r = await fetch('/api/source');
@@ -806,14 +1280,10 @@
       const d = await r.json();
       if (d.ok) showToast('Source diubah ke ' + d.label, 'success');
       else showToast('Gagal ubah source', 'error');
-    } catch(e) {
-      showToast('Gagal ubah source', 'error');
-    }
+    } catch(e) { showToast('Gagal ubah source', 'error'); }
   });
 
-  // ── Display name ────────────────────────────────────────
   function loadDisplayName(defaultName) {
-    // Prioritas: sb_user.name (sumber kebenaran), baru fallback ke displayName
     try {
       const u = JSON.parse(localStorage.getItem('sb_user'));
       if (u && u.name) { $('displayNameInput').value = u.name; return; }
@@ -824,7 +1294,6 @@
   $('btnSaveName').addEventListener('click', function() {
     const name = $('displayNameInput').value.trim();
     if (!name) { showToast('Nama tidak boleh kosong', 'error'); return; }
-    // Update sb_user supaya navbar & komentar langsung pakai nama baru
     try {
       const u = JSON.parse(localStorage.getItem('sb_user')) || {};
       u.name = name;
@@ -832,25 +1301,19 @@
     } catch(e) {}
     localStorage.setItem('displayName', name);
     $('profileName').textContent = name;
-    showToast('Nama disimpan! Refresh halaman lain untuk melihat perubahan.', 'success');
+    showToast('Nama disimpan!', 'success');
   });
 
-  // ── Logout ──────────────────────────────────────────────
   $('btnLogout').addEventListener('click', async function() {
-    try {
-      await fetch('/auth/logout', { method: 'POST' });
-    } catch(e) {}
-    // Clear supabase session
+    try { await fetch('/auth/logout', { method: 'POST' }); } catch(e) {}
     try { localStorage.removeItem('sb_access_token'); } catch(e) {}
     try { localStorage.removeItem('sb_user'); } catch(e) {}
     showToast('Berhasil logout', 'success');
     setTimeout(() => { window.location.href = '/'; }, 1000);
   });
 
-  // ── Delete account ──────────────────────────────────────
   $('btnDeleteAccount').addEventListener('click', function() {
-    const modal = $('deleteModal');
-    modal.style.display = 'flex';
+    $('deleteModal').style.display = 'flex';
   });
 
   $('btnConfirmDelete').addEventListener('click', async function() {
@@ -859,8 +1322,6 @@
     this.disabled = true;
     this.textContent = 'Menghapus…';
     try {
-      // Logout saja karena Supabase delete user butuh admin API
-      // Idealnya ada endpoint /api/account/delete di backend
       await fetch('/auth/logout', { method: 'POST' });
       localStorage.clear();
       showToast('Akun dihapus. Sampai jumpa!', 'success');
@@ -872,16 +1333,11 @@
     }
   });
 
-  // ── Get token helper ────────────────────────────────────
   function getToken() {
-    try {
-      return localStorage.getItem('sb_access_token') || null;
-    } catch(e) { return null; }
+    try { return localStorage.getItem('sb_access_token') || null; } catch(e) { return null; }
   }
 
-  // ── Init ────────────────────────────────────────────────
   async function init() {
-    // Ambil session dari /api/me (server-side session)
     let user = null;
     let token = getToken();
 
@@ -891,7 +1347,6 @@
       user = d.user;
     } catch(e) {}
 
-    // Jika tidak ada server session, coba dari localStorage Supabase
     if (!user && token) {
       try {
         const u = JSON.parse(localStorage.getItem('sb_user'));
@@ -913,11 +1368,10 @@
       return;
     }
 
-    // Populate UI
     $('profileContent').style.display = 'block';
     $('profileName').textContent = user.name || 'User';
     $('profileEmail').textContent = user.email || '';
-    // Avatar — hide fallback default, show only if img gagal load
+
     const initial = (user.name || 'U')[0].toUpperCase();
     $('avatarFallback').textContent = initial;
     $('avatarFallback').style.display = 'none';
@@ -925,9 +1379,8 @@
     if (user.avatar) {
       const img = $('profileAvatar');
       img.style.display = 'block';
-      img.onload  = function() { img.style.display = 'block'; $('avatarFallback').style.display = 'none'; };
-      img.onerror = function() { img.style.display = 'none';  $('avatarFallback').style.display = 'flex'; };
-      img.removeAttribute('onerror'); // hapus onerror inline di HTML
+      img.onload  = () => { img.style.display = 'block'; $('avatarFallback').style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  $('avatarFallback').style.display = 'flex'; };
       img.src = user.avatar;
     } else {
       $('profileAvatar').style.display = 'none';
@@ -936,7 +1389,7 @@
 
     const idBadge = $('userIdBadge');
     const shortId = user.id ? user.id.substring(0, 8) + '…' : '—';
-    idBadge.textContent = 'ID: ' + shortId;
+    idBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg> ID: ${shortId}`;
     idBadge.dataset.uid = user.id || '';
 
     loadDisplayName(user.name);
