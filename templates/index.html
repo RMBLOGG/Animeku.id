@@ -238,14 +238,14 @@ setInterval(function() {
 <div id="continueWatchingSection" style="display:none">
 <style>
 .cw-section {
-  padding: 20px 0 4px;
+  padding: 18px 0 4px;
 }
 .cw-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .cw-title {
   font-family: var(--font-head, 'Bebas Neue', sans-serif);
@@ -257,82 +257,80 @@ setInterval(function() {
   gap: 8px;
 }
 .cw-title-dot {
-  width: 8px; height: 8px;
+  width: 3px;
+  height: 18px;
   background: var(--accent);
-  border-radius: 50%;
-  animation: cwPulse 1.8s ease infinite;
+  border-radius: 2px;
 }
-@keyframes cwPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.7); }
-}
-.cw-clear-btn {
-  font-size: 11px;
-  color: var(--text3);
+.cw-see-all {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--font-body);
+  cursor: pointer;
   background: none;
   border: none;
-  cursor: pointer;
-  font-family: var(--font-mono, monospace);
-  padding: 4px 8px;
-  border-radius: 5px;
-  transition: color 0.2s, background 0.2s;
 }
-.cw-clear-btn:hover { color: var(--accent); background: rgba(230,57,70,0.08); }
 
+/* Scroll container */
 .cw-scroll {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 0;
   overflow-x: auto;
-  padding: 4px 16px 16px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Stack rows inside a flex-wrap column inside the scroll */
 }
 .cw-scroll::-webkit-scrollbar { display: none; }
 
+/* Inner horizontal strip */
+.cw-strip {
+  display: flex;
+  gap: 10px;
+  padding: 2px 16px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cw-strip::-webkit-scrollbar { display: none; }
+
+/* Each card: poster left + info right */
 .cw-card {
   flex-shrink: 0;
-  width: 130px;
-  text-decoration: none;
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
+  width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   background: var(--card);
   border: 1px solid var(--border);
-  transition: transform 0.2s, border-color 0.2s;
+  border-radius: 10px;
+  padding: 8px;
+  text-decoration: none;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
 }
 .cw-card:hover {
-  transform: translateY(-3px);
   border-color: rgba(230,57,70,0.35);
+  background: var(--bg2);
 }
+
+/* Poster */
 .cw-poster-wrap {
   position: relative;
-  aspect-ratio: 2/3;
+  width: 54px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: 6px;
   overflow: hidden;
 }
 .cw-poster {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s;
 }
-.cw-card:hover .cw-poster { transform: scale(1.05); }
-.cw-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 55%, transparent 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.cw-card:hover .cw-overlay { opacity: 1; }
-.cw-play-icon {
-  width: 38px; height: 38px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(230,57,70,0.5);
-}
+
+/* Progress bar at bottom of poster */
 .cw-progress-bar {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -342,50 +340,77 @@ setInterval(function() {
 .cw-progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 0 2px 2px 0;
-  min-width: 8%;
+  min-width: 6%;
 }
+
+/* Play icon overlay on poster */
+.cw-play-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 6px;
+}
+.cw-card:hover .cw-play-wrap { opacity: 1; }
+.cw-play-icon {
+  width: 26px; height: 26px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Info */
 .cw-info {
-  padding: 8px 8px 10px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 .cw-anime-title {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
   font-family: var(--font-body);
 }
 .cw-ep-name {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--accent);
+  font-family: var(--font-mono, monospace);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: var(--font-mono, monospace);
 }
 .cw-time {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text3);
-  margin-top: 2px;
   font-family: var(--font-mono, monospace);
 }
+
+/* Delete btn */
 .cw-delete-btn {
   position: absolute;
   top: 5px; right: 5px;
-  width: 22px; height: 22px;
+  width: 20px; height: 20px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.7);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.6);
-  font-size: 12px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.55);
+  font-size: 13px;
+  line-height: 1;
   display: none;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  line-height: 1;
   transition: background 0.2s, color 0.2s;
   z-index: 2;
 }
@@ -397,11 +422,11 @@ setInterval(function() {
   <div class="cw-header">
     <div class="cw-title">
       <div class="cw-title-dot"></div>
-      LANJUT NONTON
+      Lanjutkan Menonton
     </div>
-    <button class="cw-clear-btn" onclick="cwClearAll()">Hapus semua</button>
+    <button class="cw-see-all" onclick="cwClearAll()">Hapus semua ›</button>
   </div>
-  <div class="cw-scroll" id="cwScroll"></div>
+  <div class="cw-strip" id="cwScroll"></div>
 </div>
 </div>
 
@@ -419,10 +444,10 @@ setInterval(function() {
 
   function timeAgo(ts) {
     const diff = (Date.now() - ts) / 1000;
-    if (diff < 60) return 'baru saja';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'j lalu';
-    return Math.floor(diff / 86400) + 'h lalu';
+    if (diff < 60) return 'Baru saja';
+    if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+    return Math.floor(diff / 86400) + ' hari lalu';
   }
 
   function cwRemoveItem(animeSlug) {
@@ -444,13 +469,13 @@ setInterval(function() {
   function renderCW() {
     const hist = lsGet(HIST_KEY, []);
     const section = document.getElementById('continueWatchingSection');
-    const scroll = document.getElementById('cwScroll');
-    if (!hist.length || !section || !scroll) {
+    const strip = document.getElementById('cwScroll');
+    if (!hist.length || !section || !strip) {
       if (section) section.style.display = 'none';
       return;
     }
 
-    // Deduplicate by animeSlug, keep latest
+    // Deduplicate by animeSlug
     const seen = new Set();
     const unique = hist.filter(h => {
       if (seen.has(h.animeSlug)) return false;
@@ -459,19 +484,17 @@ setInterval(function() {
     }).slice(0, 10);
 
     section.style.display = 'block';
-    scroll.innerHTML = unique.map(h => {
-      const prog = lsGet(PROG_KEY, {})[h.animeSlug];
-      // Estimasi progress dari nama episode (misal "Episode 5" dari total unknown → tampilkan bar kecil)
+    strip.innerHTML = unique.map(h => {
       const epNum = parseInt((h.epName || '').match(/\d+/)?.[0]) || 1;
-      const progressPct = Math.min(95, Math.max(8, (epNum % 24) / 24 * 100));
+      const progressPct = Math.min(92, Math.max(6, (epNum % 24) / 24 * 100));
 
       return `
         <a href="/episode/${h.epSlug}?anime=${h.animeSlug}" class="cw-card">
           <div class="cw-poster-wrap">
-            <img src="${h.animePoster || ''}" alt="${h.animeTitle || ''}" class="cw-poster" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
-            <div class="cw-overlay">
+            <img src="${h.animePoster || ''}" alt="" class="cw-poster" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
+            <div class="cw-play-wrap">
               <div class="cw-play-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
               </div>
             </div>
             <div class="cw-progress-bar">
@@ -490,7 +513,6 @@ setInterval(function() {
 
   window.cwRemoveItem = cwRemoveItem;
 
-  // Render saat DOM siap
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', renderCW);
   } else {
