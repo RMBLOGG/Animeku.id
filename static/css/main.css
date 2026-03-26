@@ -199,23 +199,168 @@ button { cursor: pointer; border: none; background: none; }
 .search-result-info .title { font-size: 14px; font-weight: 500; }
 .search-result-info .meta { font-size: 12px; color: var(--text3); }
 
-/* Mobile Menu */
-.mobile-menu {
+/* ── SIDEBAR OVERLAY ── */
+.sidebar-overlay {
   display: none;
-  flex-direction: column;
-  padding: 8px 24px 16px;
-  border-top: 1px solid var(--border);
-  gap: 2px;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
-.mobile-menu.open { display: flex; }
-.mobile-menu a {
-  padding: 10px 16px;
+.sidebar-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+/* ── MODERN SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 280px;
+  height: 100dvh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: right 0.35s cubic-bezier(.22,.68,0,1.2);
+  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar { display: none; }
+.sidebar.open { right: 0; }
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-logo {
+  font-family: var(--font-head);
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--text);
+}
+.sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: var(--text2);
-  font-size: 15px;
+  color: var(--text3);
+  cursor: pointer;
   transition: var(--trans);
 }
-.mobile-menu a:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.sidebar-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+.sidebar-section {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-section-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 4px 8px 8px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--trans);
+  font-family: var(--font-body);
+}
+.sidebar-link:hover, .sidebar-link.active {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.sidebar-link svg { flex-shrink: 0; opacity: 0.7; }
+.sidebar-link:hover svg, .sidebar-link.active svg { opacity: 1; }
+.sidebar-link.active { color: var(--accent); background: rgba(230,57,70,0.08); }
+.sidebar-link.active svg { color: var(--accent); }
+
+.sidebar-endpoint { font-size: 13px; }
+
+.sidebar-livechat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(230,57,70,0.15), rgba(230,57,70,0.05));
+  border: 1px solid rgba(230,57,70,0.25);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: var(--trans);
+}
+.sidebar-livechat:hover { background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.08)); }
+.sidebar-livechat-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sidebar-live-dot {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 9px; height: 9px;
+  background: #4caf7d;
+  border-radius: 50%;
+  border: 1.5px solid var(--bg2);
+  animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+.sidebar-live-badge {
+  margin-left: auto;
+  font-size: 10px;
+  background: rgba(230,57,70,0.2);
+  color: var(--accent);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
 
 /* ══════════════════════════════════════════════
    LAYOUT
