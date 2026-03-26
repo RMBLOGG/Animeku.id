@@ -238,7 +238,7 @@ setInterval(function() {
 <div id="continueWatchingSection" style="display:none">
 <style>
 .cw-section {
-  padding: 18px 0 4px;
+  padding: 18px 0 0;
 }
 .cw-header {
   display: flex;
@@ -288,7 +288,7 @@ setInterval(function() {
 .cw-strip {
   display: flex;
   gap: 10px;
-  padding: 2px 16px 14px;
+  padding: 2px 16px 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -523,7 +523,7 @@ setInterval(function() {
 
 <!-- ONGOING -->
 {% if data and data.ongoing %}
-<section class="section">
+<section class="section" style="padding-top:12px">
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">Sedang Tayang</h2>
