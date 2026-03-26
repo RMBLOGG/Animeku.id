@@ -547,14 +547,17 @@ const RARITY = {
   common:    { label: 'COMMON',    icon: '🃏', color: '#94a3b8', sellPrice: 20,  powerMult: 1.0, class: 'rar-common' },
 };
 
-// Anime character pool (MAL IDs)
-const CHAR_POOL = [
+// Anime IDs untuk ambil karakter (populer & banyak karakternya)
+const ANIME_POOL = [
   1,21,16498,5114,11061,9253,9969,2904,38000,40748,41467,38524,
   32281,33486,37779,35790,38474,40591,49387,50265,1535,19,6547,
   15417,34572,23273,42938,51009,52991,54492,52034,48316,48569,
-  44511,46569,47917,48661,42203,40591,45576,1735,2025,849,28851,
-  31964,33352,22319,13601,28171,35849,36475,38000,39535,40534
+  44511,46569,47917,48661,42203,45576,1735,2025,849,28851,
+  31964,33352,22319,13601,28171,35849,36475,39535,40534,52034
 ];
+
+// Cache karakter supaya tidak re-fetch
+const CHAR_CACHE = {};
 
 function sbFetch(path, opts = {}) {
   return fetch(SUPABASE_URL + path, { ...opts, headers: { ...SB.headers, ...(opts.headers||{}) } });
@@ -680,13 +683,16 @@ function gcRenderCollection() {
 function gcCardHTML(c, extra = '') {
   const r = RARITY[c.rarity] || RARITY.common;
   const glowClass = c.rarity === 'legendary' ? 'legendary-glow' : c.rarity === 'rare' ? 'rare-glow' : '';
+  const name = c.char_name || c.anime_title || '?';
+  const sub  = c.char_name && c.anime_title ? c.anime_title : '';
   return `<div class="${r.class}">
-    <div class="gc-anime-card ${glowClass}" style="cursor:default" title="${esc(c.anime_title)}">
+    <div class="gc-anime-card ${glowClass}" style="cursor:default" title="${esc(name)}">
       <img src="${esc(c.image_url)}" alt="" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
       <div class="gc-rar-badge">${r.icon} ${r.label}</div>
       <div class="gc-power-badge">⚡${c.power}</div>
       <div class="gc-anime-card-ov">
-        <div class="gc-anime-card-title">${esc(c.anime_title)}</div>
+        <div class="gc-anime-card-title">${esc(name)}</div>
+        ${sub ? `<div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(sub)}</div>` : ''}
       </div>
     </div>
     ${extra}
@@ -733,38 +739,62 @@ async function gcPull(count) {
 
   for (let i = 0; i < count; i++) {
     const rarity = rarityRoll();
-    const animeId = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
+    const animeId = ANIME_POOL[Math.floor(Math.random() * ANIME_POOL.length)];
     try {
-      const res = await fetch(`https://api.jikan.moe/v4/anime/${animeId}`);
-      const { data } = await res.json();
-      if (data) {
-        const power = Math.round((data.score || 5) * 10 * RARITY[rarity].powerMult);
-        const card = {
-          user_id: gcUser.id,
-          anime_id: data.mal_id,
-          anime_title: data.title,
-          image_url: data.images?.jpg?.large_image_url || '',
-          rarity,
-          power,
-          obtained_at: new Date().toISOString()
-        };
-        pulled.push(card);
-
-        // Animate card reveal
-        const r = RARITY[rarity];
-        const el = document.createElement('div');
-        el.className = `gc-pull-card-item ${rarity === 'legendary' ? 'legendary-glow' : ''} ${r.class}`;
-        el.style.borderColor = `var(--rbo)`;
-        el.innerHTML = `<img src="${esc(card.image_url)}" alt="" onerror="this.src='/static/img/placeholder.svg'">
-          <div class="gc-pull-card-info">
-            <div class="gc-pull-card-title">${esc(card.anime_title)}</div>
-            <div class="gc-pull-card-rar" style="color:${r.color}">${r.icon} ${r.label}</div>
-          </div>`;
-        cardsRow.appendChild(el);
-        setTimeout(() => el.classList.add('reveal'), 100 + i * 200);
-        await new Promise(res => setTimeout(res, 350));
+      // Fetch characters dari anime ini (pakai cache)
+      let chars = CHAR_CACHE[animeId];
+      if (!chars) {
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/characters`);
+        const json = await res.json();
+        chars = (json.data || []).filter(c => c.character?.images?.jpg?.image_url && c.character.name);
+        CHAR_CACHE[animeId] = chars;
+        await new Promise(r => setTimeout(r, 340)); // rate limit
       }
-    } catch {}
+      if (!chars.length) continue;
+
+      // Pilih random karakter
+      const picked = chars[Math.floor(Math.random() * chars.length)];
+      const char = picked.character;
+      const imgUrl = char.images?.jpg?.image_url || char.images?.webp?.image_url || '';
+      if (!imgUrl) continue;
+
+      // Ambil nama anime untuk info kartu
+      let animeTitle = '';
+      try {
+        const aRes = await fetch(`https://api.jikan.moe/v4/anime/${animeId}?fields=title,score`);
+        const { data: aData } = await aRes.json();
+        animeTitle = aData?.title || '';
+        // Power berdasarkan score anime × rarity
+        var animeScore = aData?.score || 6;
+      } catch { var animeScore = 6; }
+
+      const power = Math.round(animeScore * 10 * RARITY[rarity].powerMult);
+      const card = {
+        user_id: gcUser.id,
+        char_id: char.mal_id,
+        char_name: char.name,
+        anime_title: animeTitle,
+        image_url: imgUrl,
+        rarity,
+        power,
+        obtained_at: new Date().toISOString()
+      };
+      pulled.push(card);
+
+      // Animate card reveal
+      const r = RARITY[rarity];
+      const el = document.createElement('div');
+      el.className = `gc-pull-card-item ${rarity === 'legendary' ? 'legendary-glow' : ''} ${r.class}`;
+      el.innerHTML = `<img src="${esc(card.image_url)}" alt="" onerror="this.src='/static/img/placeholder.svg'">
+        <div class="gc-pull-card-info">
+          <div class="gc-pull-card-title">${esc(card.char_name)}</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(card.anime_title)}</div>
+          <div class="gc-pull-card-rar" style="color:${r.color}">${r.icon} ${r.label}</div>
+        </div>`;
+      cardsRow.appendChild(el);
+      setTimeout(() => el.classList.add('reveal'), 100 + i * 200);
+      await new Promise(res => setTimeout(res, 350));
+    } catch(e) { console.warn(e); }
   }
 
   // Save to Supabase
@@ -810,11 +840,14 @@ function gcRenderSellGrid() {
     const r = RARITY[c.rarity] || RARITY.common;
     return `<div class="gc-sell-item ${r.class}" id="gcSellItem_${i}" onclick="gcToggleSell(${i})">
       <div class="gc-sell-check"><i class="fa-solid fa-check" style="font-size:10px"></i></div>
-      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.anime_title)}">
+      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.char_name||c.anime_title)}">
         <img src="${esc(c.image_url)}" alt="" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
         <div class="gc-rar-badge">${r.icon}</div>
         <div class="gc-power-badge" style="bottom:24px;top:auto;left:6px;right:auto;background:rgba(251,191,36,0.2);color:#fbbf24">${r.sellPrice}🪙</div>
-        <div class="gc-anime-card-ov"><div class="gc-anime-card-title">${esc(c.anime_title)}</div></div>
+        <div class="gc-anime-card-ov">
+          <div class="gc-anime-card-title">${esc(c.char_name||c.anime_title)}</div>
+          ${c.char_name&&c.anime_title?`<div style="font-size:9px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.anime_title)}</div>`:''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -879,10 +912,13 @@ function gcRenderTradeOfferGrid() {
   grid.innerHTML = gcCollection.map((c, i) => {
     const r = RARITY[c.rarity] || RARITY.common;
     return `<div class="gc-duel-card-wrap ${r.class}" id="gcTradeOffer_${i}" onclick="gcPickTradeOffer(${i})">
-      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.anime_title)}">
+      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.char_name||c.anime_title)}">
         <img src="${esc(c.image_url)}" alt="" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
         <div class="gc-rar-badge">${r.icon}</div>
-        <div class="gc-anime-card-ov"><div class="gc-anime-card-title">${esc(c.anime_title)}</div></div>
+        <div class="gc-anime-card-ov">
+          <div class="gc-anime-card-title">${esc(c.char_name||c.anime_title)}</div>
+          ${c.char_name&&c.anime_title?`<div style="font-size:9px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.anime_title)}</div>`:''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -908,7 +944,7 @@ async function gcSendTrade() {
       body: JSON.stringify({
         from_user_id: gcUser.id, from_user_name: gcUser.name || '',
         to_user_id: target,
-        card_id: card.id, card_title: card.anime_title,
+        card_id: card.id, card_title: card.char_name || card.anime_title,
         card_image: card.image_url, card_rarity: card.rarity, card_power: card.power,
         status: 'pending', created_at: new Date().toISOString()
       })
@@ -953,8 +989,8 @@ async function gcAcceptTrade(tradeId, trade) {
     await sbFetch('/rest/v1/gacha_collection', {
       method: 'POST', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({
-        user_id: gcUser.id, anime_id: trade.card_id,
-        anime_title: trade.card_title, image_url: trade.card_image,
+        user_id: gcUser.id, char_id: trade.card_id,
+        char_name: trade.card_title, image_url: trade.card_image,
         rarity: trade.card_rarity, power: trade.card_power,
         obtained_at: new Date().toISOString()
       })
@@ -993,11 +1029,14 @@ function gcRenderDuelGrid() {
   grid.innerHTML = gcCollection.map((c, i) => {
     const r = RARITY[c.rarity] || RARITY.common;
     return `<div class="gc-duel-card-wrap ${r.class}" id="gcDuelWrap_${i}" onclick="gcPickDuel(${i})">
-      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.anime_title)}">
+      <div class="gc-anime-card" style="cursor:pointer" title="${esc(c.char_name||c.anime_title)}">
         <img src="${esc(c.image_url)}" alt="" loading="lazy" onerror="this.src='/static/img/placeholder.svg'">
         <div class="gc-rar-badge">${r.icon}</div>
         <div class="gc-power-badge">⚡${c.power}</div>
-        <div class="gc-anime-card-ov"><div class="gc-anime-card-title">${esc(c.anime_title)}</div></div>
+        <div class="gc-anime-card-ov">
+          <div class="gc-anime-card-title">${esc(c.char_name||c.anime_title)}</div>
+          ${c.char_name&&c.anime_title?`<div style="font-size:9px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.anime_title)}</div>`:''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1014,21 +1053,31 @@ async function gcStartDuel() {
   if (gcDuelPicked === null) return;
   const myCard = gcCollection[gcDuelPicked];
 
-  // CPU picks random card from pool
-  const cpuAnimeId = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
+  // CPU picks random character
+  const cpuAnimeId = ANIME_POOL[Math.floor(Math.random() * ANIME_POOL.length)];
   let cpuCard;
   try {
-    const r = await fetch(`https://api.jikan.moe/v4/anime/${cpuAnimeId}`);
-    const { data } = await r.json();
+    let chars = CHAR_CACHE[cpuAnimeId];
+    if (!chars) {
+      const rc = await fetch(`https://api.jikan.moe/v4/anime/${cpuAnimeId}/characters`);
+      const jc = await rc.json();
+      chars = (jc.data || []).filter(c => c.character?.images?.jpg?.image_url);
+      CHAR_CACHE[cpuAnimeId] = chars;
+    }
+    const ra = await fetch(`https://api.jikan.moe/v4/anime/${cpuAnimeId}?fields=title,score`);
+    const { data: aData } = await ra.json();
+    const picked = chars[Math.floor(Math.random() * chars.length)];
+    const cpuChar = picked?.character;
     const cpuRar = Math.random() < 0.05 ? 'legendary' : Math.random() < 0.3 ? 'rare' : 'common';
     cpuCard = {
-      anime_title: data?.title || 'Unknown',
-      image_url: data?.images?.jpg?.large_image_url || '',
+      char_name: cpuChar?.name || 'CPU Character',
+      anime_title: aData?.title || '',
+      image_url: cpuChar?.images?.jpg?.image_url || '',
       rarity: cpuRar,
-      power: Math.round(((data?.score || 6) * 10) * RARITY[cpuRar].powerMult)
+      power: Math.round(((aData?.score || 6) * 10) * RARITY[cpuRar].powerMult)
     };
   } catch {
-    cpuCard = { anime_title: 'CPU Card', image_url: '', rarity: 'common', power: 50 };
+    cpuCard = { char_name: 'CPU Character', anime_title: '', image_url: '', rarity: 'common', power: 50 };
   }
 
   // Show arena
@@ -1040,14 +1089,16 @@ async function gcStartDuel() {
     <div class="gc-duel-vs-slot">
       <div class="gc-duel-vs-label">Kartumu</div>
       <img class="gc-duel-vs-img" src="${esc(myCard.image_url)}" alt="" onerror="this.src='/static/img/placeholder.svg'">
-      <div class="gc-duel-vs-name">${esc(myCard.anime_title)}</div>
+      <div class="gc-duel-vs-name">${esc(myCard.char_name||myCard.anime_title)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${esc(myCard.anime_title||'')}</div>
       <div class="gc-duel-vs-power">⚡ ${myCard.power}</div>
     </div>
     <div class="gc-duel-vs-sep">VS</div>
     <div class="gc-duel-vs-slot">
       <div class="gc-duel-vs-label">CPU</div>
       <img class="gc-duel-vs-img" src="${esc(cpuCard.image_url)}" alt="" onerror="this.src='/static/img/placeholder.svg'">
-      <div class="gc-duel-vs-name">${esc(cpuCard.anime_title)}</div>
+      <div class="gc-duel-vs-name">${esc(cpuCard.char_name||cpuCard.anime_title)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${esc(cpuCard.anime_title||'')}</div>
       <div class="gc-duel-vs-power">⚡ ${cpuCard.power}</div>
     </div>`;
 
@@ -1086,8 +1137,8 @@ async function gcStartDuel() {
       method: 'POST', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({
         user_id: gcUser.id, user_name: gcUser.name || '',
-        my_card_title: myCard.anime_title, my_power: myCard.power,
-        cpu_card_title: cpuCard.anime_title, cpu_power: cpuCard.power,
+        my_card_title: myCard.char_name || myCard.anime_title, my_power: myCard.power,
+        cpu_card_title: cpuCard.char_name || cpuCard.anime_title, cpu_power: cpuCard.power,
         result: outcome, coins_earned: coinReward,
         played_at: new Date().toISOString()
       })
