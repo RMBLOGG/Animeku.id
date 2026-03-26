@@ -41,7 +41,7 @@
       {% if d.info %}
       <div class="detail-stats">
         {% if d.info.score and d.info.score != 'N/A' %}
-        <div class="stat"><span class="stat-label">⭐ Score</span><span class="stat-value score">{{ d.info.score }}</span></div>
+        <div class="stat"><span class="stat-label"><i class="fas fa-star" style="color:#f5c518"></i> Score</span><span class="stat-value score">{{ d.info.score }}</span></div>
         {% endif %}
         {% if d.info.total_episode %}
         <div class="stat"><span class="stat-label">Episode</span><span class="stat-value">{{ d.info.total_episode }}</span></div>
@@ -66,7 +66,7 @@
       {% if d.synopsis %}
       <div>
         <p class="synopsis-text" id="synopsisText">{{ d.synopsis }}</p>
-        <span class="read-more" id="readMoreBtn">Baca selengkapnya <span class="read-more-arrow">↓</span></span>
+        <span class="read-more" id="readMoreBtn">Baca selengkapnya <span class="read-more-arrow"><i class="fas fa-chevron-down"></i></span></span>
       </div>
       {% endif %}
 
@@ -89,7 +89,7 @@
             document.getElementById('detailHero').dataset.animeType
           )">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <span id="statusBtnText">☆ Status</span>
+          <span id="statusBtnText"><i class="far fa-star"></i> Status</span>
         </button>
       </div>
     </div>
@@ -143,7 +143,7 @@
   const inList = list.some(a => a.slug === slug);
   const btn  = document.getElementById('watchlistBtn');
   const txt  = document.getElementById('watchlistBtnText');
-  if (inList && btn) { btn.classList.add('active'); txt.textContent = '✓ Di Watchlist'; }
+  if (inList && btn) { btn.classList.add('active'); txt.textContent = '<i class="fas fa-check"></i> Di Watchlist'; }
 
   // Continue watching banner
   const prog  = JSON.parse(localStorage.getItem('animeku_progress') || '{}');
@@ -154,7 +154,7 @@
       <a href="/episode/${saved.epSlug}?anime=${slug}" class="continue-banner">
         <img src="{{ d.poster }}" alt="{{ d.title }}" onerror="this.src='/static/img/placeholder.svg'">
         <div class="continue-info">
-          <div class="continue-label">⏯ LANJUT NONTON</div>
+          <div class="continue-label"><i class="fas fa-play-circle"></i> LANJUT NONTON</div>
           <div class="continue-title">{{ d.title }}</div>
           <div class="continue-ep">${saved.epName}</div>
         </div>
