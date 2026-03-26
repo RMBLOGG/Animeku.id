@@ -708,6 +708,14 @@ function closeAnnouncement() {
         <a href="/animelist">Anime A-Z</a>
       </div>
 
+      <!-- Reward Harian -->
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <a href="/reward" style="display:flex;align-items:center;gap:10px;padding:11px 16px;margin:4px 0;background:linear-gradient(135deg,rgba(245,197,24,0.12),rgba(244,162,97,0.08));border:1px solid rgba(245,197,24,0.25);border-radius:10px;color:#f5c518;font-weight:700;font-size:14px;text-decoration:none">
+        <span style="position:relative;display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(245,197,24,0.15);border-radius:50%;flex-shrink:0;font-size:14px">🪙</span>
+        Reward Harian
+        <span style="margin-left:auto;font-size:10px;background:rgba(245,197,24,0.15);color:#f5c518;border-radius:20px;padding:2px 8px;font-weight:700;letter-spacing:.5px">+KOIN</span>
+      </a>
+
       <!-- MyList section -->
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
       <a href="#" onclick="event.preventDefault();var d=document.getElementById('mobMylistDropdown');var open=d.style.display==='flex';d.style.display=open?'none':'flex';document.getElementById('mobMylistArrow').style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between">
@@ -830,11 +838,9 @@ function closeAnnouncement() {
       </span>
       <span class="mob-nav-label">Jadwal</span>
     </a>
-    <a href="/quiz" class="mob-nav-item" data-page="game">
-      <span class="mob-nav-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>
-      </span>
-      <span class="mob-nav-label">Game</span>
+    <a href="/reward" class="mob-nav-item" data-page="reward">
+      <span class="mob-nav-icon" style="font-size:20px;display:flex;align-items:center;justify-content:center">🪙</span>
+      <span class="mob-nav-label">Reward</span>
     </a>
     <a href="/rekomendasi" class="mob-nav-item" data-page="rekomendasi">
       <span class="mob-nav-icon">
@@ -955,7 +961,7 @@ function closeAnnouncement() {
         (page === 'home' && (path === '/' || path === '/home')) ||
         (page === 'ongoing' && path.startsWith('/ongoing')) ||
         (page === 'schedule' && path.startsWith('/schedule')) ||
-        (page === 'game' && path.startsWith('/quiz')) ||
+        (page === 'reward' && path.startsWith('/reward')) ||
         (page === 'rekomendasi' && path.startsWith('/rekomendasi')) ||
         (page === 'mylist' && path.startsWith('/mylist')) ||
         (page === 'login' && (path.startsWith('/auth') || path.startsWith('/profile')))
