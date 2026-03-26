@@ -16,13 +16,11 @@ const sidebarOverlay = document.getElementById('sidebarOverlay');
 function openSidebar() {
   mobileMenu?.classList.add('open');
   sidebarOverlay?.classList.add('open');
-  document.body.classList.add('sidebar-open');
   hamburger?.classList.add('open');
 }
 function closeSidebar() {
   mobileMenu?.classList.remove('open');
   sidebarOverlay?.classList.remove('open');
-  document.body.classList.remove('sidebar-open');
   hamburger?.classList.remove('open');
 }
 window.closeSidebar = closeSidebar;
