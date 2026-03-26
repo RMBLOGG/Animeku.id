@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/ads.txt",
-      "dest": "/static/ads.txt"
+      "dest": "/app.py"
     },
     {
       "src": "/(.*)",
