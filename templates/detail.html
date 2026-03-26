@@ -91,6 +91,10 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           <span id="statusBtnText"><i class="far fa-star"></i> Status</span>
         </button>
+        <div id="accessBadge" style="display:inline-flex;align-items:center"></div>
+        <button id="buyAccessBtn" class="btn btn-primary btn-sm" style="display:none;gap:6px">
+          <i class="fas fa-coins"></i> Beli Akses
+        </button>
       </div>
     </div>
   </div>
@@ -144,6 +148,67 @@
   const btn  = document.getElementById('watchlistBtn');
   const txt  = document.getElementById('watchlistBtnText');
   if (inList && btn) { btn.classList.add('active'); txt.textContent = '<i class="fas fa-check"></i> Di Watchlist'; }
+
+  // ── Cek akses koin ──────────────────────────────────
+  (async function checkCoinAccess() {
+    const token = localStorage.getItem('sb_access_token') || '';
+    try {
+      const r = await fetch(`/api/coins/check-access?anime=${encodeURIComponent(slug)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const d = await r.json();
+      const accessBadge = document.getElementById('accessBadge');
+      const buyAccessBtn = document.getElementById('buyAccessBtn');
+      if (!accessBadge) return;
+      if (d.access || d.already_purchased) {
+        accessBadge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.3);color:#4caf7d;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700"><i class="fas fa-unlock"></i> Akses Penuh</span>`;
+        if (buyAccessBtn) buyAccessBtn.style.display = 'none';
+      } else if (d.reason === 'not_logged_in') {
+        accessBadge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);padding:4px 12px;border-radius:99px;font-size:11px"><i class="fas fa-lock"></i> Login untuk akses</span>`;
+        if (buyAccessBtn) buyAccessBtn.style.display = 'none';
+      } else {
+        accessBadge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);color:#f5c518;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700"><i class="fas fa-coins"></i> ${d.coin_price} Koin</span>`;
+        if (buyAccessBtn) {
+          buyAccessBtn.style.display = 'inline-flex';
+          if (d.can_afford) {
+            buyAccessBtn.textContent = '';
+            buyAccessBtn.innerHTML = `<i class="fas fa-coins"></i> Beli Akses (${d.coin_price} Koin)`;
+            buyAccessBtn.onclick = () => buyAnimeAccess(slug, '{{ d.title | e }}', d.coin_price, buyAccessBtn, accessBadge);
+          } else {
+            buyAccessBtn.innerHTML = `<i class="fas fa-coins"></i> Topup Koin`;
+            buyAccessBtn.onclick = () => window.location.href = '/topup';
+          }
+        }
+      }
+    } catch(e) {}
+  })();
+
+  async function buyAnimeAccess(animeSlug, animeTitle, price, btn, badge) {
+    if (!confirm(`Beli akses "${animeTitle}" seharga ${price} koin?`)) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    const token = localStorage.getItem('sb_access_token') || '';
+    try {
+      const r = await fetch('/api/coins/buy-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ anime_slug: animeSlug, anime_title: animeTitle })
+      });
+      const d = await r.json();
+      if (d.success) {
+        badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.3);color:#4caf7d;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700"><i class="fas fa-unlock"></i> Akses Penuh</span>`;
+        btn.style.display = 'none';
+        alert(`✅ Berhasil! Sisa saldo: ${d.new_balance} koin`);
+      } else {
+        alert(d.error || 'Gagal beli akses');
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-coins"></i> Beli Akses (${price} Koin)`;
+      }
+    } catch(e) {
+      alert('Terjadi kesalahan');
+      btn.disabled = false;
+    }
+  }
 
   // Continue watching banner
   const prog  = JSON.parse(localStorage.getItem('animeku_progress') || '{}');
