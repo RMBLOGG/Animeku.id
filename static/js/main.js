@@ -8,45 +8,12 @@ window.addEventListener('scroll', () => {
   navbar?.classList.toggle('scrolled', window.scrollY > 50);
 }, { passive: true });
 
-// ── Sidebar ─────────────────────────────────────
-const hamburger   = document.getElementById('hamburger');
-const mobileMenu  = document.getElementById('mobileMenu');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-function openSidebar() {
-  mobileMenu?.classList.add('open');
-  sidebarOverlay?.classList.add('open');
-  hamburger?.classList.add('open');
-  // Lock background scroll tapi JANGAN pakai touch-action
-  document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
-  document.body.style.width = '100%';
-}
-function closeSidebar() {
-  mobileMenu?.classList.remove('open');
-  sidebarOverlay?.classList.remove('open');
-  hamburger?.classList.remove('open');
-  document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.width = '';
-}
-window.closeSidebar = closeSidebar;
-
+// ── Hamburger ──────────────────────────────────
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
 hamburger?.addEventListener('click', () => {
-  if (mobileMenu?.classList.contains('open')) closeSidebar();
-  else openSidebar();
-});
-
-// Close sidebar on ESC
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeSidebar();
-});
-
-// Highlight active link
-document.querySelectorAll('.sidebar-link').forEach(link => {
-  if (link.getAttribute('href') === window.location.pathname) {
-    link.classList.add('active');
-  }
+  hamburger.classList.toggle('open');
+  mobileMenu.classList.toggle('open');
 });
 
 // ── Search ─────────────────────────────────────
