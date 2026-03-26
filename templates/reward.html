@@ -1,0 +1,729 @@
+{% extends "base.html" %}
+{% block title %}Reward Harian — Animeku.id{% endblock %}
+
+{% block head %}
+<style>
+/* ═══════════════════════════════════════════════
+   REWARD PAGE
+═══════════════════════════════════════════════ */
+.rw-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 80px 16px 100px;
+}
+
+/* ── HEADER ── */
+.rw-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.rw-header h1 {
+  font-family: var(--font-head);
+  font-size: clamp(26px, 6vw, 38px);
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.rw-header h1 span { color: var(--accent); }
+.rw-header p { color: var(--text3); font-size: 13px; }
+
+/* ── BALANCE CARD ── */
+.rw-balance-card {
+  background: linear-gradient(135deg, rgba(230,57,70,0.15), rgba(100,40,130,0.15));
+  border: 1px solid rgba(230,57,70,0.25);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.rw-balance-card::before {
+  content: '🪙';
+  position: absolute;
+  font-size: 80px;
+  opacity: 0.06;
+  right: -10px;
+  top: -10px;
+}
+.rw-balance-label { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.rw-balance-num {
+  font-family: var(--font-head);
+  font-size: 44px;
+  color: #f5c518;
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-bottom: 4px;
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+.rw-balance-num.pop { transform: scale(1.25); }
+.rw-balance-sub { font-size: 12px; color: var(--text3); }
+.rw-balance-sub strong { color: var(--text2); }
+
+/* ── CARDS ── */
+.rw-cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+.rw-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.rw-card:hover { border-color: rgba(230,57,70,0.3); }
+
+.rw-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.rw-card-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.rw-card-icon.daily { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.25); }
+.rw-card-icon.ad    { background: rgba(77,171,247,0.15); border: 1px solid rgba(77,171,247,0.25); }
+
+.rw-card-info { flex: 1; min-width: 0; }
+.rw-card-title { font-weight: 700; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+.rw-card-desc  { font-size: 12px; color: var(--text3); }
+
+.rw-card-reward {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-head);
+  font-size: 18px;
+  color: #f5c518;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+/* Progress bar (untuk ad counter) */
+.rw-progress-wrap { margin-bottom: 12px; }
+.rw-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+.rw-progress-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.rw-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4dabf7, #74c0fc);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+/* Buttons */
+.rw-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.rw-btn-daily {
+  background: linear-gradient(135deg, #f5c518, #f4a261);
+  color: #1a1a2e;
+}
+.rw-btn-daily:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+
+.rw-btn-ad {
+  background: linear-gradient(135deg, #4dabf7, #339af0);
+  color: #fff;
+}
+.rw-btn-ad:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+
+.rw-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.rw-btn-claimed {
+  background: rgba(76,175,125,0.15);
+  border: 1px solid rgba(76,175,125,0.3);
+  color: #4caf7d;
+  cursor: default;
+}
+
+/* ── LOGIN NOTICE ── */
+.rw-login-notice {
+  background: rgba(230,57,70,0.08);
+  border: 1px solid rgba(230,57,70,0.2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 14px;
+}
+.rw-login-notice a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── AD OVERLAY ── */
+#rwAdOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#rwAdOverlay.show { display: flex; }
+
+.rw-ad-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  animation: rwPopIn 0.3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes rwPopIn { from{opacity:0;transform:scale(0.88) translateY(20px)} to{opacity:1;transform:none} }
+
+.rw-ad-emoji { font-size: 48px; margin-bottom: 14px; display: block; }
+.rw-ad-title { font-family: var(--font-head); font-size: 22px; letter-spacing: 1px; color: var(--text); margin-bottom: 6px; }
+.rw-ad-desc  { font-size: 13px; color: var(--text3); margin-bottom: 24px; line-height: 1.6; }
+
+.rw-ad-ring-wrap { position: relative; width: 90px; height: 90px; margin: 0 auto 20px; }
+.rw-ad-ring-wrap svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.rw-ad-ring-bg   { stroke: rgba(255,255,255,0.08); }
+.rw-ad-ring-fill {
+  stroke: #4dabf7;
+  stroke-dasharray: 251.2;
+  stroke-dashoffset: 251.2;
+  transition: stroke-dashoffset 1s linear;
+}
+.rw-ad-ring-count {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-size: 28px; color: var(--text);
+}
+
+.rw-ad-reward {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 16px;
+}
+.rw-ad-reward strong { color: #f5c518; font-size: 16px; }
+
+.rw-ad-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text3);
+  font-size: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.rw-ad-cancel:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── HISTORY ── */
+.rw-history-title {
+  font-family: var(--font-head);
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: var(--text2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rw-history-list { display: flex; flex-direction: column; gap: 8px; }
+.rw-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.rw-history-icon { font-size: 16px; flex-shrink: 0; }
+.rw-history-info { flex: 1; min-width: 0; }
+.rw-history-desc { color: var(--text2); font-weight: 600; }
+.rw-history-time { font-size: 11px; color: var(--text3); }
+.rw-history-amount { font-family: var(--font-head); font-size: 15px; color: #f5c518; flex-shrink: 0; }
+.rw-history-amount.neg { color: var(--accent); }
+
+.rw-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+
+/* ── TOAST ── */
+.rw-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.rw-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.rw-toast.success { border-color: rgba(76,175,125,0.4); }
+.rw-toast.error   { border-color: rgba(230,57,70,0.4); }
+
+/* Streak badge */
+.rw-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: #f5c518;
+  font-weight: 700;
+  margin-top: 8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rw-page">
+
+  <!-- Header -->
+  <div class="rw-header">
+    <h1>🪙 Reward <span>Harian</span></h1>
+    <p>Login tiap hari & nonton iklan untuk dapat koin gratis!</p>
+  </div>
+
+  <!-- Login notice (tampil kalau belum login) -->
+  <div class="rw-login-notice" id="rwLoginNotice" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <a href="/auth/login" onclick="localStorage.setItem('auth_return_to',location.href)">Login</a> dulu untuk klaim reward!
+  </div>
+
+  <!-- Balance Card -->
+  <div class="rw-balance-card">
+    <div class="rw-balance-label">Saldo Koin Kamu</div>
+    <div class="rw-balance-num" id="rwBalanceNum">—</div>
+    <div class="rw-balance-sub">1 koin = nonton 1 anime · butuh <strong>5 koin</strong> per anime</div>
+    <div class="rw-streak" id="rwStreak" style="display:none">🔥 <span id="rwStreakNum">0</span> hari streak</div>
+  </div>
+
+  <!-- Cards -->
+  <div class="rw-cards">
+
+    <!-- Daily Login -->
+    <div class="rw-card">
+      <div class="rw-card-top">
+        <div class="rw-card-icon daily">📅</div>
+        <div class="rw-card-info">
+          <div class="rw-card-title">Login Harian</div>
+          <div class="rw-card-desc">Klaim sekali per hari, reset tengah malam</div>
+        </div>
+        <div class="rw-card-reward">+5 🪙</div>
+      </div>
+      <button class="rw-btn rw-btn-daily" id="rwDailyBtn" onclick="rwClaimDaily()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Klaim 5 Koin
+      </button>
+      <div id="rwDailyStatus" style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px;display:none"></div>
+    </div>
+
+    <!-- Watch Ad -->
+    <div class="rw-card">
+      <div class="rw-card-top">
+        <div class="rw-card-icon ad">📺</div>
+        <div class="rw-card-info">
+          <div class="rw-card-title">Nonton Iklan</div>
+          <div class="rw-card-desc">Tonton iklan 30 detik, dapat 3 koin (max 5x/hari)</div>
+        </div>
+        <div class="rw-card-reward">+3 🪙</div>
+      </div>
+      <div class="rw-progress-wrap">
+        <div class="rw-progress-label">
+          <span>Sudah nonton</span>
+          <span id="rwAdCountLabel">0 / 5</span>
+        </div>
+        <div class="rw-progress-track">
+          <div class="rw-progress-fill" id="rwAdProgressFill" style="width:0%"></div>
+        </div>
+      </div>
+      <button class="rw-btn rw-btn-ad" id="rwAdBtn" onclick="rwWatchAd()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Nonton Iklan (+3 Koin)
+      </button>
+      <div id="rwAdStatus" style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px;display:none"></div>
+    </div>
+
+  </div>
+
+  <!-- History -->
+  <div class="rw-history-title">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Riwayat Transaksi
+  </div>
+  <div class="rw-history-list" id="rwHistoryList">
+    <div class="rw-empty">Memuat riwayat...</div>
+  </div>
+
+</div>
+
+<!-- Ad Overlay -->
+<div id="rwAdOverlay">
+  <div class="rw-ad-modal">
+    <span class="rw-ad-emoji">📺</span>
+    <div class="rw-ad-title">Sedang Memuat Iklan</div>
+    <div class="rw-ad-desc">Tunggu <strong>30 detik</strong> sampai timer selesai untuk mendapatkan koin.</div>
+
+    <div class="rw-ad-ring-wrap">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle class="rw-ad-ring-bg" cx="45" cy="45" r="40" fill="none" stroke-width="6"/>
+        <circle class="rw-ad-ring-fill" id="rwAdRingFill" cx="45" cy="45" r="40" fill="none" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <div class="rw-ad-ring-count" id="rwAdCountdown">30</div>
+    </div>
+
+    <div class="rw-ad-reward">
+      Kamu akan mendapat <strong>+3 🪙</strong>
+    </div>
+
+    <button class="rw-ad-cancel" id="rwAdCancelBtn" onclick="rwCancelAd()">
+      Batalkan
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="rw-toast" id="rwToast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Config ──────────────────────────────────────────────
+const DAILY_REWARD  = 5;
+const AD_REWARD     = 3;
+const AD_MAX_DAY    = 5;
+const AD_DURATION   = 30; // detik
+
+// ── State ────────────────────────────────────────────────
+let rwUser      = null;
+let rwToken     = null;
+let rwBalance   = 0;
+let rwAdRunning = false;
+let rwAdTimer   = null;
+
+// ── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    rwToken = localStorage.getItem('sb_access_token') || '';
+    const raw = localStorage.getItem('sb_user');
+    if (raw) rwUser = JSON.parse(raw);
+  } catch(e) {}
+
+  if (!rwUser || !rwToken) {
+    document.getElementById('rwLoginNotice').style.display = 'block';
+    document.getElementById('rwDailyBtn').disabled = true;
+    document.getElementById('rwAdBtn').disabled    = true;
+    document.getElementById('rwBalanceNum').textContent = '—';
+    document.getElementById('rwHistoryList').innerHTML = '<div class="rw-empty">Login dulu untuk melihat riwayat.</div>';
+    return;
+  }
+
+  await Promise.all([rwLoadBalance(), rwLoadStatus(), rwLoadHistory()]);
+});
+
+// ── Load Balance ─────────────────────────────────────────
+async function rwLoadBalance() {
+  try {
+    const r = await fetch('/api/coins/balance', {
+      headers: { Authorization: 'Bearer ' + rwToken }
+    });
+    const d = await r.json();
+    rwBalance = d.balance || 0;
+    rwAnimateBalance(rwBalance);
+  } catch(e) {}
+}
+
+function rwAnimateBalance(val) {
+  const el = document.getElementById('rwBalanceNum');
+  el.textContent = val;
+  el.classList.add('pop');
+  setTimeout(() => el.classList.remove('pop'), 400);
+}
+
+// ── Load Status (daily + ad count) ───────────────────────
+async function rwLoadStatus() {
+  try {
+    const r = await fetch('/api/reward/status', {
+      headers: { Authorization: 'Bearer ' + rwToken }
+    });
+    const d = await r.json();
+
+    // Daily
+    const dailyBtn  = document.getElementById('rwDailyBtn');
+    const dailyStat = document.getElementById('rwDailyStatus');
+    if (d.daily_claimed) {
+      dailyBtn.disabled   = true;
+      dailyBtn.className  = 'rw-btn rw-btn-claimed';
+      dailyBtn.innerHTML  = '✓ Sudah Diklaim Hari Ini';
+      dailyStat.style.display = 'block';
+      dailyStat.textContent   = 'Kembali lagi besok!';
+    }
+
+    // Streak
+    if (d.streak > 1) {
+      document.getElementById('rwStreak').style.display = 'inline-flex';
+      document.getElementById('rwStreakNum').textContent = d.streak;
+    }
+
+    // Ad count
+    const adCount = d.ad_count || 0;
+    const adBtn   = document.getElementById('rwAdBtn');
+    const adStat  = document.getElementById('rwAdStatus');
+    document.getElementById('rwAdCountLabel').textContent = `${adCount} / ${AD_MAX_DAY}`;
+    document.getElementById('rwAdProgressFill').style.width = `${(adCount / AD_MAX_DAY) * 100}%`;
+
+    if (adCount >= AD_MAX_DAY) {
+      adBtn.disabled  = true;
+      adBtn.className = 'rw-btn rw-btn-claimed';
+      adBtn.innerHTML = '✓ Batas Harian Tercapai (5/5)';
+      adStat.style.display = 'block';
+      adStat.textContent   = 'Kembali lagi besok!';
+    }
+
+  } catch(e) {}
+}
+
+// ── Claim Daily ──────────────────────────────────────────
+async function rwClaimDaily() {
+  const btn = document.getElementById('rwDailyBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg> Memproses...';
+
+  try {
+    const r = await fetch('/api/reward/daily', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + rwToken, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+
+    if (d.success) {
+      rwBalance = d.new_balance;
+      rwAnimateBalance(rwBalance);
+      btn.className  = 'rw-btn rw-btn-claimed';
+      btn.innerHTML  = '✓ Sudah Diklaim Hari Ini';
+      const stat = document.getElementById('rwDailyStatus');
+      stat.style.display = 'block';
+      stat.textContent   = 'Kembali lagi besok!';
+      if (d.streak > 1) {
+        document.getElementById('rwStreak').style.display = 'inline-flex';
+        document.getElementById('rwStreakNum').textContent = d.streak;
+      }
+      rwToast('🎉 +' + DAILY_REWARD + ' koin! Login harian berhasil!', 'success');
+      setTimeout(rwLoadHistory, 500);
+    } else {
+      btn.disabled  = true;
+      btn.className = 'rw-btn rw-btn-claimed';
+      btn.innerHTML = '✓ Sudah Diklaim';
+      rwToast(d.error || 'Sudah diklaim hari ini', 'error');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Klaim 5 Koin';
+    rwToast('Gagal koneksi', 'error');
+  }
+}
+
+// ── Watch Ad ─────────────────────────────────────────────
+function rwWatchAd() {
+  if (rwAdRunning) return;
+  rwAdRunning = true;
+
+  // Buka popup Adsterra — trigger popunder
+  // Script popunder sudah ada di base.html, kita trigger dengan window.open
+  try {
+    window.open('about:blank', '_blank', 'width=1,height=1');
+  } catch(e) {}
+
+  // Tampilkan overlay countdown
+  const overlay   = document.getElementById('rwAdOverlay');
+  const countdown = document.getElementById('rwAdCountdown');
+  const ring      = document.getElementById('rwAdRingFill');
+  const cancelBtn = document.getElementById('rwAdCancelBtn');
+  const circumference = 251.2; // 2π × 40
+
+  overlay.classList.add('show');
+  cancelBtn.style.display = 'block';
+
+  let timeLeft = AD_DURATION;
+  countdown.textContent = timeLeft;
+  ring.style.strokeDashoffset = circumference;
+
+  rwAdTimer = setInterval(() => {
+    timeLeft--;
+    countdown.textContent = timeLeft;
+
+    // Update ring
+    const progress = (AD_DURATION - timeLeft) / AD_DURATION;
+    ring.style.strokeDashoffset = circumference * (1 - progress);
+
+    if (timeLeft <= 0) {
+      clearInterval(rwAdTimer);
+      cancelBtn.style.display = 'none';
+      countdown.textContent = '✓';
+      ring.style.stroke = '#4caf7d';
+
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        rwAdRunning = false;
+        rwClaimAdReward();
+      }, 800);
+    }
+  }, 1000);
+}
+
+function rwCancelAd() {
+  if (rwAdTimer) clearInterval(rwAdTimer);
+  document.getElementById('rwAdOverlay').classList.remove('show');
+  rwAdRunning = false;
+  rwToast('Iklan dibatalkan, koin tidak diberikan.', 'error');
+}
+
+async function rwClaimAdReward() {
+  try {
+    const r = await fetch('/api/reward/watch-ad', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + rwToken, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+
+    if (d.success) {
+      rwBalance = d.new_balance;
+      rwAnimateBalance(rwBalance);
+
+      // Update counter
+      const adCount = d.ad_count;
+      document.getElementById('rwAdCountLabel').textContent = `${adCount} / ${AD_MAX_DAY}`;
+      document.getElementById('rwAdProgressFill').style.width = `${(adCount / AD_MAX_DAY) * 100}%`;
+
+      if (adCount >= AD_MAX_DAY) {
+        const adBtn = document.getElementById('rwAdBtn');
+        adBtn.disabled  = true;
+        adBtn.className = 'rw-btn rw-btn-claimed';
+        adBtn.innerHTML = '✓ Batas Harian Tercapai (5/5)';
+        const stat = document.getElementById('rwAdStatus');
+        stat.style.display = 'block';
+        stat.textContent   = 'Kembali lagi besok!';
+      }
+
+      rwToast('📺 +' + AD_REWARD + ' koin! Terima kasih sudah nonton iklan!', 'success');
+      setTimeout(rwLoadHistory, 500);
+    } else {
+      rwToast(d.error || 'Gagal klaim reward iklan', 'error');
+    }
+  } catch(e) {
+    rwToast('Gagal koneksi ke server', 'error');
+  }
+}
+
+// ── Load History ─────────────────────────────────────────
+async function rwLoadHistory() {
+  const list = document.getElementById('rwHistoryList');
+  try {
+    const r = await fetch('/api/coins/transactions', {
+      headers: { Authorization: 'Bearer ' + rwToken }
+    });
+    const d = await r.json();
+    const txs = d.transactions || d || [];
+
+    if (!txs.length) {
+      list.innerHTML = '<div class="rw-empty">Belum ada transaksi.</div>';
+      return;
+    }
+
+    const icons = {
+      'daily':    '📅',
+      'ad':       '📺',
+      'spend':    '🎬',
+      'topup':    '💳',
+      'reward':   '🎁',
+      'gacha':    '🎰',
+      'new_user': '🎉',
+    };
+
+    list.innerHTML = txs.slice(0, 15).map(tx => {
+      const isPositive = (tx.amount || 0) > 0;
+      const icon = icons[tx.type] || '🪙';
+      const timeAgo = rwTimeAgo(tx.created_at);
+      return `<div class="rw-history-item">
+        <span class="rw-history-icon">${icon}</span>
+        <div class="rw-history-info">
+          <div class="rw-history-desc">${tx.description || tx.type}</div>
+          <div class="rw-history-time">${timeAgo}</div>
+        </div>
+        <div class="rw-history-amount ${isPositive ? '' : 'neg'}">
+          ${isPositive ? '+' : ''}${tx.amount} 🪙
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="rw-empty">Gagal memuat riwayat.</div>';
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function rwTimeAgo(iso) {
+  if (!iso) return '';
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return 'baru saja';
+  if (m < 60) return m + ' menit lalu';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' jam lalu';
+  return Math.floor(h / 24) + ' hari lalu';
+}
+
+let rwToastTimer;
+function rwToast(msg, type) {
+  const el = document.getElementById('rwToast');
+  el.textContent = msg;
+  el.className = 'rw-toast show ' + (type || '');
+  clearTimeout(rwToastTimer);
+  rwToastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
