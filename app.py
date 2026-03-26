@@ -2084,5 +2084,326 @@ def quiz():
 def gacha():
     return render_template('gacha.html')
 
+# ═══════════════════════════════════════════════════════
+# SISTEM KOIN
+# ═══════════════════════════════════════════════════════
+
+COIN_PRICE_PER_ANIME = 5   # 5 koin untuk akses 1 anime penuh
+COIN_RATE            = 1   # 1 koin = Rp 1.000
+FREE_EPISODES        = 2   # episode 1-2 gratis tanpa koin
+
+def _get_user_id_from_token(access_token):
+    """Verifikasi token Supabase dan return user_id."""
+    if not access_token:
+        return None
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers=supabase_headers(access_token),
+            timeout=5
+        )
+        if r.ok:
+            return r.json().get("id")
+    except Exception:
+        pass
+    return None
+
+def _get_coin_balance(user_id):
+    """Ambil saldo koin user dari Supabase."""
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/user_coins",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "select": "balance"}
+        )
+        if r.ok and r.json():
+            return r.json()[0]["balance"]
+    except Exception:
+        pass
+    return 0
+
+def _has_anime_access(user_id, anime_slug):
+    """Cek apakah user sudah punya akses ke anime ini."""
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_access",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "anime_slug": f"eq.{anime_slug}", "select": "id"}
+        )
+        if r.ok and r.json():
+            return True
+    except Exception:
+        pass
+    return False
+
+@app.route("/api/coins/balance")
+def api_coin_balance():
+    """Ambil saldo koin user yang sedang login."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    balance = _get_coin_balance(user_id)
+    return jsonify({"balance": balance, "coin_price": COIN_PRICE_PER_ANIME})
+
+@app.route("/api/coins/check-access")
+def api_check_access():
+    """Cek apakah user bisa akses anime tertentu (punya koin / sudah beli)."""
+    anime_slug   = request.args.get("anime", "")
+    ep_index     = int(request.args.get("ep_index", 0))  # index episode (0-based dari terbaru)
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+
+    if not anime_slug:
+        return jsonify({"error": "anime param required"}), 400
+
+    # Episode 1 & 2 (index terakhir = ep terlama karena list terbalik) gratis
+    # Kita pakai ep_index dari ujung: ep_index >= (total-FREE_EPISODES) = gratis
+    # Tapi karena kita tidak tahu total di sini, kita cek dari frontend
+    # Untuk API ini: kalau ep_index < FREE_EPISODES → gratis
+    # Catatan: API mengurutkan terbaru dulu, jadi index 0 = terbaru
+    # "Episode 1 & 2" = index terbesar (terlama). Kita handle di frontend.
+
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({
+            "access": False,
+            "reason": "not_logged_in",
+            "balance": 0,
+            "coin_price": COIN_PRICE_PER_ANIME,
+            "free_episodes": FREE_EPISODES
+        })
+
+    # Cek apakah sudah beli anime ini
+    if _has_anime_access(user_id, anime_slug):
+        balance = _get_coin_balance(user_id)
+        return jsonify({"access": True, "balance": balance, "already_purchased": True})
+
+    balance = _get_coin_balance(user_id)
+    return jsonify({
+        "access":           False,
+        "reason":           "not_purchased",
+        "balance":          balance,
+        "coin_price":       COIN_PRICE_PER_ANIME,
+        "free_episodes":    FREE_EPISODES,
+        "can_afford":       balance >= COIN_PRICE_PER_ANIME,
+    })
+
+@app.route("/api/coins/buy-access", methods=["POST"])
+def api_buy_access():
+    """User beli akses anime dengan koin."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Login dulu ya!"}), 401
+
+    data       = request.get_json() or {}
+    anime_slug = data.get("anime_slug", "").strip()
+    anime_title = data.get("anime_title", anime_slug)
+    if not anime_slug:
+        return jsonify({"error": "anime_slug required"}), 400
+
+    # Cek sudah punya akses
+    if _has_anime_access(user_id, anime_slug):
+        return jsonify({"success": True, "already_owned": True, "balance": _get_coin_balance(user_id)})
+
+    # Cek saldo
+    balance = _get_coin_balance(user_id)
+    if balance < COIN_PRICE_PER_ANIME:
+        return jsonify({
+            "error": f"Koin tidak cukup. Kamu punya {balance} koin, butuh {COIN_PRICE_PER_ANIME} koin.",
+            "balance": balance,
+            "needed": COIN_PRICE_PER_ANIME
+        }), 400
+
+    # Kurangi saldo koin
+    new_balance = balance - COIN_PRICE_PER_ANIME
+    try:
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/user_coins",
+            headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+            json={"user_id": user_id, "balance": new_balance}
+        )
+        if not r.ok:
+            return jsonify({"error": "Gagal update saldo", "detail": r.text}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Catat transaksi
+    try:
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/coin_transactions",
+            headers={**supabase_service_headers(), "Prefer": "return=representation"},
+            json={
+                "user_id":     user_id,
+                "type":        "spend",
+                "amount":      -COIN_PRICE_PER_ANIME,
+                "description": f"Akses anime: {anime_title}",
+                "anime_slug":  anime_slug,
+            }
+        )
+    except Exception:
+        pass
+
+    # Beri akses anime
+    try:
+        r2 = requests.post(
+            f"{SUPABASE_URL}/rest/v1/anime_access",
+            headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+            json={"user_id": user_id, "anime_slug": anime_slug}
+        )
+        if not r2.ok:
+            return jsonify({"error": "Gagal beri akses", "detail": r2.text}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "success":     True,
+        "new_balance": new_balance,
+        "anime_slug":  anime_slug,
+        "message":     f"Berhasil! Semua episode {anime_title} sekarang bisa ditonton."
+    })
+
+@app.route("/api/coins/transactions")
+def api_coin_transactions():
+    """Riwayat transaksi koin user."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/coin_transactions",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "order": "created_at.desc", "limit": "30", "select": "*"}
+        )
+        return jsonify(r.json() if r.ok else [])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/coins/my-access")
+def api_my_access():
+    """Daftar anime yang sudah dibeli user."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/anime_access",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "order": "purchased_at.desc", "select": "*"}
+        )
+        return jsonify(r.json() if r.ok else [])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ── Admin: Topup koin manual ───────────────────────────
+
+@app.route("/api/admin/coins/topup", methods=["POST"])
+def admin_coin_topup():
+    """Admin topup koin ke user tertentu."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    data        = request.get_json() or {}
+    target_id   = data.get("user_id", "").strip()
+    amount      = int(data.get("amount", 0))
+    description = data.get("description", "Topup manual oleh admin")
+    if not target_id or amount <= 0:
+        return jsonify({"error": "user_id dan amount (> 0) wajib diisi"}), 400
+
+    # Ambil saldo sekarang
+    current = _get_coin_balance(target_id)
+    new_balance = current + amount
+
+    # Update saldo
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/user_coins",
+        headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+        json={"user_id": target_id, "balance": new_balance}
+    )
+    if not r.ok:
+        return jsonify({"error": "Gagal update saldo", "detail": r.text}), 500
+
+    # Catat transaksi
+    try:
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/coin_transactions",
+            headers={**supabase_service_headers(), "Prefer": "return=representation"},
+            json={
+                "user_id":     target_id,
+                "type":        "topup",
+                "amount":      amount,
+                "description": description,
+                "anime_slug":  None,
+            }
+        )
+    except Exception:
+        pass
+
+    return jsonify({
+        "ok":          True,
+        "user_id":     target_id,
+        "added":       amount,
+        "new_balance": new_balance,
+        "rp_value":    f"Rp {amount * COIN_RATE:,}".replace(",", ".")
+    })
+
+@app.route("/api/admin/coins/adjust", methods=["POST"])
+def admin_coin_adjust():
+    """Admin set saldo koin user ke nilai tertentu (override)."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    data      = request.get_json() or {}
+    target_id = data.get("user_id", "").strip()
+    balance   = int(data.get("balance", 0))
+    if not target_id:
+        return jsonify({"error": "user_id wajib diisi"}), 400
+
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/user_coins",
+        headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+        json={"user_id": target_id, "balance": balance}
+    )
+    if not r.ok:
+        return jsonify({"error": r.text}), 500
+
+    return jsonify({"ok": True, "user_id": target_id, "balance": balance})
+
+@app.route("/api/admin/coins/revoke-access", methods=["POST"])
+def admin_revoke_access():
+    """Admin cabut akses anime user."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    data       = request.get_json() or {}
+    target_id  = data.get("user_id", "").strip()
+    anime_slug = data.get("anime_slug", "").strip()
+    if not target_id:
+        return jsonify({"error": "user_id wajib diisi"}), 400
+
+    params = {"user_id": f"eq.{target_id}"}
+    if anime_slug:
+        params["anime_slug"] = f"eq.{anime_slug}"
+
+    r = requests.delete(
+        f"{SUPABASE_URL}/rest/v1/anime_access",
+        headers=supabase_service_headers(),
+        params=params
+    )
+    return jsonify({"ok": r.ok})
+
 if __name__ == "__main__":
     app.run(debug=True)
