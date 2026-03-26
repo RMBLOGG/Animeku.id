@@ -2405,5 +2405,217 @@ def admin_revoke_access():
     )
     return jsonify({"ok": r.ok})
 
+# ═══════════════════════════════════════════════════════
+# TOPUP REQUEST SYSTEM
+# ═══════════════════════════════════════════════════════
+
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "dzfkklsza")
+CLOUDINARY_API_KEY    = os.environ.get("CLOUDINARY_API_KEY",    "588474134734416")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "9c12YJe5rZSYSg7zROQuvmVZ7mg")
+
+PAYMENT_INFO = {
+    "dana":  {"name": "DANA",  "number": "082320781747"},
+    "ovo":   {"name": "OVO",   "number": "082320781747"},
+    "gopay": {"name": "GoPay", "number": "082320781747"},
+}
+
+@app.route("/topup")
+def topup_page():
+    return render_template("topup.html")
+
+@app.route("/api/topup/upload-proof", methods=["POST"])
+def topup_upload_proof():
+    """Upload bukti transfer ke Cloudinary dan buat topup request."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Login dulu ya!"}), 401
+
+    amount_rp   = int(request.form.get("amount_rp", 0))
+    payment_via = request.form.get("payment_via", "").strip()
+    note        = request.form.get("note", "").strip()
+    proof_file  = request.files.get("proof")
+
+    if amount_rp < 5000:
+        return jsonify({"error": "Minimal topup Rp 5.000 (5 koin)"}), 400
+    if not payment_via or payment_via not in PAYMENT_INFO:
+        return jsonify({"error": "Pilih metode pembayaran"}), 400
+    if not proof_file:
+        return jsonify({"error": "Bukti transfer wajib diupload"}), 400
+
+    # Upload ke Cloudinary
+    import hashlib, time as _time, base64 as b64
+    try:
+        timestamp = int(_time.time())
+        file_data = proof_file.read()
+        data_uri  = f"data:{proof_file.mimetype};base64,{b64.b64encode(file_data).decode()}"
+        sig_str   = f"folder=animeku_topup&timestamp={timestamp}{CLOUDINARY_API_SECRET}"
+        signature = hashlib.sha256(sig_str.encode()).hexdigest()
+        upload_resp = requests.post(
+            f"https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/upload",
+            data={
+                "file":      data_uri,
+                "api_key":   CLOUDINARY_API_KEY,
+                "timestamp": timestamp,
+                "folder":    "animeku_topup",
+                "signature": signature,
+            },
+            timeout=20
+        )
+        if not upload_resp.ok:
+            return jsonify({"error": "Gagal upload bukti", "detail": upload_resp.text}), 500
+        proof_url = upload_resp.json().get("secure_url", "")
+    except Exception as e:
+        return jsonify({"error": f"Upload error: {str(e)}"}), 500
+
+    amount_coins = amount_rp // 1000
+
+    # Ambil nama user
+    user_name = ""
+    try:
+        ur = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=supabase_headers(access_token))
+        if ur.ok:
+            meta = ur.json().get("user_metadata", {})
+            user_name = meta.get("full_name", ur.json().get("email", ""))
+    except Exception:
+        pass
+
+    # Simpan request ke Supabase
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers={**supabase_service_headers(), "Prefer": "return=representation"},
+        json={
+            "user_id":      user_id,
+            "user_name":    user_name,
+            "amount_rp":    amount_rp,
+            "amount_coins": amount_coins,
+            "payment_via":  payment_via,
+            "proof_url":    proof_url,
+            "note":         note,
+            "status":       "pending",
+        },
+        timeout=10
+    )
+    if not r.ok:
+        return jsonify({"error": "Gagal simpan request", "detail": r.text}), 500
+
+    req_id = r.json()[0]["id"] if r.json() else ""
+    return jsonify({
+        "success":      True,
+        "request_id":   req_id,
+        "amount_coins": amount_coins,
+        "proof_url":    proof_url,
+        "message":      f"Request {amount_coins} koin dikirim! Tunggu konfirmasi admin."
+    })
+
+@app.route("/api/topup/my-requests")
+def topup_my_requests():
+    """Riwayat request topup milik user."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    user_id = _get_user_id_from_token(access_token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers=supabase_service_headers(),
+        params={"user_id": f"eq.{user_id}", "order": "created_at.desc", "limit": "20", "select": "*"}
+    )
+    return jsonify(r.json() if r.ok else [])
+
+# ── Admin: kelola topup requests ──────────────────────
+
+@app.route("/api/admin/topup/requests")
+def admin_topup_requests():
+    """Ambil semua topup request (admin only)."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+    status = request.args.get("status", "")
+    params = {"order": "created_at.desc", "limit": "50", "select": "*"}
+    if status:
+        params["status"] = f"eq.{status}"
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers=supabase_service_headers(),
+        params=params
+    )
+    return jsonify(r.json() if r.ok else [])
+
+@app.route("/api/admin/topup/approve/<req_id>", methods=["POST"])
+def admin_topup_approve(req_id):
+    """Admin approve → otomatis tambah koin ke user."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers=supabase_service_headers(),
+        params={"id": f"eq.{req_id}", "select": "*"}
+    )
+    if not r.ok or not r.json():
+        return jsonify({"error": "Request tidak ditemukan"}), 404
+    req_data = r.json()[0]
+    if req_data["status"] != "pending":
+        return jsonify({"error": f"Request sudah {req_data['status']}"}), 400
+
+    user_id      = req_data["user_id"]
+    amount_coins = req_data["amount_coins"]
+
+    # Tambah koin
+    current = _get_coin_balance(user_id)
+    new_bal = current + amount_coins
+    rb = requests.post(
+        f"{SUPABASE_URL}/rest/v1/user_coins",
+        headers={**supabase_service_headers(), "Prefer": "resolution=merge-duplicates,return=representation"},
+        json={"user_id": user_id, "balance": new_bal}
+    )
+    if not rb.ok:
+        return jsonify({"error": "Gagal tambah koin"}), 500
+
+    # Catat transaksi
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/coin_transactions",
+        headers={**supabase_service_headers(), "Prefer": "return=representation"},
+        json={
+            "user_id":     user_id,
+            "type":        "topup",
+            "amount":      amount_coins,
+            "description": f"Topup via {req_data.get('payment_via','').upper()} — disetujui admin",
+            "anime_slug":  None,
+        }
+    )
+
+    # Update status → approved
+    requests.patch(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers=supabase_service_headers(),
+        params={"id": f"eq.{req_id}"},
+        json={"status": "approved"}
+    )
+
+    return jsonify({"ok": True, "user_id": user_id, "added_coins": amount_coins, "new_balance": new_bal})
+
+@app.route("/api/admin/topup/reject/<req_id>", methods=["POST"])
+def admin_topup_reject(req_id):
+    """Admin reject topup request."""
+    auth_header  = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+    data   = request.get_json() or {}
+    reason = data.get("reason", "Ditolak admin")
+    r = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/topup_requests",
+        headers=supabase_service_headers(),
+        params={"id": f"eq.{req_id}"},
+        json={"status": "rejected", "note": reason}
+    )
+    return jsonify({"ok": r.ok})
+
 if __name__ == "__main__":
     app.run(debug=True)
