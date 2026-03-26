@@ -2820,5 +2820,11 @@ def admin_topup_reject(req_id):
     )
     return jsonify({"ok": r.ok})
 
+@app.route('/ads.txt')
+def ads_txt():
+    from flask import Response
+    content = "google.com, pub-3673996314713788, DIRECT, f08c47fec0942fa0"
+    return Response(content, mimetype='text/plain')
+
 if __name__ == "__main__":
     app.run(debug=True)
