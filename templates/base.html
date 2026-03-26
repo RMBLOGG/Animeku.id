@@ -644,6 +644,23 @@ function closeAnnouncement() {
           <div id="desktopDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;
             background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
             min-width:190px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden">
+            <a href="/profile"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
+              background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;
+              font-family:var(--font-body);transition:var(--trans);text-decoration:none"
+              onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='none'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Profil
+            </a>
+            <a href="/topup"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
+              background:none;border:none;color:#f5c518;font-size:13px;cursor:pointer;
+              font-family:var(--font-body);transition:var(--trans);text-decoration:none"
+              onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background='none'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M9.5 8.5c.7-1 1.8-1.5 3-1.5 2 0 3.5 1.3 3.5 3S14 13 12 13"/></svg>
+              Topup Koin
+            </a>
+            <div style="height:1px;background:var(--border)"></div>
             <button onclick="logoutUser()"
               style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
               background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;
@@ -747,11 +764,13 @@ function closeAnnouncement() {
           <img id="menuAvatar" src="" alt="" width="32" height="32" style="border-radius:50%;object-fit:cover;flex-shrink:0">
           <div style="flex:1;min-width:0">
             <div id="menuUserName" style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-
           </div>
           <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
         </div>
-
+        <a href="/topup" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin-top:6px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#f5c518;font-size:13px;font-weight:600;text-decoration:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Topup Koin
+        </a>
       </div>
     </div>
   </nav>
