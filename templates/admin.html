@@ -447,6 +447,9 @@
     <button class="admin-tab" onclick="switchTab('coins')" id="tab-coins">
       <i class="fas fa-coins"></i> Koin
     </button>
+    <button class="admin-tab" onclick="switchTab('topup')" id="tab-topup">
+      <i class="fas fa-money-bill-transfer"></i> Topup
+    </button>
   </div>
 
   <!-- ── STATISTIK ─────────────────────────────── -->
@@ -814,6 +817,31 @@
     </div>
   </div>
 
+  <!-- ── TOPUP REQUESTS PANE ───────────────────────── -->
+  <div class="admin-pane" id="pane-topup">
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title"><i class="fas fa-money-bill-transfer"></i> Request Topup Koin</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="topupFilterStatus" onchange="loadTopupRequests()"
+            style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;font-family:var(--font-body)">
+            <option value="">Semua</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <button onclick="loadTopupRequests()"
+            style="background:none;border:1px solid var(--border);color:var(--text3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font-body)">
+            <i class="fas fa-rotate"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div id="topupRequestsContainer" style="padding:16px">
+        <div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Klik Refresh untuk memuat...</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Access Denied -->
@@ -987,6 +1015,109 @@ function quickTopup(userId, userName) {
 
 // Coin management end
 
+// ── TOPUP REQUESTS ────────────────────────────────────────────
+async function loadTopupRequests() {
+  const container = document.getElementById('topupRequestsContainer');
+  container.innerHTML = '<div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Memuat...</div>';
+  const token  = localStorage.getItem('sb_access_token') || '';
+  const status = document.getElementById('topupFilterStatus')?.value || '';
+  try {
+    const url = '/api/admin/topup/requests' + (status ? `?status=${status}` : '');
+    const r   = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    const reqs = await r.json();
+
+    if (!reqs.length) {
+      container.innerHTML = '<div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Tidak ada request</div>';
+      return;
+    }
+
+    container.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
+      ${reqs.map(req => {
+        const isPending  = req.status === 'pending';
+        const statusColor = { pending:'#f5c518', approved:'#4caf7d', rejected:'#e63946' }[req.status] || '#fff';
+        const statusLabel = { pending:'⏳ Pending', approved:'✅ Disetujui', rejected:'❌ Ditolak' }[req.status] || req.status;
+        const date = req.created_at ? new Date(req.created_at).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+        return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+          <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+            ${req.proof_url
+              ? `<img src="${req.proof_url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;border:1px solid var(--border)" onclick="window.open('${req.proof_url}','_blank')" title="Klik untuk lihat penuh">`
+              : '<div style="width:64px;height:64px;background:var(--bg);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text3)"><i class="fas fa-image"></i></div>'
+            }
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+                <span style="font-weight:700;color:var(--text);font-size:14px">${req.user_name || '—'}</span>
+                <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono,monospace)">${(req.user_id||'').substring(0,12)}…</span>
+                <span style="background:rgba(${statusColor === '#f5c518' ? '245,197,24' : statusColor === '#4caf7d' ? '76,175,125' : '230,57,70'},0.15);color:${statusColor};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;font-family:var(--font-mono,monospace)">${statusLabel}</span>
+              </div>
+              <div style="font-size:13px;color:#f5c518;font-weight:700;font-family:var(--font-mono,monospace);margin-bottom:4px">
+                +${req.amount_coins} koin <span style="color:var(--text3);font-weight:400">= Rp ${(req.amount_rp||0).toLocaleString('id-ID')}</span>
+              </div>
+              <div style="font-size:11px;color:var(--text3)">
+                ${(req.payment_via||'').toUpperCase()} · ${date}
+                ${req.note ? `<br><i class="fas fa-comment"></i> ${req.note}` : ''}
+              </div>
+            </div>
+            ${isPending ? `
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+              <button onclick="approveTopup('${req.id}',${req.amount_coins},'${req.user_name||''}')"
+                style="background:#4caf7d;border:none;color:#fff;padding:8px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-body)">
+                <i class="fas fa-check"></i> Approve
+              </button>
+              <button onclick="rejectTopup('${req.id}')"
+                style="background:rgba(230,57,70,0.15);border:1px solid rgba(230,57,70,0.3);color:#e63946;padding:8px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-body)">
+                <i class="fas fa-times"></i> Tolak
+              </button>
+            </div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--accent);font-size:13px">Error: ${e.message}</div>`;
+  }
+}
+
+async function approveTopup(reqId, coins, userName) {
+  if (!confirm(`Approve topup +${coins} koin untuk ${userName}?`)) return;
+  const token = localStorage.getItem('sb_access_token') || '';
+  try {
+    const r = await fetch(`/api/admin/topup/approve/${reqId}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast(`✅ +${coins} koin diberikan ke ${userName}. Saldo baru: ${d.new_balance} koin`, 'success');
+      loadTopupRequests();
+    } else {
+      toast(d.error || 'Gagal approve', 'error');
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function rejectTopup(reqId) {
+  const reason = prompt('Alasan penolakan (opsional):') ?? '';
+  const token  = localStorage.getItem('sb_access_token') || '';
+  try {
+    const r = await fetch(`/api/admin/topup/reject/${reqId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ reason })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast('Request ditolak', 'success');
+      loadTopupRequests();
+    } else {
+      toast('Gagal tolak request', 'error');
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
 // ── HELPERS ────────────────────────────────────────────────────
 function sbH() {
   const token = localStorage.getItem("sb_access_token");
@@ -1027,9 +1158,10 @@ function switchTab(tab) {
   document.getElementById("pane-" + tab).classList.add("active");
   currentTab = tab;
   if (tab === 'coins') {
-    _allUsersCache = allUsers; // sync user cache untuk search
+    _allUsersCache = allUsers;
     loadCoinBalances();
   }
+  if (tab === 'topup') loadTopupRequests();
 }
 
 // ── STATISTIK ──────────────────────────────────────────────────
