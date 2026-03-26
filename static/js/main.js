@@ -8,12 +8,40 @@ window.addEventListener('scroll', () => {
   navbar?.classList.toggle('scrolled', window.scrollY > 50);
 }, { passive: true });
 
-// ── Hamburger ──────────────────────────────────
-const hamburger = document.getElementById('hamburger');
-const mobileMenu = document.getElementById('mobileMenu');
+// ── Sidebar ─────────────────────────────────────
+const hamburger   = document.getElementById('hamburger');
+const mobileMenu  = document.getElementById('mobileMenu');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebar() {
+  mobileMenu?.classList.add('open');
+  sidebarOverlay?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  hamburger?.classList.add('open');
+}
+function closeSidebar() {
+  mobileMenu?.classList.remove('open');
+  sidebarOverlay?.classList.remove('open');
+  document.body.style.overflow = '';
+  hamburger?.classList.remove('open');
+}
+window.closeSidebar = closeSidebar;
+
 hamburger?.addEventListener('click', () => {
-  hamburger.classList.toggle('open');
-  mobileMenu.classList.toggle('open');
+  if (mobileMenu?.classList.contains('open')) closeSidebar();
+  else openSidebar();
+});
+
+// Close sidebar on ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSidebar();
+});
+
+// Highlight active link
+document.querySelectorAll('.sidebar-link').forEach(link => {
+  if (link.getAttribute('href') === window.location.pathname) {
+    link.classList.add('active');
+  }
 });
 
 // ── Search ─────────────────────────────────────
