@@ -17,11 +17,18 @@ function openSidebar() {
   mobileMenu?.classList.add('open');
   sidebarOverlay?.classList.add('open');
   hamburger?.classList.add('open');
+  // Lock background scroll tapi JANGAN pakai touch-action
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 function closeSidebar() {
   mobileMenu?.classList.remove('open');
   sidebarOverlay?.classList.remove('open');
   hamburger?.classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
 }
 window.closeSidebar = closeSidebar;
 
