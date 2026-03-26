@@ -187,7 +187,7 @@
   position: relative;
 }
 .ep-btn.watched::after {
-  content: '✓';
+  content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
   position: absolute;
   top: 2px; right: 4px;
   font-size: 9px;
@@ -360,6 +360,84 @@
   padding: 4px 0 8px;
 }
 
+/* ── COIN GATE OVERLAY ──────────────────────────────── */
+#coinGate {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(4px);
+  z-index: 25;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-radius: inherit;
+  padding: 24px;
+  text-align: center;
+}
+#coinGate.show { display: flex; }
+.cg-icon { font-size: 40px; line-height: 1; }
+.cg-title {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+.cg-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+  line-height: 1.5;
+}
+.cg-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(230,57,70,0.15);
+  border: 1px solid rgba(230,57,70,0.3);
+  border-radius: 99px;
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+}
+.cg-price-coin { color: #f5c518; }
+.cg-balance {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  font-family: var(--font-mono, monospace);
+}
+.cg-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cg-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-body);
+  transition: opacity 0.2s;
+}
+.cg-btn:hover { opacity: 0.85; }
+.cg-btn-buy   { background: var(--accent); color: #fff; }
+.cg-btn-topup { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.cg-btn-login { background: #4285f4; color: #fff; }
+.cg-free-badge {
+  position: absolute;
+  top: 8px; left: 8px;
+  background: #4caf7d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.5px;
+}
+
 /* ── SPOILER TAG di komentar ────────────────────────── */
 .spoiler-wrap {
   display: inline-block;
@@ -459,7 +537,7 @@
         <span class="ph-a">A</span><span class="ph-n">N</span><span class="ph-i">I</span><span class="ph-m">M</span><span class="ph-e">E</span><span class="ph-k">K</span><span class="ph-u">U</span><span class="ph-dot">.</span><span class="ph-id">ID</span>
       </div>
       <p id="phSubtitle" style="color:rgba(255,255,255,0.45);font-size:13px;letter-spacing:2px;font-family:var(--font-mono,'monospace');text-transform:uppercase;opacity:0;transform:translateY(12px);transition:none">
-        ↓ Pilih kualitas untuk memulai
+        <i class="fas fa-chevron-down"></i> Pilih kualitas untuk memulai
       </p>
     </div>
 
@@ -530,8 +608,26 @@
       <rect x="2" y="3" width="20" height="14" rx="2"/>
       <rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/>
     </svg>
-    PiP
+    <i class="fas fa-tv"></i> PiP
   </button>
+
+  <!-- COIN GATE -->
+  <div id="coinGate">
+    <div class="cg-icon"><i class="fas fa-lock" style="color:#f5c518"></i></div>
+    <p class="cg-title">Episode ini terkunci</p>
+    <p class="cg-sub" id="cgSubText">Beli akses anime ini untuk menonton semua episode</p>
+    <div class="cg-price">
+      <i class="fas fa-coins cg-price-coin"></i>
+      <span id="cgPriceText">5 Koin</span>
+      <span style="opacity:0.4;font-size:11px">= Rp 5.000</span>
+    </div>
+    <div class="cg-balance" id="cgBalanceText">Saldo kamu: — koin</div>
+    <div class="cg-actions" id="cgActions">
+      <button class="cg-btn cg-btn-login" onclick="window.location.href='/auth/login'">
+        <i class="fas fa-key"></i> Login dulu
+      </button>
+    </div>
+  </div>
 
   <!-- AUTO-NEXT OVERLAY -->
   {% if next_ep %}
@@ -617,7 +713,7 @@
       {% endif %}
     {% endfor %}
 
-    <div id="serverLoading" style="display:none;color:var(--text3);font-size:13px;margin-top:8px">⏳ Memuat server...</div>
+    <div id="serverLoading" style="display:none;color:var(--text3);font-size:13px;margin-top:8px"><i class="fas fa-spinner fa-spin"></i> Memuat server...</div>
   </div>
   {% endif %}
 
@@ -927,7 +1023,7 @@ document.addEventListener('keydown', function(e) {
   switch(e.key.toLowerCase()) {
     case 'n':
       {% if next_ep %}
-      showKbToast('⏭ Episode berikutnya');
+      showKbToast('<i class="fas fa-forward-step"></i> Episode berikutnya');
       setTimeout(() => window.location.href = '/episode/{{ next_ep.slug }}?anime={{ anime_slug }}', 600);
       {% else %}
       showKbToast('Tidak ada episode berikutnya');
@@ -935,7 +1031,7 @@ document.addEventListener('keydown', function(e) {
       break;
     case 'p':
       {% if prev_ep %}
-      showKbToast('⏮ Episode sebelumnya');
+      showKbToast('<i class="fas fa-backward-step"></i> Episode sebelumnya');
       setTimeout(() => window.location.href = '/episode/{{ prev_ep.slug }}?anime={{ anime_slug }}', 600);
       {% else %}
       showKbToast('Tidak ada episode sebelumnya');
@@ -946,7 +1042,7 @@ document.addEventListener('keydown', function(e) {
       if (iframe) {
         if (iframe.requestFullscreen) iframe.requestFullscreen();
         else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-        showKbToast('⛶ Fullscreen');
+        showKbToast('<i class="fas fa-expand"></i> Fullscreen');
       }
       break;
     case '?':
@@ -1002,6 +1098,147 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- PICTURE-IN-PICTURE & CATATAN EPISODE -->
 <script>
 /* ════════════════════════════════════════════════════
+   COIN GATE SYSTEM
+════════════════════════════════════════════════════ */
+const ANIME_SLUG_GATE  = '{{ anime_slug or (data.anime_id if data else "") }}';
+const ANIME_TITLE_GATE = {{ (anime_data.detail.title if anime_data and anime_data.detail else (data.title if data else '')) | tojson }};
+const EP_INDEX         = {{ current_idx.val if current_idx is defined else 0 }};
+const TOTAL_EPS        = {{ ep_count }};
+const FREE_EPS         = 2;   // episode terlama (index terbesar) = gratis
+
+// Episode gratis = FREE_EPS episode terlama
+// API sort terbaru→terlama, jadi index (TOTAL-1) = ep 1, (TOTAL-2) = ep 2, dll
+const IS_FREE_EP = (TOTAL_EPS - EP_INDEX) <= FREE_EPS;
+
+function getToken() {
+  try { return localStorage.getItem('sb_access_token') || ''; } catch { return ''; }
+}
+
+async function initCoinGate() {
+  if (!ANIME_SLUG_GATE) return;
+  if (IS_FREE_EP || TOTAL_EPS === 0) {
+    // Tandai sebagai episode gratis
+    const frame = document.querySelector('.player-frame');
+    if (frame && !frame.querySelector('.cg-free-badge') && IS_FREE_EP) {
+      const badge = document.createElement('div');
+      badge.className = 'cg-free-badge';
+      badge.innerHTML = '<i class="fas fa-unlock"></i> GRATIS';
+      frame.appendChild(badge);
+    }
+    return; // Tidak perlu gate
+  }
+
+  const token = getToken();
+  try {
+    const r = await fetch(`/api/coins/check-access?anime=${encodeURIComponent(ANIME_SLUG_GATE)}&ep_index=${EP_INDEX}`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    const d = await r.json();
+
+    if (d.access) return; // Sudah punya akses, lanjut
+
+    // Tampilkan gate
+    showCoinGate(d);
+  } catch(e) {
+    console.error('Coin gate check failed:', e);
+  }
+}
+
+function showCoinGate(data) {
+  const gate = document.getElementById('coinGate');
+  if (!gate) return;
+
+  // Update teks
+  const sub = document.getElementById('cgSubText');
+  const bal = document.getElementById('cgBalanceText');
+  const act = document.getElementById('cgActions');
+
+  if (sub) sub.textContent = `Beli akses "${ANIME_TITLE_GATE}" untuk nonton semua episode`;
+  if (bal) bal.innerHTML = data.balance !== undefined
+    ? `Saldo kamu: <strong style="color:#f5c518">${data.balance} koin</strong>`
+    : 'Saldo kamu: — koin';
+
+  if (act) {
+    if (data.reason === 'not_logged_in') {
+      act.innerHTML = `
+        <button class="cg-btn cg-btn-login" onclick="window.location.href='/auth/login'">
+          <i class="fas fa-key"></i> Login dulu
+        </button>`;
+    } else if (data.can_afford) {
+      act.innerHTML = `
+        <button class="cg-btn cg-btn-buy" id="cgBuyBtn" onclick="buyAccess()">
+          <i class="fas fa-coins"></i> Beli Akses (${data.coin_price} Koin)
+        </button>
+        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/profile'">
+          <i class="fas fa-wallet"></i> Lihat Saldo
+        </button>`;
+    } else {
+      const kurang = (data.coin_price || 5) - (data.balance || 0);
+      act.innerHTML = `
+        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/profile'">
+          <i class="fas fa-coins"></i> Topup Koin (kurang ${kurang} koin)
+        </button>`;
+    }
+  }
+
+  // Sembunyikan player, tampilkan gate
+  const iframe = document.getElementById('playerIframe');
+  if (iframe) iframe.style.visibility = 'hidden';
+  const placeholder = document.getElementById('playerPlaceholder');
+  if (placeholder) placeholder.style.display = 'none';
+  gate.classList.add('show');
+
+  // Lock server tabs
+  document.querySelectorAll('.server-btn').forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.3';
+    btn.style.cursor = 'not-allowed';
+  });
+}
+
+async function buyAccess() {
+  const btn = document.getElementById('cgBuyBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...'; }
+
+  const token = getToken();
+  try {
+    const r = await fetch('/api/coins/buy-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ anime_slug: ANIME_SLUG_GATE, anime_title: ANIME_TITLE_GATE })
+    });
+    const d = await r.json();
+
+    if (d.success) {
+      // Tutup gate, aktifkan player
+      const gate = document.getElementById('coinGate');
+      if (gate) gate.classList.remove('show');
+      const iframe = document.getElementById('playerIframe');
+      if (iframe) iframe.style.visibility = 'visible';
+      document.querySelectorAll('.server-btn').forEach(b => {
+        b.disabled = false;
+        b.style.opacity = '';
+        b.style.cursor = '';
+      });
+      showKbToast(`<i class="fas fa-check"></i> Akses dibeli! Sisa: ${d.new_balance} koin`);
+      // Auto pilih server pertama
+      const firstSrv = document.querySelector('.server-group:not([style*="none"]) .server-btn');
+      if (firstSrv) switchServer(firstSrv);
+    } else {
+      showKbToast(`<i class="fas fa-triangle-exclamation"></i> ${d.error || 'Gagal beli akses'}`);
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-coins"></i> Beli Akses`; }
+    }
+  } catch(e) {
+    showKbToast('<i class="fas fa-triangle-exclamation"></i> Terjadi kesalahan');
+    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-coins"></i> Beli Akses`; }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initCoinGate);
+</script>
+
+<!-- PICTURE-IN-PICTURE & CATATAN EPISODE -->
+/* ════════════════════════════════════════════════════
    PICTURE-IN-PICTURE
 ════════════════════════════════════════════════════ */
 let pipWindow = null;
@@ -1012,14 +1249,14 @@ function togglePiP() {
     pipWindow.close();
     pipWindow = null;
     btn.classList.remove('pip-active');
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> PiP`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> <i class="fas fa-tv"></i> PiP`;
     return;
   }
 
   const iframe = document.getElementById('playerIframe');
   const src = iframe?.src;
   if (!src || src === 'about:blank') {
-    showKbToast('⚠ Pilih server dulu!');
+    showKbToast('<i class="fas fa-triangle-exclamation"></i> Pilih server dulu!');
     return;
   }
 
@@ -1051,8 +1288,8 @@ function togglePiP() {
 </head>
 <body>
   <div class="pip-bar">
-    <span class="pip-title">▶ ${title.replace(/</g,'&lt;')}</span>
-    <button class="pip-close" onclick="window.close()">✕ Tutup</button>
+    <span class="pip-title"><i class="fas fa-play"></i> ${title.replace(/</g,'&lt;')}</span>
+    <button class="pip-close" onclick="window.close()"><i class="fas fa-times"></i> Tutup</button>
   </div>
   <iframe src="${src}" allowfullscreen allow="autoplay; fullscreen"
     sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
@@ -1062,15 +1299,15 @@ function togglePiP() {
   pipWindow.document.close();
 
   btn.classList.add('pip-active');
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> ✓ PiP Aktif`;
-  showKbToast('📺 PiP aktif — cek pojok layar!');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> <i class="fas fa-check"></i> PiP Aktif`;
+  showKbToast('<i class="fas fa-tv"></i> PiP aktif — cek pojok layar!');
 
   pipWindow.addEventListener('beforeunload', function() {
     pipWindow = null;
     const b = document.getElementById('pipBtn');
     if (b) {
       b.classList.remove('pip-active');
-      b.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> PiP`;
+      b.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="11" width="9" height="6" rx="1" fill="currentColor" stroke="none"/></svg> <i class="fas fa-tv"></i> PiP`;
     }
   });
 }
@@ -1111,7 +1348,7 @@ function renderNotes() {
         <div class="note-item-text">${escNotes(n.text)}</div>
         <div class="note-item-time">${noteTimeAgo(n.savedAt)}</div>
       </div>
-      <button class="note-delete-btn" onclick="deleteNote(${i})" title="Hapus catatan">×</button>
+      <button class="note-delete-btn" onclick="deleteNote(${i})" title="Hapus catatan"><i class="fas fa-times"></i></button>
     </div>`).join('');
 }
 
@@ -1125,7 +1362,7 @@ function addNote() {
   ta.value = '';
   ta.style.height = 'auto';
   renderNotes();
-  showKbToast('📝 Catatan disimpan!');
+  showKbToast('<i class="fas fa-pen-to-square"></i> Catatan disimpan!');
 }
 
 function deleteNote(idx) {
@@ -1278,7 +1515,7 @@ function renderCommentForm(user) {
           <textarea id="commentInput" placeholder="Tulis komentar... (gunakan [spoiler]teks[/spoiler] untuk menyembunyikan spoiler)" rows="2" class="comment-input"></textarea>
           <div class="spoiler-toolbar">
             <button class="spoiler-toolbar-btn" id="spoilerTagBtn" onclick="insertSpoilerTag()" title="Wrap teks terpilih sebagai spoiler">
-              🙈 Spoiler Tag
+              <i class="fas fa-eye-slash"></i> Spoiler Tag
             </button>
             <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono,monospace)">atau tulis [spoiler]...[/spoiler]</span>
           </div>
@@ -1286,7 +1523,7 @@ function renderCommentForm(user) {
         </div>
       </div>`;
   } else {
-    wrap.innerHTML = `<a href="/auth/login" class="btn btn-primary btn-sm">🔑 Login untuk berkomentar</a>`;
+    wrap.innerHTML = `<a href="/auth/login" class="btn btn-primary btn-sm"><i class="fas fa-key"></i> Login untuk berkomentar</a>`;
   }
 }
 
@@ -1378,7 +1615,7 @@ function renderComment(content) {
   // Parse [spoiler]...[/spoiler] tags
   return escHtml(content).replace(
     /\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi,
-    (_, inner) => `<span class="spoiler-wrap" onclick="this.classList.toggle('revealed')" title="Klik untuk reveal spoiler">⚠ ${inner}</span>`
+    (_, inner) => `<span class="spoiler-wrap" onclick="this.classList.toggle('revealed')" title="Klik untuk reveal spoiler"><i class="fas fa-triangle-exclamation"></i> ${inner}</span>`
   );
 }
 
