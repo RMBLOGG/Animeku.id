@@ -176,7 +176,7 @@
             buyAccessBtn.onclick = () => buyAnimeAccess(slug, '{{ d.title | e }}', d.coin_price, buyAccessBtn, accessBadge);
           } else {
             buyAccessBtn.innerHTML = `<i class="fas fa-coins"></i> Topup Koin`;
-            buyAccessBtn.onclick = () => window.location.href = '/profile';
+            buyAccessBtn.onclick = () => window.location.href = '/topup';
           }
         }
       }

@@ -1169,13 +1169,13 @@ function showCoinGate(data) {
         <button class="cg-btn cg-btn-buy" id="cgBuyBtn" onclick="buyAccess()">
           <i class="fas fa-coins"></i> Beli Akses (${data.coin_price} Koin)
         </button>
-        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/profile'">
-          <i class="fas fa-wallet"></i> Lihat Saldo
+        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/topup'">
+          <i class="fas fa-wallet"></i> Topup Koin
         </button>`;
     } else {
       const kurang = (data.coin_price || 5) - (data.balance || 0);
       act.innerHTML = `
-        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/profile'">
+        <button class="cg-btn cg-btn-topup" onclick="window.location.href='/topup'">
           <i class="fas fa-coins"></i> Topup Koin (kurang ${kurang} koin)
         </button>`;
     }
