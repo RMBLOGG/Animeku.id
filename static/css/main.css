@@ -283,6 +283,17 @@ button { cursor: pointer; border: none; background: none; }
   transform: rotate(90deg);
 }
 
+/* Lock body scroll when sidebar open, but allow sidebar-body to scroll */
+body.sidebar-open {
+  overflow: hidden;
+  touch-action: none;
+}
+body.sidebar-open .sidebar-body {
+  overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Scrollable body */
 .sidebar-body {
   flex: 1;
