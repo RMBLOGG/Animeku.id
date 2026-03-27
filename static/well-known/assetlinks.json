@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.animeku.id",
+      "sha256_cert_fingerprints": [
+        "0C:6A:D6:B7:23:86:0C:F4:71:C8:33:B0:BF:53:85:B5:C2:56:29:14:F6:63:98:0F:C6:94:78:C1:18:F5:D0:F4"
+      ]
+    }
+  }
+]
