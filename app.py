@@ -2826,5 +2826,9 @@ def ads_txt():
     content = "google.com, pub-3673996314713788, DIRECT, f08c47fec0942fa0"
     return Response(content, mimetype='text/plain')
 
+@app.route('/.well-known/assetlinks.json')
+def assetlinks():
+    return app.send_static_file('well-known/assetlinks.json')
+
 if __name__ == "__main__":
     app.run(debug=True)
