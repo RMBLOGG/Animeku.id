@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <!-- Ad scripts: load after checking premium status from server -->
   <script>
   (function() {
@@ -876,6 +877,12 @@ function closeAnnouncement() {
       </span>
       <span class="mob-nav-label">Jadwal</span>
     </a>
+    <a href="/premium" class="mob-nav-item mob-nav-premium" data-page="premium">
+      <span class="mob-nav-icon">
+        <i class="fas fa-crown" style="font-size:20px;"></i>
+      </span>
+      <span class="mob-nav-label">Premium</span>
+    </a>
     <a href="/rekomendasi" class="mob-nav-item" data-page="rekomendasi">
       <span class="mob-nav-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -946,6 +953,16 @@ function closeAnnouncement() {
   }
   .mob-nav-item.active .mob-nav-icon svg {
     stroke: var(--accent, #e63946);
+  }
+  .mob-nav-item.mob-nav-premium .mob-nav-icon i {
+    color: #f5c518;
+    filter: drop-shadow(0 0 6px rgba(245,197,24,0.45));
+    transition: color 0.2s, filter 0.2s;
+  }
+  .mob-nav-item.mob-nav-premium.active .mob-nav-icon i,
+  .mob-nav-item.mob-nav-premium:hover .mob-nav-icon i {
+    color: #ffd700;
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.7));
   }
   /* active indicator bar di atas */
   .mob-nav-item.active::before {
