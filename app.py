@@ -1639,11 +1639,28 @@ def _get_user_perks(user_id):
 
 @app.route("/premium/redeem", methods=["POST"])
 def premium_redeem():
-    user = session.get("user")
-    if not user:
+    user_id = None
+
+    # 1. Coba dari Authorization header (Supabase JWT / localStorage)
+    auth_header = request.headers.get("Authorization", "")
+    access_token = auth_header.replace("Bearer ", "").strip() if auth_header else ""
+    if access_token:
+        r_user = requests.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers=supabase_headers(access_token)
+        )
+        if r_user.ok:
+            user_id = r_user.json().get("id")
+
+    # 2. Fallback ke Flask session
+    if not user_id:
+        user = session.get("user")
+        if user:
+            user_id = user.get("id")
+
+    if not user_id:
         return jsonify({"error": "Login dulu untuk redeem voucher."}), 401
 
-    user_id = user.get("id")
     kode    = request.form.get("kode", "").strip().upper()
     if not kode:
         return jsonify({"error": "Kode voucher tidak boleh kosong."}), 400
