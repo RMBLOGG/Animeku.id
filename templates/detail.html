@@ -96,6 +96,32 @@
   </div>
 </div>
 
+<!-- ADS 468x60 -->
+<div id="adDetail1Wrap" style="display:none;margin:20px auto;width:468px;max-width:100%;text-align:center">
+  <script>
+    atOptions = {
+      'key' : '05c45eadd08ff81647aa748872cfd99f',
+      'format' : 'iframe',
+      'height' : 60,
+      'width' : 468,
+      'params' : {}
+    };
+  </script>
+  <script src="https://www.highperformanceformat.com/05c45eadd08ff81647aa748872cfd99f/invoke.js"></script>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) document.getElementById('adDetail1Wrap').style.display = 'block';
+    })
+    .catch(function() { document.getElementById('adDetail1Wrap').style.display = 'block'; });
+})();
+</script>
+
 <!-- EPISODE LIST -->
 {% if d.episodes and d.episodes | length > 0 %}
 <div class="episodes-section" style="padding-top:40px">
@@ -119,6 +145,23 @@
     {% endfor %}
   </div>
 </div>
+
+<!-- ADS SOCIAL BAR -->
+<div id="adDetail2Wrap" style="display:none;margin:20px auto;text-align:center">
+  <script src="https://pl28904745.profitablecpmratenetwork.com/4a/81/0f/4a810f968812c37a2a95d35a92267fee.js"></script>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) document.getElementById('adDetail2Wrap').style.display = 'block';
+    })
+    .catch(function() { document.getElementById('adDetail2Wrap').style.display = 'block'; });
+})();
+</script>
 
 
 
