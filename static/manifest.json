@@ -9,22 +9,13 @@
   "background_color": "#090b0f",
   "theme_color": "#090b0f",
   "lang": "id",
-  "categories": ["entertainment"],
+  "categories": [
+    "entertainment"
+  ],
   "icons": [
     {
-      "src": "/static/img/icon_32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/img/icon_192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/static/img/icon_512.png",
-      "sizes": "512x512",
+      "src": "/static/img/favicon.png",
+      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
     }
@@ -43,19 +34,34 @@
       "name": "Ongoing",
       "short_name": "Ongoing",
       "url": "/ongoing",
-      "icons": [{ "src": "/static/img/icon_192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/static/img/favicon.png",
+          "sizes": "1024x1024"
+        }
+      ]
     },
     {
       "name": "Jadwal",
       "short_name": "Jadwal",
       "url": "/jadwal",
-      "icons": [{ "src": "/static/img/icon_192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/static/img/favicon.png",
+          "sizes": "1024x1024"
+        }
+      ]
     },
     {
       "name": "MyList",
       "short_name": "MyList",
       "url": "/mylist",
-      "icons": [{ "src": "/static/img/icon_192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/static/img/favicon.png",
+          "sizes": "1024x1024"
+        }
+      ]
     }
   ]
 }
