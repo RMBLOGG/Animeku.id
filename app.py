@@ -1604,6 +1604,181 @@ def api_donations():
 
 
 
+# ── Voucher System ─────────────────────────────────────────────────────────────
+
+def _get_user_perks(user_id):
+    """Ambil status premium + noads user dari Supabase."""
+    empty = {"noads": False, "premium": False, "expires_at": None}
+    if not user_id:
+        return empty
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "select": "is_active,expires_at,noads_active"}
+        )
+        if not r.ok or not r.json():
+            return empty
+        row     = r.json()[0]
+        noads   = bool(row.get("noads_active", False))
+        exp_str = row.get("expires_at")
+        prem    = False
+        if row.get("is_active"):
+            if not exp_str:
+                prem = True
+            else:
+                try:
+                    exp_dt = datetime.fromisoformat(exp_str.replace("Z", "+00:00"))
+                    prem   = exp_dt > datetime.now(timezone.utc)
+                except Exception:
+                    prem = True
+        return {"noads": noads, "premium": prem, "expires_at": exp_str}
+    except Exception:
+        return empty
+
+
+@app.route("/premium/redeem", methods=["POST"])
+def premium_redeem():
+    user = session.get("user")
+    if not user:
+        return jsonify({"error": "Login dulu untuk redeem voucher."}), 401
+
+    user_id = user.get("id")
+    kode    = request.form.get("kode", "").strip().upper()
+    if not kode:
+        return jsonify({"error": "Kode voucher tidak boleh kosong."}), 400
+
+    try:
+        now = datetime.now(timezone.utc)
+
+        r_v = requests.get(
+            f"{SUPABASE_URL}/rest/v1/vouchers",
+            headers=supabase_service_headers(),
+            params={"kode": f"eq.{kode}", "select": "*"}
+        )
+        if not r_v.ok or not r_v.json():
+            return jsonify({"error": "Kode voucher tidak ditemukan."}), 404
+        v = r_v.json()[0]
+        if v.get("used"):
+            return jsonify({"error": "Kode voucher sudah pernah dipakai."}), 400
+
+        tipe        = v.get("tipe", "noads")
+        durasi_hari = v.get("durasi_hari") or 30
+
+        r_up     = requests.get(
+            f"{SUPABASE_URL}/rest/v1/user_premium",
+            headers=supabase_service_headers(),
+            params={"user_id": f"eq.{user_id}", "select": "*"}
+        )
+        existing = r_up.json()[0] if (r_up.ok and r_up.json()) else None
+
+        if tipe == "noads":
+            upsert_data  = {"noads_active": True}
+            msg          = "Berhasil! Iklan dimatikan selamanya. \U0001f389"
+            result_extra = {"tipe": "noads"}
+        else:
+            base = now
+            if existing:
+                old_exp = existing.get("expires_at", "")
+                try:
+                    old_dt = datetime.fromisoformat(old_exp.replace("Z", "+00:00"))
+                    if old_dt > now:
+                        base = old_dt
+                except Exception:
+                    pass
+            new_exp      = (base + timedelta(days=durasi_hari)).isoformat()
+            upsert_data  = {"is_active": True, "expires_at": new_exp}
+            msg          = f"Berhasil! Premium aktif {durasi_hari} hari. \U0001f389"
+            result_extra = {"tipe": "premium", "expires_at": new_exp[:10]}
+
+        if existing:
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/user_premium",
+                headers={**supabase_service_headers(), "Prefer": "return=representation"},
+                params={"user_id": f"eq.{user_id}"},
+                json=upsert_data
+            )
+        else:
+            upsert_data["user_id"] = user_id
+            requests.post(
+                f"{SUPABASE_URL}/rest/v1/user_premium",
+                headers={**supabase_service_headers(), "Prefer": "return=representation"},
+                json=upsert_data
+            )
+
+        requests.patch(
+            f"{SUPABASE_URL}/rest/v1/vouchers",
+            headers={**supabase_service_headers(), "Prefer": "return=representation"},
+            params={"id": f"eq.{v['id']}"},
+            json={"used": True, "used_by": user_id, "used_at": now.isoformat()}
+        )
+
+        return jsonify({"ok": True, "message": msg, **result_extra})
+    except Exception as e:
+        return jsonify({"error": f"Terjadi kesalahan: {str(e)}"}), 500
+
+
+@app.route("/admin/voucher")
+def admin_voucher():
+    access_token = session.get("access_token", "")
+    # Fallback: cek dari Authorization header (AJAX call)
+    if not access_token:
+        access_token = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        if request.headers.get("Accept") == "application/json":
+            return jsonify({"error": "Forbidden"}), 403
+        return redirect("/")
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/vouchers",
+        headers=supabase_service_headers(),
+        params={"order": "created_at.desc", "select": "*"}
+    )
+    vouchers = r.json() if r.ok else []
+    if request.headers.get("Accept") == "application/json":
+        return jsonify({"vouchers": vouchers})
+    return render_template("admin/voucher.html", vouchers=vouchers)
+
+
+@app.route("/admin/voucher/generate", methods=["POST"])
+def admin_voucher_generate():
+    import secrets, string
+    access_token = session.get("access_token", "") or request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+
+    tipe        = request.form.get("tipe", "noads")
+    jumlah      = min(int(request.form.get("jumlah", 1)), 50)
+    durasi_hari = int(request.form.get("durasi_hari", 30)) if tipe != "noads" else None
+    prefix      = "NOADS" if tipe == "noads" else "PREM"
+    alpha       = string.ascii_uppercase + string.digits
+
+    generated = []
+    for _ in range(jumlah):
+        kode = prefix + "-" + "".join(secrets.choice(alpha) for _ in range(8))
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/vouchers",
+            headers={**supabase_service_headers(), "Prefer": "return=representation"},
+            json={"kode": kode, "tipe": tipe, "durasi_hari": durasi_hari, "used": False}
+        )
+        if r.ok:
+            generated.append(kode)
+
+    return jsonify({"ok": True, "generated": generated, "count": len(generated)})
+
+
+@app.route("/admin/voucher/delete/<int:vid>", methods=["POST"])
+def admin_voucher_delete(vid):
+    access_token = session.get("access_token", "") or request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    if not _is_admin(access_token):
+        return jsonify({"error": "Forbidden"}), 403
+    requests.delete(
+        f"{SUPABASE_URL}/rest/v1/vouchers",
+        headers=supabase_service_headers(),
+        params={"id": f"eq.{vid}"}
+    )
+    return jsonify({"ok": True})
+
+
 # ── Admin: User Monitoring ─────────────────────────────────────────────────────
 
 def _is_admin(access_token):
