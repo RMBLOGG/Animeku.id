@@ -1166,6 +1166,28 @@ function noteTimeAgo(ts) {
 document.addEventListener('DOMContentLoaded', renderNotes);
 </script>
 
+<!-- NATIVE BANNER AD -->
+<div id="nativeBannerWrap" style="display:none;max-width:860px;margin:0 auto 20px;padding:0 16px">
+  <script async="async" data-cfasync="false" src="https://pl29004982.profitablecpmratenetwork.com/b6f36235dfe4dd1e85ab4cafc0a8fde7/invoke.js"></script>
+  <div id="container-b6f36235dfe4dd1e85ab4cafc0a8fde7"></div>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) {
+        document.getElementById('nativeBannerWrap').style.display = 'block';
+      }
+    })
+    .catch(function() {
+      document.getElementById('nativeBannerWrap').style.display = 'block';
+    });
+})();
+</script>
+
 <!-- KOMENTAR -->
 <div class="container" style="max-width:860px;margin:0 auto;padding:0 16px 60px">
 
