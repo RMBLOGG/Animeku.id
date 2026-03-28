@@ -634,6 +634,32 @@
   </div>
   {% endif %}
 
+  <!-- ADS 320x50 -->
+  <div id="adBanner320Wrap" style="display:none;margin:12px auto 0;width:320px;max-width:100%;text-align:center">
+    <script>
+      atOptions = {
+        'key' : 'a63d4de8742eab322eca6be4f6255f70',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script src="https://www.highperformanceformat.com/a63d4de8742eab322eca6be4f6255f70/invoke.js"></script>
+  </div>
+  <script>
+  (function() {
+    var token = localStorage.getItem('sb_access_token') || '';
+    var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    fetch('/api/premium/status', { headers: headers })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.premium) document.getElementById('adBanner320Wrap').style.display = 'block';
+      })
+      .catch(function() { document.getElementById('adBanner320Wrap').style.display = 'block'; });
+  })();
+  </script>
+
   <!-- NOTICE -->
   <div class="player-notice">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -1164,28 +1190,6 @@ function noteTimeAgo(ts) {
 }
 
 document.addEventListener('DOMContentLoaded', renderNotes);
-</script>
-
-<!-- NATIVE BANNER AD -->
-<div id="nativeBannerWrap" style="display:none;max-width:860px;margin:0 auto 20px;padding:0 16px">
-  <script async="async" data-cfasync="false" src="https://pl29004982.profitablecpmratenetwork.com/b6f36235dfe4dd1e85ab4cafc0a8fde7/invoke.js"></script>
-  <div id="container-b6f36235dfe4dd1e85ab4cafc0a8fde7"></div>
-</div>
-<script>
-(function() {
-  var token = localStorage.getItem('sb_access_token') || '';
-  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-  fetch('/api/premium/status', { headers: headers })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data.premium) {
-        document.getElementById('nativeBannerWrap').style.display = 'block';
-      }
-    })
-    .catch(function() {
-      document.getElementById('nativeBannerWrap').style.display = 'block';
-    });
-})();
 </script>
 
 <!-- KOMENTAR -->
