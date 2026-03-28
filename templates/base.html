@@ -227,6 +227,28 @@
 </script>
 <!-- ── END SPLASH SCREEN ──────────────────────────────────────── -->
 
+<!-- ── PWA INSTALL BANNER ────────────────────────────────────── -->
+<div id="pwaBanner" style="display:none;position:fixed;bottom:70px;left:12px;right:12px;z-index:9999;
+  background:linear-gradient(135deg,#0e1117,#141825);
+  border:1px solid rgba(230,57,70,0.3);border-radius:14px;
+  padding:12px 14px;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+  <img src="/static/img/icon_192.png" alt="" style="width:40px;height:40px;border-radius:10px;flex-shrink:0">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:700;color:#e8eaf0">Install Animeku.ID</div>
+    <div style="font-size:11px;color:#8b92a5;margin-top:1px">Akses cepat tanpa browser 🎌</div>
+  </div>
+  <button onclick="installPWA()" style="background:linear-gradient(135deg,#e63946,#c1121f);
+    color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;
+    font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+    Install
+  </button>
+  <button onclick="document.getElementById('pwaBanner').style.display='none'"
+    style="background:none;border:none;color:#555d70;font-size:18px;cursor:pointer;
+    padding:0 2px;flex-shrink:0;line-height:1">×</button>
+</div>
+<!-- ── END PWA INSTALL BANNER ────────────────────────────────── -->
+
 <!-- ── POPUP PEMBERITAHUAN ───────────────────────────────────── -->
 <div id="announcementOverlay" style="display:none">
   <div id="announcementModal">
@@ -1170,6 +1192,48 @@ loadEndpointState();
 </script>
 
   {% block scripts %}{% endblock %}
+
+<script>
+// ── PWA: Register Service Worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(function(reg) {
+        console.log('[SW] Registered:', reg.scope);
+      })
+      .catch(function(err) {
+        console.warn('[SW] Failed:', err);
+      });
+  });
+}
+
+// ── PWA: Install prompt (simpan untuk tombol "Install App") ──
+let _pwaInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  // Tampilkan banner install jika ada
+  var banner = document.getElementById('pwaBanner');
+  if (banner) banner.style.display = 'flex';
+});
+
+window.installPWA = function() {
+  if (!_pwaInstallPrompt) return;
+  _pwaInstallPrompt.prompt();
+  _pwaInstallPrompt.userChoice.then(function(result) {
+    _pwaInstallPrompt = null;
+    var banner = document.getElementById('pwaBanner');
+    if (banner) banner.style.display = 'none';
+  });
+};
+
+// Sembunyikan banner kalau sudah diinstall
+window.addEventListener('appinstalled', function() {
+  _pwaInstallPrompt = null;
+  var banner = document.getElementById('pwaBanner');
+  if (banner) banner.style.display = 'none';
+});
+</script>
 
 <!-- ── FLOATING CHAT WIDGET ──────────────────────────────────────── -->
 
