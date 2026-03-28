@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}Kelola Voucher — Admin Animeku.ID{% endblock %}
+
+{% block head %}
+<style>
+  .vpage { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+  .vpage-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+  .vpage-header h2 { font-size:1.2rem; font-weight:800; color:var(--text); margin:0; }
+  .vback { font-size:.8rem; color:var(--text3); text-decoration:none; }
+  .vback:hover { color:var(--text); }
+
+  .vcard { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .vcard-head { padding:14px 18px; border-bottom:1px solid var(--border); font-size:.9rem; font-weight:700; color:var(--text); }
+  .vcard-body { padding:16px 18px; }
+
+  /* Generate form */
+  .gen-row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .gen-field { display:flex; flex-direction:column; gap:5px; }
+  .gen-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); }
+  .gen-select, .gen-input {
+    padding:8px 12px;
+    background:var(--bg, #0d0f14);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:.875rem;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .gen-select:focus, .gen-input:focus { border-color:#e63946; }
+  .gen-input[type=number] { width:90px; }
+  .gen-input.durasi { width:100px; }
+  .btn-gen {
+    padding:8px 20px;
+    background:linear-gradient(135deg,#e63946,#c1121f);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:.875rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:opacity .15s;
+    white-space:nowrap;
+  }
+  .btn-gen:hover { opacity:.88; }
+  .btn-gen:disabled { opacity:.5; cursor:not-allowed; }
+
+  .gen-msg { display:none; margin-top:12px; font-size:.82rem; font-weight:600; padding:10px 12px; border-radius:8px; }
+  .gen-msg.ok  { background:rgba(74,222,128,.1);  border:1px solid rgba(74,222,128,.25); color:#4ade80; }
+  .gen-msg.err { background:rgba(220,38,38,.1);   border:1px solid rgba(220,38,38,.2);   color:#f87171; }
+
+  .gen-codes { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .gen-code-chip {
+    font-family:monospace;
+    font-size:.82rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+    transition:background .12s;
+  }
+  .gen-code-chip:hover { background:rgba(255,255,255,.12); }
+
+  /* Table */
+  .vtbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .vtbl { width:100%; min-width:560px; border-collapse:collapse; font-size:.85rem; }
+  .vtbl th {
+    padding:10px 14px;
+    text-align:left;
+    font-size:.68rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text3);
+    border-bottom:1px solid var(--border);
+  }
+  .vtbl th.c, .vtbl td.c { text-align:center; }
+  .vtbl td { padding:10px 14px; color:var(--text2); border-bottom:1px solid var(--border); vertical-align:middle; }
+  .vtbl tbody tr:last-child td { border-bottom:none; }
+  .vtbl tbody tr:hover td { background:rgba(255,255,255,.02); }
+
+  .kode-cell { font-family:monospace; font-weight:700; letter-spacing:.04em; color:var(--text); font-size:.875rem; }
+  .copy-btn { background:none; border:none; color:var(--text3); cursor:pointer; padding:2px 5px; border-radius:4px; font-size:.75rem; transition:color .12s; }
+  .copy-btn:hover { color:var(--text); }
+
+  .badge { display:inline-flex; align-items:center; gap:4px; border-radius:99px; padding:3px 10px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+  .badge-noads   { background:rgba(251,191,36,.12); color:#fbbf24; }
+  .badge-premium { background:rgba(230,57,70,.12);  color:#e63946; }
+  .badge-avail   { background:rgba(74,222,128,.12);  color:#4ade80; }
+  .badge-used    { background:rgba(107,107,138,.15); color:var(--text3); }
+
+  .btn-del { padding:4px 10px; background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.2); color:#ef4444; border-radius:6px; font-size:.75rem; cursor:pointer; transition:background .12s; }
+  .btn-del:hover { background:rgba(220,38,38,.22); }
+
+  .tbl-empty { padding:36px; text-align:center; color:var(--text3); font-size:.875rem; }
+
+  /* Denied */
+  .v-denied { display:none; flex-direction:column; align-items:center; justify-content:center; padding:80px 16px; text-align:center; color:var(--text3); }
+  .v-denied .icon { font-size:48px; margin-bottom:12px; }
+
+  /* Toast */
+  #vToast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#222; color:#fff; padding:10px 18px; border-radius:10px; font-size:.85rem; font-weight:600; opacity:0; transition:all .25s; pointer-events:none; z-index:9999; white-space:nowrap; }
+  #vToast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="vDenied" class="v-denied">
+  <div class="icon">🚫</div>
+  <p>Akses ditolak. Login sebagai admin dulu.</p>
+  <a href="/auth/login" style="margin-top:8px;padding:8px 20px;background:var(--accent,#e63946);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:.875rem">Login</a>
+</div>
+
+<div id="vPage" class="vpage" style="display:none">
+
+  <div class="vpage-header">
+    <h2>🎟️ Kelola Voucher</h2>
+    <a href="/admin" class="vback">← Kembali ke Admin</a>
+  </div>
+
+  <!-- Generate -->
+  <div class="vcard">
+    <div class="vcard-head">✨ Generate Voucher Baru</div>
+    <div class="vcard-body">
+      <div class="gen-row">
+        <div class="gen-field">
+          <span class="gen-label">Tipe</span>
+          <select id="genTipe" class="gen-select" onchange="toggleDurasi(this.value)">
+            <option value="noads">🚫 No-Ads (Selamanya)</option>
+            <option value="premium">⭐ Premium (Berbatas)</option>
+          </select>
+        </div>
+        <div class="gen-field" id="durasiWrap" style="display:none">
+          <span class="gen-label">Durasi (hari)</span>
+          <input type="number" id="genDurasi" class="gen-input durasi" value="30" min="1" max="365"/>
+        </div>
+        <div class="gen-field">
+          <span class="gen-label">Jumlah</span>
+          <input type="number" id="genJumlah" class="gen-input" value="1" min="1" max="50"/>
+        </div>
+        <button class="btn-gen" id="genBtn" onclick="generateVoucher()">✨ Generate</button>
+      </div>
+      <div class="gen-msg" id="genMsg"></div>
+      <div class="gen-codes" id="genCodes"></div>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="vcard">
+    <div class="vcard-head" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Daftar Voucher (<span id="vCount">0</span>)</span>
+      <button onclick="loadVouchers()" style="background:none;border:1px solid var(--border);color:var(--text3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.75rem;font-family:inherit">🔄 Refresh</button>
+    </div>
+    <div class="vtbl-wrap">
+      <table class="vtbl">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th class="c">Tipe</th>
+            <th class="c">Durasi</th>
+            <th class="c">Status</th>
+            <th>Dipakai oleh</th>
+            <th>Tanggal</th>
+            <th class="c">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="vTbody">
+          <tr><td colspan="7" class="tbl-empty">Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="vToast"></div>
+
+<script>
+const SB_URL  = "{{ supabase_url }}";
+const SB_ANON = "{{ supabase_anon }}";
+const ADMIN_IDS = {{ admin_ids | tojson }};
+
+function sbH(token) {
+  var h = { "apikey": SB_ANON, "Content-Type": "application/json" };
+  if (token) h["Authorization"] = "Bearer " + token;
+  return h;
+}
+
+function toast(msg, ok) {
+  var el = document.getElementById('vToast');
+  el.textContent = msg;
+  el.style.background = ok === false ? '#c1121f' : '#1a7a4a';
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+function toggleDurasi(v) {
+  document.getElementById('durasiWrap').style.display = v === 'premium' ? 'flex' : 'none';
+}
+
+// ── Auth check ──
+var _token = null;
+document.addEventListener('DOMContentLoaded', async function() {
+  _token = localStorage.getItem('sb_access_token');
+  if (!_token) {
+    document.getElementById('vDenied').style.display = 'flex';
+    return;
+  }
+  try {
+    var res  = await fetch(SB_URL + '/auth/v1/user', { headers: sbH(_token) });
+    var user = await res.json();
+    if (!res.ok || !ADMIN_IDS.includes(user.id)) {
+      document.getElementById('vDenied').style.display = 'flex';
+      return;
+    }
+  } catch(e) {
+    document.getElementById('vDenied').style.display = 'flex';
+    return;
+  }
+  document.getElementById('vPage').style.display = 'block';
+  loadVouchers();
+});
+
+// ── Load vouchers ──
+async function loadVouchers() {
+  var tbody = document.getElementById('vTbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">Memuat...</td></tr>';
+  try {
+    var res  = await fetch('/api/vouchers', { headers: { 'Authorization': 'Bearer ' + _token } });
+    var data = await res.json();
+    var list = data.vouchers || [];
+    document.getElementById('vCount').textContent = list.length;
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">Belum ada voucher. Generate dulu!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(function(v) {
+      var tb = v.tipe === 'noads'
+        ? '<span class="badge badge-noads">🚫 No-Ads</span>'
+        : '<span class="badge badge-premium">⭐ Premium</span>';
+      var sb = v.used
+        ? '<span class="badge badge-used">Terpakai</span>'
+        : '<span class="badge badge-avail">Tersedia</span>';
+      var dur = v.durasi_hari ? v.durasi_hari + ' hari' : '∞';
+      var tgl = (v.used_at || v.created_at || '').slice(0, 10) || '—';
+      var by  = v.used_by ? ('<span style="font-size:.75rem;color:var(--text3);max-width:130px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle">' + v.used_by + '</span>') : '—';
+      var del = !v.used ? ('<button class="btn-del" onclick="delVoucher(' + v.id + ')">🗑️</button>') : '';
+      return '<tr>' +
+        '<td class="kode-cell">' + v.kode + '<button class="copy-btn" onclick="cp(\'' + v.kode + '\')" title="Salin">📋</button></td>' +
+        '<td class="c">' + tb + '</td>' +
+        '<td class="c" style="color:var(--text3);font-size:.8rem">' + dur + '</td>' +
+        '<td class="c">' + sb + '</td>' +
+        '<td>' + by + '</td>' +
+        '<td style="font-size:.78rem;color:var(--text3)">' + tgl + '</td>' +
+        '<td class="c">' + del + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty" style="color:#f87171">Gagal memuat data.</td></tr>';
+  }
+}
+
+// ── Generate ──
+async function generateVoucher() {
+  var tipe   = document.getElementById('genTipe').value;
+  var durasi = document.getElementById('genDurasi').value;
+  var jumlah = document.getElementById('genJumlah').value;
+  var btn    = document.getElementById('genBtn');
+  var msgEl  = document.getElementById('genMsg');
+  var codesEl = document.getElementById('genCodes');
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  msgEl.style.display = 'none';
+  codesEl.innerHTML = '';
+
+  var fd = new FormData();
+  fd.append('tipe', tipe);
+  fd.append('jumlah', jumlah);
+  if (tipe !== 'noads') fd.append('durasi_hari', durasi);
+
+  try {
+    var res  = await fetch('/admin/voucher/generate', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _token, 'Accept': 'application/json' },
+      body: fd
+    });
+    var data = await res.json();
+    if (data.ok) {
+      msgEl.className = 'gen-msg ok';
+      msgEl.textContent = data.count + ' voucher berhasil dibuat! Klik kode untuk salin.';
+      msgEl.style.display = 'block';
+      codesEl.innerHTML = data.generated.map(function(k) {
+        return '<span class="gen-code-chip" onclick="cp(\'' + k + '\')">' + k + '</span>';
+      }).join('');
+      loadVouchers();
+    } else {
+      msgEl.className = 'gen-msg err';
+      msgEl.textContent = data.error || 'Gagal generate.';
+      msgEl.style.display = 'block';
+    }
+  } catch(e) {
+    msgEl.className = 'gen-msg err';
+    msgEl.textContent = 'Terjadi kesalahan server.';
+    msgEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Generate';
+  }
+}
+
+// ── Delete ──
+async function delVoucher(id) {
+  if (!confirm('Hapus voucher ini?')) return;
+  try {
+    await fetch('/admin/voucher/delete/' + id, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _token }
+    });
+    toast('Voucher dihapus.', true);
+    loadVouchers();
+  } catch(e) { toast('Gagal hapus.', false); }
+}
+
+// ── Copy ──
+function cp(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    toast('Disalin: ' + text, true);
+  });
+}
+</script>
+{% endblock %}
