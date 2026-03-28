@@ -1666,6 +1666,7 @@ def premium_redeem():
         return jsonify({"error": "Kode voucher tidak boleh kosong."}), 400
 
     try:
+        from datetime import datetime, timezone, timedelta
         now = datetime.now(timezone.utc)
 
         r_v = requests.get(
