@@ -555,6 +555,32 @@ setInterval(function() {
 </section>
 {% endif %}
 
+<!-- ADS 300x250 -->
+<div id="adIndex300Wrap" style="display:none;margin:16px auto;width:300px;max-width:100%;text-align:center">
+  <script>
+    atOptions = {
+      'key' : 'c70f57b1b28932ae6a385027cc3ed1da',
+      'format' : 'iframe',
+      'height' : 250,
+      'width' : 300,
+      'params' : {}
+    };
+  </script>
+  <script src="https://www.highperformanceformat.com/c70f57b1b28932ae6a385027cc3ed1da/invoke.js"></script>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) document.getElementById('adIndex300Wrap').style.display = 'block';
+    })
+    .catch(function() { document.getElementById('adIndex300Wrap').style.display = 'block'; });
+})();
+</script>
+
 <!-- POPULAR -->
 {% if popular and popular.animes %}
 <section class="section" style="padding-top:0">
