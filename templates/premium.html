@@ -144,6 +144,20 @@
   .prem-btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text2); font-size: 13px; }
   .prem-note { font-size: 11px; color: var(--text3); text-align: center; margin-top: 14px; line-height: 1.6; }
   .prem-note a { color: var(--accent); text-decoration: none; }
+  .voucher-divider { display:flex;align-items:center;gap:10px;margin:20px 0 14px;color:var(--text3);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase; }
+  .voucher-divider::before,.voucher-divider::after { content:'';flex:1;height:1px;background:var(--border); }
+  .voucher-box { background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px; }
+  .voucher-box label { display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px; }
+  .voucher-input-row { display:flex;gap:8px; }
+  .voucher-input { flex:1;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Courier New',monospace;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;outline:none;transition:border-color .15s; }
+  .voucher-input:focus { border-color:#e63946; }
+  .voucher-input::placeholder { font-family:inherit;font-weight:400;letter-spacing:normal;color:var(--text3);text-transform:none; }
+  .voucher-submit { padding:10px 16px;background:linear-gradient(135deg,#e63946,#c1121f);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s; }
+  .voucher-submit:hover { opacity:.88; }
+  .voucher-submit:disabled { opacity:.5;cursor:not-allowed; }
+  .voucher-msg { display:none;margin-top:8px;font-size:12px;font-weight:600;padding:8px 10px;border-radius:8px; }
+  .voucher-msg.ok  { background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80; }
+  .voucher-msg.err { background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.2);color:#f87171; }
 </style>
 {% endblock %}
 
@@ -185,22 +199,29 @@
           <li><span class="feat-icon">💛</span><span>Mendukung server Animeku.ID tetap hidup</span></li>
         </ul>
 
-        <div class="prem-price-box">
-          <div class="prem-price-label">Mulai dari</div>
-          <div class="prem-price"><sup>Rp</sup>5.000<sub> / bulan</sub></div>
+        <div class="voucher-divider">Punya Kode Voucher?</div>
+
+        <div class="voucher-box" id="voucherSection">
+          <label>Masukkan Kode Voucher</label>
+          <div class="voucher-input-row">
+            <input type="text" class="voucher-input" id="voucherInput"
+              placeholder="Contoh: NOADS-AB12CD34"
+              maxlength="20" autocomplete="off" spellcheck="false"/>
+            <button class="voucher-submit" id="voucherBtn" onclick="redeemVoucher()">Redeem</button>
+          </div>
+          <div class="voucher-msg" id="voucherMsg"></div>
         </div>
 
-        <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="prem-btn prem-btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Upgrade via Sociabuzz
-        </a>
+        <p style="font-size:12px;color:var(--text3);text-align:center;line-height:1.7;margin:0 0 16px">
+          Belum punya kode? Hubungi admin untuk membeli voucher via transfer / e-wallet.
+        </p>
+
         <button class="prem-btn prem-btn-secondary" onclick="history.back()">
           Nanti Saja
         </button>
 
         <p class="prem-note">
-          Premium aktif otomatis setelah donasi diverifikasi.<br>
-          Pertanyaan? Hubungi <a href="https://facebook.com/groups/1569311164620890/" target="_blank">grup FB Animeku.ID</a>.
+          Pertanyaan? Hubungi <a href="https://facebook.com/groups/1569311164620890/" target="_blank">grup FB Animeku.ID</a> atau DM admin.
         </p>
       </div>
 
@@ -240,10 +261,54 @@
       } else if (data.reason === 'not_logged_in') {
         statusWrap.style.display = 'block';
         statusInner.className = 'prem-status inactive';
-        statusInner.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg> <a href="/auth/login" style="color:var(--accent)">Login dulu</a> untuk cek status premiummu.`;
+        statusInner.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg> <a href="/auth/login" style="color:var(--accent)">Login dulu</a> untuk redeem voucher.`;
+        var vs = document.getElementById('voucherSection');
+        if (vs) { vs.style.opacity = '.5'; vs.style.pointerEvents = 'none'; }
       }
     }
   } catch(e) {}
 })();
+
+async function redeemVoucher() {
+  var input = document.getElementById('voucherInput');
+  var btn   = document.getElementById('voucherBtn');
+  var msg   = document.getElementById('voucherMsg');
+  var kode  = input.value.trim().toUpperCase();
+  if (!kode) { showVoucherMsg('Masukkan kode voucher dulu.', false); return; }
+  btn.disabled = true;
+  btn.textContent = '...';
+  msg.style.display = 'none';
+  var token = localStorage.getItem('sb_access_token');
+  var fd = new FormData();
+  fd.append('kode', kode);
+  try {
+    var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    var res  = await fetch('/premium/redeem', { method: 'POST', headers: headers, body: fd });
+    var data = await res.json();
+    if (data.ok) {
+      showVoucherMsg(data.message, true);
+      input.value = '';
+      setTimeout(function() { location.reload(); }, 2000);
+    } else {
+      showVoucherMsg(data.error || 'Gagal redeem. Coba lagi.', false);
+    }
+  } catch(e) {
+    showVoucherMsg('Terjadi kesalahan. Coba lagi.', false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Redeem';
+  }
+}
+
+function showVoucherMsg(text, ok) {
+  var el = document.getElementById('voucherMsg');
+  el.textContent = text;
+  el.className = 'voucher-msg ' + (ok ? 'ok' : 'err');
+  el.style.display = 'block';
+}
+
+document.getElementById('voucherInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') redeemVoucher();
+});
 </script>
 {% endblock %}

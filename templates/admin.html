@@ -450,6 +450,9 @@
     <button class="admin-tab" onclick="switchTab('topup')" id="tab-topup">
       <i class="fas fa-money-bill-transfer"></i> Topup
     </button>
+    <button class="admin-tab" onclick="switchTab('voucher')" id="tab-voucher">
+      🎟️ Voucher
+    </button>
   </div>
 
   <!-- ── STATISTIK ─────────────────────────────── -->
@@ -840,6 +843,77 @@
         <div style="color:var(--text3);font-size:13px;font-family:var(--font-mono,monospace)">Klik Refresh untuk memuat...</div>
       </div>
     </div>
+  <!-- ── VOUCHER ──────────────────────────────────── -->
+  <div class="admin-pane" id="pane-voucher">
+
+    <!-- Generate form -->
+    <div class="admin-section" style="margin-bottom:16px">
+      <div class="admin-section-header">
+        <div class="admin-section-title">🎟️ Generate Voucher Baru</div>
+      </div>
+      <div style="padding:16px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Tipe</label>
+            <select id="vgenTipe" onchange="vgenToggleDurasi(this.value)"
+              style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none">
+              <option value="noads">🚫 No-Ads (Selamanya)</option>
+              <option value="premium">⭐ Premium (Berbatas)</option>
+            </select>
+          </div>
+          <div id="vgenDurasiWrap" style="display:none;flex-direction:column;gap:6px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Durasi (hari)</label>
+            <input type="number" id="vgenDurasi" value="30" min="1" max="365"
+              style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;width:110px;outline:none"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Jumlah</label>
+            <input type="number" id="vgenJumlah" value="1" min="1" max="50"
+              style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;width:90px;outline:none"/>
+          </div>
+          <button onclick="vgenGenerate()"
+            style="padding:8px 20px;background:linear-gradient(135deg,#e63946,#c1121f);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px">
+            ✨ Generate
+          </button>
+        </div>
+        <div id="vgenMsg" style="display:none;margin-top:12px;font-size:13px;font-weight:600;padding:10px 12px;border-radius:8px"></div>
+        <!-- Kode yang baru digenerate -->
+        <div id="vgenResult" style="display:none;margin-top:12px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px">Kode yang dibuat:</div>
+          <div id="vgenCodes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Voucher list -->
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">Daftar Voucher</div>
+        <button onclick="loadVouchers()"
+          style="background:none;border:1px solid var(--border);color:var(--text3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font-body)">
+          🔄 Refresh
+        </button>
+      </div>
+      <div class="admin-section-body">
+        <table class="admin-table" style="min-width:560px">
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th style="text-align:center">Tipe</th>
+              <th style="text-align:center">Durasi</th>
+              <th style="text-align:center">Status</th>
+              <th>Dipakai oleh</th>
+              <th>Tanggal</th>
+              <th style="text-align:center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="voucherTableBody">
+            <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3);font-size:13px">Klik Refresh untuk memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -1611,6 +1685,103 @@ async function clearAllChat() {
     toast("✓ Semua pesan chat dihapus", "success");
     loadStats();
   } catch { toast("Gagal hapus semua pesan", "error"); }
+}
+
+// ── VOUCHER MANAGEMENT ─────────────────────────────────────────
+function vgenToggleDurasi(val) {
+  var el = document.getElementById('vgenDurasiWrap');
+  el.style.display = val === 'premium' ? 'flex' : 'none';
+}
+
+async function vgenGenerate() {
+  var tipe   = document.getElementById('vgenTipe').value;
+  var durasi = document.getElementById('vgenDurasi').value;
+  var jumlah = document.getElementById('vgenJumlah').value;
+  var msgEl  = document.getElementById('vgenMsg');
+  var resEl  = document.getElementById('vgenResult');
+  var codesEl = document.getElementById('vgenCodes');
+
+  var fd = new FormData();
+  fd.append('tipe', tipe);
+  fd.append('jumlah', jumlah);
+  if (tipe !== 'noads') fd.append('durasi_hari', durasi);
+
+  msgEl.style.display = 'none';
+  resEl.style.display = 'none';
+
+  try {
+    var token = localStorage.getItem('sb_access_token') || '';
+    var res  = await fetch('/admin/voucher/generate', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: fd
+    });
+    var data = await res.json();
+    if (data.ok) {
+      msgEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;font-weight:600;padding:10px 12px;border-radius:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80';
+      msgEl.textContent = data.count + ' voucher berhasil dibuat!';
+      codesEl.innerHTML = data.generated.map(function(k) {
+        return '<span onclick="navigator.clipboard.writeText(\'' + k + '\').then(function(){toast(\'Disalin: ' + k + '\',\'success\')})" title="Klik untuk salin" style="font-family:monospace;font-size:13px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;letter-spacing:.05em">' + k + '</span>';
+      }).join('');
+      resEl.style.display = 'block';
+      loadVouchers();
+    } else {
+      msgEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;font-weight:600;padding:10px 12px;border-radius:8px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.2);color:#f87171';
+      msgEl.textContent = data.error || 'Gagal generate.';
+    }
+  } catch(e) {
+    msgEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;font-weight:600;padding:10px 12px;border-radius:8px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.2);color:#f87171';
+    msgEl.textContent = 'Terjadi kesalahan.';
+  }
+}
+
+async function loadVouchers() {
+  var tbody = document.getElementById('voucherTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Memuat...</td></tr>';
+  try {
+    var token = localStorage.getItem('sb_access_token') || '';
+    var res  = await fetch('/admin/voucher', { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token } });
+    var data = await res.json();
+    if (!data.vouchers || !data.vouchers.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text3);font-size:13px">Belum ada voucher.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.vouchers.map(function(v) {
+      var tipeBadge = v.tipe === 'noads'
+        ? '<span style="background:rgba(251,191,36,.12);color:#fbbf24;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700">🚫 No-Ads</span>'
+        : '<span style="background:rgba(230,57,70,.12);color:#e63946;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700">⭐ Premium</span>';
+      var statusBadge = v.used
+        ? '<span style="background:rgba(107,107,138,.15);color:var(--text3);border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700">Terpakai</span>'
+        : '<span style="background:rgba(74,222,128,.12);color:#4ade80;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700">Tersedia</span>';
+      var durasi = v.durasi_hari ? v.durasi_hari + ' hari' : '∞';
+      var tgl = (v.used_at || v.created_at || '').slice(0,10) || '—';
+      var delBtn = !v.used ? '<button onclick="deleteVoucher(' + v.id + ')" style="padding:4px 10px;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);color:#ef4444;border-radius:6px;font-size:12px;cursor:pointer">🗑️</button>' : '';
+      return '<tr>' +
+        '<td style="font-family:monospace;font-weight:700;letter-spacing:.04em">' + v.kode + ' <button onclick="navigator.clipboard.writeText(\'' + v.kode + '\').then(function(){toast(\'Disalin\',\'success\')})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px">📋</button></td>' +
+        '<td style="text-align:center">' + tipeBadge + '</td>' +
+        '<td style="text-align:center;color:var(--text3);font-size:13px">' + durasi + '</td>' +
+        '<td style="text-align:center">' + statusBadge + '</td>' +
+        '<td style="font-size:12px;color:var(--text3);max-width:150px;overflow:hidden;text-overflow:ellipsis">' + (v.used_by || '—') + '</td>' +
+        '<td style="font-size:12px;color:var(--text3)">' + tgl + '</td>' +
+        '<td style="text-align:center">' + delBtn + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#f87171;font-size:13px">Gagal memuat.</td></tr>';
+  }
+}
+
+async function deleteVoucher(id) {
+  if (!confirm('Hapus voucher ini?')) return;
+  var token = localStorage.getItem('sb_access_token') || '';
+  try {
+    await fetch('/admin/voucher/delete/' + id, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    loadVouchers();
+    toast('Voucher dihapus.', 'success');
+  } catch(e) { toast('Gagal hapus.', 'error'); }
 }
 </script>
 {% endblock %}
