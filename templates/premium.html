@@ -231,7 +231,7 @@
 
 <script>
 (async function() {
-  const token = localStorage.getItem('sb_access_token');
+  const token = JSON.parse(localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token') || 'null')?.access_token;
   const statusWrap = document.getElementById('premStatusWrap');
   const statusInner = document.getElementById('premStatusInner');
   const activeBanner = document.getElementById('premActiveBanner');
@@ -278,7 +278,7 @@ async function redeemVoucher() {
   btn.disabled = true;
   btn.textContent = '...';
   msg.style.display = 'none';
-  var token = localStorage.getItem('sb_access_token');
+  var token = JSON.parse(localStorage.getItem('sb-mafnnqttvkdgqqxczqyt-auth-token') || 'null')?.access_token;
   var fd = new FormData();
   fd.append('kode', kode);
   try {
