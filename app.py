@@ -558,6 +558,13 @@ def _norm_paginated(raw, page):
 def manifest():
     return send_from_directory(app.static_folder, "manifest.json", mimetype="application/manifest+json")
 
+@app.route("/sw.js")
+def service_worker():
+    response = send_from_directory(app.static_folder, "sw.js", mimetype="application/javascript")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
 @app.route("/")
 def landing():
     return render_template("landing.html")
