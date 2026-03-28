@@ -228,23 +228,23 @@
 <!-- ── END SPLASH SCREEN ──────────────────────────────────────── -->
 
 <!-- ── PWA INSTALL BANNER ────────────────────────────────────── -->
-<div id="pwaBanner" style="display:none;position:fixed;top:70px;left:12px;right:12px;z-index:9999;
-  background:linear-gradient(135deg,#0e1117,#141825);
-  border:1px solid rgba(230,57,70,0.3);border-radius:14px;
-  padding:12px 14px;align-items:center;gap:12px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-  <img src="/static/img/favicon.png" alt="" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;object-fit:cover">
+<div id="pwaBanner" style="display:none;position:fixed;bottom:72px;left:12px;right:12px;z-index:9999;
+  background:rgba(14,17,23,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(230,57,70,0.2);border-radius:14px;
+  padding:10px 12px;align-items:center;gap:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+  <img src="/static/img/favicon.png" alt="" style="width:34px;height:34px;border-radius:8px;flex-shrink:0;object-fit:cover">
   <div style="flex:1;min-width:0">
-    <div style="font-size:13px;font-weight:700;color:#e8eaf0">Install Animeku.ID</div>
-    <div style="font-size:11px;color:#8b92a5;margin-top:1px">Akses cepat tanpa browser 🎌</div>
+    <div style="font-size:12px;font-weight:700;color:#e8eaf0">Install Animeku.ID</div>
+    <div style="font-size:10px;color:#6b7280;margin-top:1px">Akses cepat tanpa browser</div>
   </div>
-  <button onclick="installPWA()" style="background:linear-gradient(135deg,#e63946,#c1121f);
-    color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;
+  <button onclick="installPWA()" style="background:#e63946;
+    color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:11px;
     font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
     Install
   </button>
   <button onclick="document.getElementById('pwaBanner').style.display='none'"
-    style="background:none;border:none;color:#555d70;font-size:18px;cursor:pointer;
+    style="background:none;border:none;color:#4b5563;font-size:16px;cursor:pointer;
     padding:0 2px;flex-shrink:0;line-height:1">×</button>
 </div>
 <!-- ── END PWA INSTALL BANNER ────────────────────────────────── -->
