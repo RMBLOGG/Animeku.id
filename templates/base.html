@@ -13,8 +13,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3673996314713788"
-     crossorigin="anonymous"></script>
+  <!-- Ad scripts: load after checking premium status from server -->
+  <script>
+  (function() {
+    var token = localStorage.getItem('sb_access_token') || '';
+    var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    fetch('/api/premium/status', { headers: headers })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.premium) {
+          var s1 = document.createElement('script');
+          s1.src = 'https://pl28904733.profitablecpmratenetwork.com/d3/28/ea/d328ea64a05b5039d9cce3fa1dd391e6.js';
+          document.head.appendChild(s1);
+          var s2 = document.createElement('script');
+          s2.src = 'https://pl28904745.profitablecpmratenetwork.com/4a/81/0f/4a810f968812c37a2a95d35a92267fee.js';
+          document.head.appendChild(s2);
+        }
+      })
+      .catch(function() {
+        // Gagal cek = tampilkan iklan (default)
+        var s1 = document.createElement('script');
+        s1.src = 'https://pl28904733.profitablecpmratenetwork.com/d3/28/ea/d328ea64a05b5039d9cce3fa1dd391e6.js';
+        document.head.appendChild(s1);
+        var s2 = document.createElement('script');
+        s2.src = 'https://pl28904745.profitablecpmratenetwork.com/4a/81/0f/4a810f968812c37a2a95d35a92267fee.js';
+        document.head.appendChild(s2);
+      });
+  })();
+  </script>
   <script>
     // Apply theme sebelum render — cegah flash
     (function() {
@@ -582,10 +608,6 @@ function closeAnnouncement() {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
               Koleksi
             </a>
-            <a href="/reward" class="nav-more-item" style="color:#f5c518">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-              🪙 Reward Harian
-            </a>
             <a href="/rekomendasi" class="nav-more-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
               Rekomendasi
@@ -680,13 +702,13 @@ function closeAnnouncement() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               Profil
             </a>
-            <a href="/topup"
+            <a href="/premium"
               style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
               background:none;border:none;color:#f5c518;font-size:13px;cursor:pointer;
               font-family:var(--font-body);transition:var(--trans);text-decoration:none"
               onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background='none'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M9.5 8.5c.7-1 1.8-1.5 3-1.5 2 0 3.5 1.3 3.5 3S14 13 12 13"/></svg>
-              Topup Koin
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              ✨ Premium
             </a>
             <div style="height:1px;background:var(--border)"></div>
             <button onclick="logoutUser()"
@@ -795,9 +817,9 @@ function closeAnnouncement() {
           </div>
           <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
         </div>
-        <a href="/topup" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin-top:6px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#f5c518;font-size:13px;font-weight:600;text-decoration:none">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Topup Koin
+        <a href="/premium" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin-top:6px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#f5c518;font-size:13px;font-weight:600;text-decoration:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          ✨ Premium
         </a>
       </div>
     </div>
@@ -853,12 +875,6 @@ function closeAnnouncement() {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
       <span class="mob-nav-label">Jadwal</span>
-    </a>
-    <a href="/quiz" class="mob-nav-item" data-page="game">
-      <span class="mob-nav-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>
-      </span>
-      <span class="mob-nav-label">Game</span>
     </a>
     <a href="/rekomendasi" class="mob-nav-item" data-page="rekomendasi">
       <span class="mob-nav-icon">
@@ -979,7 +995,7 @@ function closeAnnouncement() {
         (page === 'home' && (path === '/' || path === '/home')) ||
         (page === 'ongoing' && path.startsWith('/ongoing')) ||
         (page === 'schedule' && path.startsWith('/schedule')) ||
-        (page === 'game' && path.startsWith('/quiz')) ||
+
         (page === 'rekomendasi' && path.startsWith('/rekomendasi')) ||
         (page === 'mylist' && path.startsWith('/mylist')) ||
         (page === 'login' && (path.startsWith('/auth') || path.startsWith('/profile')))

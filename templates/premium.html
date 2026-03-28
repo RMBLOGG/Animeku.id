@@ -1,863 +1,249 @@
 {% extends "base.html" %}
-{% block title %}Premium — Animeku.id{% endblock %}
+{% block title %}Premium — Bebas Iklan | Animeku.ID{% endblock %}
 
 {% block head %}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-/* ── PAGE ── */
-.premium-page {
-  min-height: 100vh;
-  padding-bottom: 100px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Animated background */
-.premium-page::before {
-  content: '';
-  position: fixed;
-  top: -200px; left: 50%;
-  transform: translateX(-50%);
-  width: 900px; height: 900px;
-  background: radial-gradient(ellipse, rgba(244,162,97,0.07) 0%, rgba(231,111,27,0.04) 35%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-  animation: bgPulse 6s ease-in-out infinite;
-}
-.premium-page::after {
-  content: '';
-  position: fixed;
-  bottom: -100px; right: -100px;
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(230,57,70,0.05) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
-@keyframes bgPulse {
-  0%,100% { opacity: 1; transform: translateX(-50%) scale(1); }
-  50% { opacity: 0.6; transform: translateX(-50%) scale(1.08); }
-}
-
-/* Floating particles */
-.particles {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-.particle {
-  position: absolute;
-  width: 2px; height: 2px;
-  border-radius: 50%;
-  background: rgba(244,162,97,0.4);
-  animation: float linear infinite;
-}
-@keyframes float {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.5; }
-  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
-}
-
-/* ── HERO ── */
-.prem-hero {
-  text-align: center;
-  padding: 64px 20px 48px;
-  position: relative;
-  z-index: 1;
-}
-
-.prem-crown {
-  font-size: 48px;
-  display: block;
-  margin-bottom: 16px;
-  animation: crownFloat 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 20px rgba(244,162,97,0.5));
-}
-@keyframes crownFloat {
-  0%,100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-8px) rotate(3deg); }
-}
-
-.prem-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 20px;
-  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(231,111,27,0.1));
-  border: 1px solid rgba(244,162,97,0.35);
-  border-radius: 99px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #f4a261;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-  backdrop-filter: blur(10px);
-  position: relative;
-}
-.prem-badge::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 99px;
-  background: linear-gradient(135deg, rgba(244,162,97,0.3), transparent, rgba(244,162,97,0.1));
-  z-index: -1;
-}
-
-.prem-title {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(28px, 7vw, 52px);
-  font-weight: 900;
-  color: var(--text);
-  letter-spacing: 1px;
-  line-height: 1.15;
-  margin-bottom: 18px;
-  text-shadow: 0 0 60px rgba(244,162,97,0.1);
-}
-.prem-title span {
-  background: linear-gradient(135deg, #ffd166, #f4a261, #e76f1b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  position: relative;
-}
-.prem-sub {
-  color: var(--text3);
-  font-size: 14px;
-  max-width: 380px;
-  margin: 0 auto;
-  line-height: 1.8;
-  font-weight: 300;
-}
-
-/* ── MAIN CARD ── */
-.prem-card-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 0 16px 48px;
-  position: relative;
-  z-index: 1;
-}
-.prem-card {
-  background: var(--card);
-  border: 1px solid rgba(244,162,97,0.2);
-  border-radius: 24px;
-  padding: 0;
-  max-width: 420px;
-  width: 100%;
-  box-shadow:
-    0 0 0 1px rgba(244,162,97,0.05),
-    0 20px 60px rgba(0,0,0,0.4),
-    0 0 100px rgba(244,162,97,0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Top gradient bar */
-.prem-card-header {
-  padding: 28px 28px 24px;
-  background: linear-gradient(135deg, rgba(244,162,97,0.08) 0%, rgba(231,111,27,0.04) 50%, transparent 100%);
-  border-bottom: 1px solid rgba(244,162,97,0.1);
-  position: relative;
-  overflow: hidden;
-}
-.prem-card-header::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #f4a261 30%, #ffd166 50%, #f4a261 70%, transparent);
-}
-.prem-card-header::after {
-  content: '✦';
-  position: absolute;
-  right: 24px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 52px;
-  color: rgba(244,162,97,0.06);
-  line-height: 1;
-}
-
-.prem-plan-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #f4a261;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-  display: block;
-}
-.prem-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.prem-price-amt {
-  font-family: 'Cinzel', serif;
-  font-size: 52px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #ffd166, #f4a261);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-}
-.prem-price-rp {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text3);
-  font-family: 'Cinzel', serif;
-}
-.prem-price-period {
-  font-size: 13px;
-  color: var(--text3);
-  font-weight: 400;
-}
-.prem-price-note {
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 2px;
-  opacity: 0.7;
-}
-
-/* Features */
-.prem-card-body {
-  padding: 24px 28px;
-}
-.prem-features {
-  list-style: none;
-  padding: 0; margin: 0 0 24px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.prem-features li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text2);
-}
-.feat-icon {
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  background: rgba(244,162,97,0.1);
-  border: 1px solid rgba(244,162,97,0.15);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.prem-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 0 0 24px;
-  opacity: 0.5;
-}
-
-/* User section */
-#premUserSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Skeleton */
-.skel {
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%;
-  animation: skel 1.5s infinite;
-}
-@keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-/* UID Box */
-.uid-box {
-  background: rgba(244,162,97,0.04);
-  border: 1px solid rgba(244,162,97,0.15);
-  border-radius: 12px;
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
-}
-.uid-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(244,162,97,0.4), transparent);
-}
-.uid-label {
-  font-size: 9px; font-weight: 700; color: #f4a261;
-  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
-  display: block;
-}
-.uid-row { display: flex; align-items: center; gap: 8px; }
-.uid-val {
-  font-family: var(--font-mono, monospace); font-size: 11px;
-  color: var(--text2); flex: 1;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  background: rgba(0,0,0,0.2);
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-}
-.uid-copy {
-  flex-shrink: 0; padding: 6px 14px;
-  background: rgba(244,162,97,0.12);
-  border: 1px solid rgba(244,162,97,0.3);
-  border-radius: 8px; color: #f4a261; font-size: 11px; font-weight: 700;
-  cursor: pointer; white-space: nowrap; transition: all 0.2s;
-  letter-spacing: 0.5px;
-}
-.uid-copy:hover { background: rgba(244,162,97,0.22); transform: scale(1.02); }
-.uid-hint {
-  font-size: 11px; color: var(--text3); line-height: 1.6; margin-top: 8px;
-  display: flex; align-items: flex-start; gap: 6px;
-}
-.uid-hint::before { content: '⚠'; font-size: 12px; flex-shrink: 0; }
-
-/* Buttons */
-.btn-pay {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #ffd166 0%, #f4a261 40%, #e76f1b 100%);
-  color: #000; font-weight: 800; font-size: 14px; border-radius: 14px;
-  text-decoration: none; cursor: pointer; border: none; width: 100%;
-  box-shadow: 0 4px 24px rgba(244,162,97,0.35), 0 0 0 1px rgba(255,209,102,0.2);
-  transition: all 0.2s;
-  letter-spacing: 0.3px;
-  position: relative;
-  overflow: hidden;
-}
-.btn-pay::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transform: skewX(-20deg);
-  animation: shimmer 3s infinite;
-}
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 200%; }
-}
-.btn-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(244,162,97,0.45); }
-.btn-pay:active { transform: translateY(0); }
-
-.btn-login-g {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px 20px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
-  color: var(--text); font-size: 14px; font-weight: 600;
-  text-decoration: none; transition: all 0.2s;
-  backdrop-filter: blur(8px);
-}
-.btn-login-g:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
-
-.btn-home {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px 20px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  color: var(--text); font-size: 13px; font-weight: 600;
-  text-decoration: none; transition: all 0.2s; margin-top: 4px;
-}
-.btn-home:hover { background: rgba(255,255,255,0.09); }
-
-.btn-pay-note {
-  text-align: center; font-size: 11px; color: var(--text3);
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-}
-
-/* Active banner */
-.prem-active {
-  background: linear-gradient(135deg, rgba(76,175,125,0.1), rgba(76,175,125,0.05));
-  border: 1px solid rgba(76,175,125,0.25);
-  border-radius: 14px; padding: 24px; text-align: center;
-  position: relative; overflow: hidden;
-}
-.prem-active::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #4caf7d, transparent);
-}
-.prem-active .icon { font-size: 36px; margin-bottom: 8px; display: block; }
-.prem-active h3 { color: #4caf7d; font-size: 17px; margin: 0 0 6px; font-weight: 700; }
-.prem-active p { color: var(--text3); font-size: 12px; margin: 0; line-height: 1.6; }
-
-/* ── FEATURES GRID ── */
-.features-section {
-  max-width: 420px;
-  margin: 0 auto 48px;
-  padding: 0 16px;
-  position: relative;
-  z-index: 1;
-}
-.features-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.feat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 16px;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.feat-card:hover {
-  border-color: rgba(244,162,97,0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
-.feat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(244,162,97,0.2), transparent);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.feat-card:hover::before { opacity: 1; }
-.feat-card-icon { font-size: 24px; margin-bottom: 10px; display: block; }
-.feat-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.feat-card-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
-
-/* ── HOW IT WORKS ── */
-.how-section {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0 16px;
-  position: relative;
-  z-index: 1;
-}
-.section-label {
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  margin-bottom: 28px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.section-label::before,
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border));
-}
-.section-label::after {
-  background: linear-gradient(90deg, var(--border), transparent);
-}
-
-.steps { display: flex; flex-direction: column; gap: 0; }
-.step {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  position: relative;
-  padding-bottom: 24px;
-}
-.step:last-child { padding-bottom: 0; }
-.step-line {
-  position: absolute;
-  left: 17px; top: 36px; bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, rgba(244,162,97,0.3), transparent);
-}
-.step:last-child .step-line { display: none; }
-.step-num {
-  width: 36px; height: 36px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(231,111,27,0.08));
-  border: 1px solid rgba(244,162,97,0.25);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800;
-  color: #f4a261; flex-shrink: 0;
-  font-family: 'Cinzel', serif;
-}
-.step-content {
-  padding-top: 6px;
-  flex: 1;
-}
-.step-content strong {
-  display: block; font-size: 13px;
-  color: var(--text); margin-bottom: 4px; font-weight: 700;
-}
-.step-content span {
-  font-size: 12px; color: var(--text3); line-height: 1.6;
-}
-
-/* ── DESKTOP GRID ── */
-.desktop-grid {
-  display: flex;
-  flex-direction: column;
-}
-@media (min-width: 860px) {
-  .desktop-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 32px 48px;
-    align-items: start;
-  }
-  .prem-card-wrap {
-    padding: 0;
+  .prem-wrap {
+    min-height: calc(100vh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px 80px;
   }
   .prem-card {
-    max-width: 100%;
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
   }
-  .how-section {
-    max-width: 100%;
+  .prem-header {
+    background: linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 100%);
+    border-bottom: 1px solid rgba(230,57,70,0.2);
+    padding: 32px 28px 24px;
+    text-align: center;
+    position: relative;
+  }
+  .prem-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(230,57,70,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .prem-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(230,57,70,0.15);
+    border: 1px solid rgba(230,57,70,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #e63946;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .prem-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 8px;
+    line-height: 1.2;
+  }
+  .prem-title span { color: #e63946; }
+  .prem-desc {
+    font-size: 13px;
+    color: var(--text3);
     margin: 0;
+    line-height: 1.6;
+  }
+  .prem-status-wrap { padding: 16px 24px 0; }
+  .prem-status {
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .prem-status.active { background: rgba(76,175,61,0.1); border: 1px solid rgba(76,175,61,0.25); color: #4caf7d; }
+  .prem-status.inactive { background: rgba(230,57,70,0.07); border: 1px solid rgba(230,57,70,0.2); color: var(--text3); }
+  .prem-body { padding: 20px 24px 28px; }
+  .prem-active-banner {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+  .prem-active-banner .big-icon { font-size: 52px; margin-bottom: 12px; }
+  .prem-active-banner h3 { font-size: 18px; font-weight: 700; color: #4caf7d; margin: 0 0 6px; }
+  .prem-active-banner p { font-size: 13px; color: var(--text3); margin: 0; line-height: 1.6; }
+  .prem-features {
+    list-style: none;
+    margin: 0 0 20px;
     padding: 0;
-    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
-  .trust-section {
-    max-width: 900px;
+  .prem-features li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text2);
   }
-}
-
-/* ── TRUST BADGES ── */
-.trust-section {
-  max-width: 420px;
-  margin: 40px auto 0;
-  padding: 0 16px;
-  position: relative;
-  z-index: 1;
-}
-.trust-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.trust-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text3);
-}
-.trust-item span { font-size: 14px; }
-
-/* WA Section */
-.wa-section {
-  margin-top: 28px;
-  text-align: center;
-}
-.wa-or {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text3);
-  margin: 0 0 12px;
-  letter-spacing: 1px;
-}
-.wa-label {
-  font-size: 12px;
-  color: var(--text3);
-  margin: 0 0 12px;
-  line-height: 1.5;
-}
-.btn-wa {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 13px 28px;
-  background: linear-gradient(135deg, #25d366, #128c7e);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 14px;
-  text-decoration: none;
-  box-shadow: 0 4px 20px rgba(37,211,102,0.3);
-  transition: all 0.2s;
-  letter-spacing: 0.3px;
-}
-.btn-wa:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(37,211,102,0.4);
-}
+  .prem-features li .feat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(230,57,70,0.08);
+    border: 1px solid rgba(230,57,70,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 15px;
+  }
+  .prem-price-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .prem-price-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .prem-price { font-size: 30px; font-weight: 700; color: var(--text); }
+  .prem-price sup { font-size: 14px; vertical-align: super; color: var(--text2); }
+  .prem-price sub { font-size: 12px; font-weight: 400; color: var(--text3); }
+  .prem-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .prem-btn:active { transform: scale(0.98); }
+  .prem-btn-primary { background: linear-gradient(135deg,#e63946,#c1121f); color: #fff; margin-bottom: 10px; }
+  .prem-btn-primary:hover { opacity: 0.9; }
+  .prem-btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text2); font-size: 13px; }
+  .prem-note { font-size: 11px; color: var(--text3); text-align: center; margin-top: 14px; line-height: 1.6; }
+  .prem-note a { color: var(--accent); text-decoration: none; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="premium-page">
+<div class="prem-wrap">
+  <div class="prem-card">
 
-  <!-- Particles -->
-  <div class="particles" id="particles"></div>
-
-  <!-- HERO -->
-  <div class="prem-hero">
-    <span class="prem-crown">👑</span>
-    <div class="prem-badge">✦ &nbsp;Animeku Premium</div>
-    <h1 class="prem-title">Nonton Tanpa Batas,<br><span>Tanpa Gangguan</span></h1>
-    <p class="prem-sub">Akses semua episode anime favorit kamu — kapan saja, tanpa kunci, tanpa iklan.</p>
-  </div>
-
-  <!-- DESKTOP GRID WRAP -->
-  <div class="desktop-grid">
-
-    <!-- PRICE CARD -->
-    <div class="prem-card-wrap">
-      <div class="prem-card">
-
-        <div class="prem-card-header">
-          <span class="prem-plan-label">✦ Paket Bulanan</span>
-          <div class="prem-price-row">
-            <span class="prem-price-rp">Rp</span>
-            <span class="prem-price-amt">15K</span>
-            <span class="prem-price-period">/ bulan</span>
-          </div>
-          <p class="prem-price-note">Transfer Bank · QRIS · E-Wallet via Sociabuzz</p>
-        </div>
-
-        <div class="prem-card-body">
-          <ul class="prem-features">
-            <li>
-              <div class="feat-icon">🔓</div>
-              Semua episode unlocked (ep 3 ke atas)
-            </li>
-            <li>
-              <div class="feat-icon">📅</div>
-              Akses penuh selama 30 hari
-            </li>
-            <li>
-              <div class="feat-icon">⚡</div>
-              Aktif otomatis setelah bayar
-            </li>
-            <li>
-              <div class="feat-icon">❤️</div>
-              Dukung operasional Animeku.id
-            </li>
-          </ul>
-
-          <hr class="prem-divider">
-
-          <!-- Dynamic section -->
-          <div id="premUserSection">
-            <div class="skel" style="height:10px;width:50%;margin-bottom:12px;border-radius:6px"></div>
-            <div class="skel" style="height:52px;width:100%;border-radius:14px"></div>
-          </div>
-        </div>
+    <div class="prem-header">
+      <div class="prem-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Premium
       </div>
+      <h1 class="prem-title">Nonton Tanpa<br><span>Gangguan Iklan</span></h1>
+      <p class="prem-desc">Upgrade Premium dan nikmati anime tanpa iklan, lebih nyaman, lebih cepat.</p>
     </div>
 
-    <!-- HOW IT WORKS -->
-    <div class="how-section">
-      <div class="section-label">Cara Berlangganan</div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-line"></div>
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <strong>Login dengan Google</strong>
-            <span>Kamu butuh akun untuk mengaktifkan premium secara otomatis.</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-line"></div>
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <strong>Copy User ID kamu</strong>
-            <span>User ID otomatis muncul setelah login. Paste ke kolom pesan Sociabuzz.</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-line"></div>
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <strong>Donasi Rp 15.000 via Sociabuzz</strong>
-            <span>Klik "Bayar Sekarang" dan selesaikan pembayaran dengan metode apapun.</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <strong>Premium aktif otomatis ✓</strong>
-            <span>Dalam detik setelah bayar, akun langsung upgrade 30 hari penuh.</span>
-          </div>
-        </div>
-      </div>
+    <div id="premStatusWrap" style="display:none" class="prem-status-wrap">
+      <div class="prem-status" id="premStatusInner"></div>
     </div>
 
-  </div><!-- end desktop-grid -->
+    <div class="prem-body">
 
-  <!-- TRUST -->
-  <div class="trust-section">
-    <div class="trust-row">
-      <div class="trust-item"><span>🔒</span> Aman & Terpercaya</div>
-      <div class="trust-item"><span>⚡</span> Aktivasi Instan</div>
-      <div class="trust-item"><span>💳</span> Multi Pembayaran</div>
-    </div>
-  </div>
-
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-// Generate particles
-(function() {
-  var container = document.getElementById('particles');
-  if (!container) return;
-  for (var i = 0; i < 20; i++) {
-    var p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = (8 + Math.random() * 12) + 's';
-    p.style.animationDelay = (Math.random() * 10) + 's';
-    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
-    p.style.opacity = 0.2 + Math.random() * 0.5;
-    container.appendChild(p);
-  }
-})();
-
-const SOCIABUZZ_URL = 'https://sociabuzz.com/dayynime/tribe';
-const SUPABASE_URL  = 'https://mafnnqttvkdgqqxczqyt.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y';
-
-function getLocalUser() {
-  try { return JSON.parse(localStorage.getItem('sb_user')); } catch { return null; }
-}
-function getLocalToken() {
-  return localStorage.getItem('sb_access_token') || null;
-}
-
-async function checkPremium(userId) {
-  try {
-    const token = getLocalToken();
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_premium?user_id=eq.${userId}&select=is_active,expires_at`,
-      { headers: {
-        'apikey': SUPABASE_ANON,
-        'Authorization': token ? `Bearer ${token}` : `Bearer ${SUPABASE_ANON}`
-      }}
-    );
-    if (!res.ok) return false;
-    const rows = await res.json();
-    if (!rows.length) return false;
-    const row = rows[0];
-    if (!row.is_active) return false;
-    if (!row.expires_at) return { active: true };
-    const exp = new Date(row.expires_at);
-    return exp > new Date() ? { active: true, expires_at: row.expires_at } : false;
-  } catch { return false; }
-}
-
-async function initPremiumPage() {
-  const section = document.getElementById('premUserSection');
-  try {
-    const user  = getLocalUser();
-    const token = getLocalToken();
-
-    if (user && user.id) {
-      const prem = await checkPremium(user.id);
-      if (prem) {
-        const exp = prem.expires_at
-          ? new Date(prem.expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})
-          : 'Selamanya';
-        section.innerHTML = `
-          <div class="prem-active">
-            <span class="icon">✦</span>
-            <h3>Kamu Sudah Premium!</h3>
-            <p>Aktif hingga <strong style="color:#4caf7d">${exp}</strong><br>Nikmati semua episode tanpa batas.</p>
-          </div>
-          <a href="/home" class="btn-home">▶ &nbsp;Mulai Nonton Sekarang</a>
-        `;
-        return;
-      }
-
-      // Login tapi belum premium
-      const uid = user.id || '';
-      const waUrl = `https://wa.me/6282320781747?text=${encodeURIComponent(`Halo admin, saya mau bayar Premium Animeku.id Rp 15.000. User ID saya: ${uid}`)}`;
-      section.innerHTML = `
-        <div class="uid-box">
-          <span class="uid-label">User ID — paste ke kolom pesan Sociabuzz</span>
-          <div class="uid-row">
-            <span class="uid-val" id="uidVal">${uid}</span>
-            <button class="uid-copy" onclick="copyUID()">Copy</button>
-          </div>
-          <div class="uid-hint">Jangan hapus User ID ini saat mengisi pesan di Sociabuzz agar premium aktif otomatis.</div>
-        </div>
-        <button class="btn-pay" onclick="handlePay()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-          Bayar via Sociabuzz — Rp 15.000
+      <!-- Already premium -->
+      <div class="prem-active-banner" id="premActiveBanner">
+        <div class="big-icon">🎉</div>
+        <h3>Kamu Sudah Premium!</h3>
+        <p>Iklan sudah dinonaktifkan untuk akun kamu.<br>Terima kasih sudah mendukung Animeku.ID!</p>
+        <button class="prem-btn prem-btn-secondary" style="margin-top:18px" onclick="history.back()">
+          Kembali Nonton
         </button>
-        <div style="display:flex;align-items:center;gap:10px;margin:2px 0">
-          <div style="flex:1;height:1px;background:var(--border)"></div>
-          <span style="font-size:11px;color:var(--text3)">atau</span>
-          <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Upgrade section -->
+      <div id="premUpgradeSection">
+        <ul class="prem-features">
+          <li><span class="feat-icon">🚫</span><span>Semua iklan dihilangkan</span></li>
+          <li><span class="feat-icon">⚡</span><span>Halaman loading lebih cepat</span></li>
+          <li><span class="feat-icon">🎯</span><span>Nonton fokus tanpa pop-up</span></li>
+          <li><span class="feat-icon">💛</span><span>Mendukung server Animeku.ID tetap hidup</span></li>
+        </ul>
+
+        <div class="prem-price-box">
+          <div class="prem-price-label">Mulai dari</div>
+          <div class="prem-price"><sup>Rp</sup>5.000<sub> / bulan</sub></div>
         </div>
-        <a href="${waUrl}" target="_blank" rel="noopener" class="btn-wa" style="width:100%;box-sizing:border-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-          Bayar via WhatsApp Admin
+
+        <a href="https://sociabuzz.com/dayynime/tribe" target="_blank" rel="noopener" class="prem-btn prem-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Upgrade via Sociabuzz
         </a>
-        <p class="btn-pay-note">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Pembayaran aman · QRIS · Transfer Bank · E-Wallet
+        <button class="prem-btn prem-btn-secondary" onclick="history.back()">
+          Nanti Saja
+        </button>
+
+        <p class="prem-note">
+          Premium aktif otomatis setelah donasi diverifikasi.<br>
+          Pertanyaan? Hubungi <a href="https://facebook.com/groups/1569311164620890/" target="_blank">grup FB Animeku.ID</a>.
         </p>
-      `;
-      return;
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(async function() {
+  const token = localStorage.getItem('sb_access_token');
+  const statusWrap = document.getElementById('premStatusWrap');
+  const statusInner = document.getElementById('premStatusInner');
+  const activeBanner = document.getElementById('premActiveBanner');
+  const upgradeSection = document.getElementById('premUpgradeSection');
+
+  try {
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch('/api/premium/status', { headers });
+    const data = await res.json();
+
+    if (data.premium) {
+      
+      activeBanner.style.display = 'flex';
+      upgradeSection.style.display = 'none';
+      statusWrap.style.display = 'block';
+      statusInner.className = 'prem-status active';
+      const expText = data.expires_at
+        ? ' · Aktif hingga ' + new Date(data.expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})
+        : ' · Aktif selamanya';
+      statusInner.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Premium Aktif${expText}`;
+    } else {
+      
+      if (data.reason === 'expired') {
+        statusWrap.style.display = 'block';
+        statusInner.className = 'prem-status inactive';
+        statusInner.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Premium kamu sudah expired. Perpanjang untuk bebas iklan lagi.`;
+      } else if (data.reason === 'not_logged_in') {
+        statusWrap.style.display = 'block';
+        statusInner.className = 'prem-status inactive';
+        statusInner.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg> <a href="/auth/login" style="color:var(--accent)">Login dulu</a> untuk cek status premiummu.`;
+      }
     }
-
-    // Belum login
-    section.innerHTML = `
-      <p style="font-size:12px;color:var(--text3);margin:0 0 4px;text-align:center">Login dulu untuk mendapatkan User ID kamu.</p>
-      <a href="/auth/login" class="btn-login-g">
-        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.9 6.1C12.7 13.1 17.9 9.5 24 9.5z"/><path fill="#4A90D9" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4C43 36.8 46.1 31.1 46.1 24.5z"/><path fill="#34A853" d="M10.8 28.6c-.3-1-.5-2-.5-2.6 0-1.6.3-3.1.8-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.3-6.2z"/><path fill="#FBBC05" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.1 0-11.3-3.6-13.2-8.7l-8.3 6.2C6.8 42.6 14.7 48 24 48z"/></svg>
-        Login dengan Google
-      </a>
-      <div class="wa-or">— atau —</div>
-      <a href="https://wa.me/6282320781747?text=Halo%20admin%20Animeku.id%2C%20saya%20mau%20berlangganan%20Premium%20Rp%2015.000%20%F0%9F%99%8F" target="_blank" rel="noopener" class="btn-wa" style="width:100%;box-sizing:border-box">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-        Bayar via WhatsApp Admin
-      </a>
-      <p style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center">Admin aktifkan premium manual setelah konfirmasi</p>
-    `;
-  } catch(e) {
-    section.innerHTML = `<p style="color:var(--text3);font-size:12px;text-align:center">Gagal memuat. Coba refresh halaman.</p>`;
-  }
-}
-
-function copyUID() {
-  const val = document.getElementById('uidVal')?.textContent || '';
-  navigator.clipboard.writeText(val).then(() => {
-    const btn = document.querySelector('.uid-copy');
-    if (!btn) return;
-    btn.textContent = '✓ Copied!';
-    btn.style.color = '#4caf7d';
-    btn.style.borderColor = 'rgba(76,175,125,0.4)';
-    setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
-  });
-}
-
-function handlePay() {
-  const uid = document.getElementById('uidVal')?.textContent || '';
-  window.open(`${SOCIABUZZ_URL}?message=${encodeURIComponent('PREMIUM:' + uid)}`, '_blank');
-}
-
-initPremiumPage();
+  } catch(e) {}
+})();
 </script>
 {% endblock %}
