@@ -1720,23 +1720,28 @@ def premium_redeem():
 
 @app.route("/admin/voucher")
 def admin_voucher():
-    access_token = session.get("access_token", "")
-    # Fallback: cek dari Authorization header (AJAX call)
-    if not access_token:
-        access_token = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    access_token = session.get("access_token", "") or request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    # Halaman standalone — auth dicek di client-side via JS
+    return render_template(
+        "admin_voucher.html",
+        supabase_url=SUPABASE_URL,
+        supabase_anon=SUPABASE_ANON_KEY,
+        admin_ids=["c5ec3983-dbec-4e23-b6f6-2196fb4d5265"]
+    )
+
+
+@app.route("/api/vouchers")
+def api_vouchers():
+    """API untuk list voucher — admin only via token."""
+    access_token = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
     if not _is_admin(access_token):
-        if request.headers.get("Accept") == "application/json":
-            return jsonify({"error": "Forbidden"}), 403
-        return redirect("/")
+        return jsonify({"error": "Forbidden"}), 403
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/vouchers",
         headers=supabase_service_headers(),
         params={"order": "created_at.desc", "select": "*"}
     )
-    vouchers = r.json() if r.ok else []
-    if request.headers.get("Accept") == "application/json":
-        return jsonify({"vouchers": vouchers})
-    return render_template("admin/voucher.html", vouchers=vouchers)
+    return jsonify({"vouchers": r.json() if r.ok else []})
 
 
 @app.route("/admin/voucher/generate", methods=["POST"])
