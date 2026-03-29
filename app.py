@@ -1298,11 +1298,13 @@ def premium_status():
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/user_premium",
         headers=supabase_service_headers(),
-        params={"user_id": f"eq.{user_id}", "select": "is_active,expires_at"}
+        params={"user_id": f"eq.{user_id}", "select": "is_active,noads_active,expires_at"}
     )
     if r.ok and r.json():
         row = r.json()[0]
         expires_at = row.get("expires_at")
+        if row.get("noads_active"):
+            return jsonify({"premium": True})
         if row.get("is_active"):
             if not expires_at:
                 return jsonify({"premium": True})
