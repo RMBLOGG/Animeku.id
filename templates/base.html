@@ -703,14 +703,7 @@ function closeAnnouncement() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               Profil
             </a>
-            <a href="/premium"
-              style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
-              background:none;border:none;color:#f5c518;font-size:13px;cursor:pointer;
-              font-family:var(--font-body);transition:var(--trans);text-decoration:none"
-              onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background='none'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              ✨ Premium
-            </a>
+
             <div style="height:1px;background:var(--border)"></div>
             <button onclick="logoutUser()"
               style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 16px;
@@ -818,10 +811,7 @@ function closeAnnouncement() {
           </div>
           <button onclick="logoutUser()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">Logout</button>
         </div>
-        <a href="/premium" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin-top:6px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#f5c518;font-size:13px;font-weight:600;text-decoration:none">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          ✨ Premium
-        </a>
+
       </div>
     </div>
   </nav>
@@ -876,12 +866,6 @@ function closeAnnouncement() {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
       <span class="mob-nav-label">Jadwal</span>
-    </a>
-    <a href="/premium" class="mob-nav-item mob-nav-premium" data-page="premium">
-      <span class="mob-nav-icon">
-        <i class="fas fa-crown" style="font-size:20px;"></i>
-      </span>
-      <span class="mob-nav-label">Premium</span>
     </a>
     <a href="/rekomendasi" class="mob-nav-item" data-page="rekomendasi">
       <span class="mob-nav-icon">
@@ -953,16 +937,6 @@ function closeAnnouncement() {
   }
   .mob-nav-item.active .mob-nav-icon svg {
     stroke: var(--accent, #e63946);
-  }
-  .mob-nav-item.mob-nav-premium .mob-nav-icon i {
-    color: #f5c518;
-    filter: drop-shadow(0 0 6px rgba(245,197,24,0.45));
-    transition: color 0.2s, filter 0.2s;
-  }
-  .mob-nav-item.mob-nav-premium.active .mob-nav-icon i,
-  .mob-nav-item.mob-nav-premium:hover .mob-nav-icon i {
-    color: #ffd700;
-    filter: drop-shadow(0 0 10px rgba(255,215,0,0.7));
   }
   /* active indicator bar di atas */
   .mob-nav-item.active::before {
