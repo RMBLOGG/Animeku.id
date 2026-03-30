@@ -41,7 +41,7 @@
       {% if d.info %}
       <div class="detail-stats">
         {% if d.info.score and d.info.score != 'N/A' %}
-        <div class="stat"><span class="stat-label">⭐ Score</span><span class="stat-value score">{{ d.info.score }}</span></div>
+        <div class="stat"><span class="stat-label"><i class="fas fa-star" style="color:#f5c518"></i> Score</span><span class="stat-value score">{{ d.info.score }}</span></div>
         {% endif %}
         {% if d.info.total_episode %}
         <div class="stat"><span class="stat-label">Episode</span><span class="stat-value">{{ d.info.total_episode }}</span></div>
@@ -66,7 +66,17 @@
       {% if d.synopsis %}
       <div>
         <p class="synopsis-text" id="synopsisText">{{ d.synopsis }}</p>
-        <span class="read-more" id="readMoreBtn">Baca selengkapnya <span class="read-more-arrow">↓</span></span>
+        <span class="read-more" id="readMoreBtn">Baca selengkapnya <span class="read-more-arrow"><i class="fas fa-chevron-down"></i></span></span>
+      </div>
+      {% endif %}
+
+      {% if d.trailer %}
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#aaa;">▶ Trailer</div>
+        <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;">
+          <iframe src="https://www.youtube.com/embed/{{ d.trailer.split('v=')[-1] if 'v=' in d.trailer else d.trailer.split('/')[-1] }}"
+            width="100%" height="100%" style="border:none;" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        </div>
       </div>
       {% endif %}
 
@@ -81,10 +91,46 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span id="watchlistBtnText">+ Watchlist</span>
         </button>
+        <button class="btn-watchlist" id="statusBtn" style="min-width:140px"
+          onclick="openStatusMenu(
+            document.getElementById('detailHero').dataset.animeSlug,
+            document.getElementById('detailHero').dataset.animeTitle,
+            document.getElementById('detailHero').dataset.animePoster,
+            document.getElementById('detailHero').dataset.animeType
+          )">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span id="statusBtnText"><i class="far fa-star"></i> Status</span>
+        </button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ADS 468x60 -->
+<div id="adDetail1Wrap" style="display:none;margin:20px auto;width:468px;max-width:100%;text-align:center">
+  <script>
+    atOptions = {
+      'key' : '05c45eadd08ff81647aa748872cfd99f',
+      'format' : 'iframe',
+      'height' : 60,
+      'width' : 468,
+      'params' : {}
+    };
+  </script>
+  <script src="https://www.highperformanceformat.com/05c45eadd08ff81647aa748872cfd99f/invoke.js"></script>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) document.getElementById('adDetail1Wrap').style.display = 'block';
+    })
+    .catch(function() { document.getElementById('adDetail1Wrap').style.display = 'block'; });
+})();
+</script>
 
 <!-- EPISODE LIST -->
 {% if d.episodes and d.episodes | length > 0 %}
@@ -110,6 +156,23 @@
   </div>
 </div>
 
+<!-- ADS SOCIAL BAR -->
+<div id="adDetail2Wrap" style="display:none;margin:20px auto;text-align:center">
+  <script src="https://pl28904745.profitablecpmratenetwork.com/4a/81/0f/4a810f968812c37a2a95d35a92267fee.js"></script>
+</div>
+<script>
+(function() {
+  var token = localStorage.getItem('sb_access_token') || '';
+  var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  fetch('/api/premium/status', { headers: headers })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.premium) document.getElementById('adDetail2Wrap').style.display = 'block';
+    })
+    .catch(function() { document.getElementById('adDetail2Wrap').style.display = 'block'; });
+})();
+</script>
+
 
 
 {% endif %}
@@ -133,7 +196,7 @@
   const inList = list.some(a => a.slug === slug);
   const btn  = document.getElementById('watchlistBtn');
   const txt  = document.getElementById('watchlistBtnText');
-  if (inList && btn) { btn.classList.add('active'); txt.textContent = '✓ Di Watchlist'; }
+  if (inList && btn) { btn.classList.add('active'); txt.textContent = '<i class="fas fa-check"></i> Di Watchlist'; }
 
   // Continue watching banner
   const prog  = JSON.parse(localStorage.getItem('animeku_progress') || '{}');
@@ -144,7 +207,7 @@
       <a href="/episode/${saved.epSlug}?anime=${slug}" class="continue-banner">
         <img src="{{ d.poster }}" alt="{{ d.title }}" onerror="this.src='/static/img/placeholder.svg'">
         <div class="continue-info">
-          <div class="continue-label">⏯ LANJUT NONTON</div>
+          <div class="continue-label"><i class="fas fa-play-circle"></i> LANJUT NONTON</div>
           <div class="continue-title">{{ d.title }}</div>
           <div class="continue-ep">${saved.epName}</div>
         </div>
